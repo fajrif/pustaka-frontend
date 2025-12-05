@@ -6,7 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 // Pages
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import MasterJenisBuku from './pages/MasterJenisBuku';
+import MasterJenisBuku from './pages/masters/MasterJenisBuku';
 
 // Layout
 import Layout from './components/Layout';
