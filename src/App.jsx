@@ -7,6 +7,10 @@ import { AuthProvider } from './context/AuthContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import MasterJenisBuku from './pages/masters/MasterJenisBuku';
+import MasterJenjangStudi from './pages/masters/MasterJenjangStudi';
+import MasterBidangStudi from './pages/masters/MasterBidangStudi';
+import MasterKelas from './pages/masters/MasterKelas';
+import MasterCities from './pages/masters/MasterCities';
 
 // Layout
 import Layout from './components/Layout';
@@ -49,6 +53,38 @@ function App() {
               <ProtectedRoute adminOnly>
                 <Layout>
                   <MasterJenisBuku />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/master-jenjang-studi" element={
+              <ProtectedRoute adminOnly>
+                <Layout>
+                  <MasterJenjangStudi />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/master-bidang-studi" element={
+              <ProtectedRoute adminOnly>
+                <Layout>
+                  <MasterBidangStudi />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/master-kelas" element={
+              <ProtectedRoute adminOnly>
+                <Layout>
+                  <MasterKelas />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/master-cities" element={
+              <ProtectedRoute adminOnly>
+                <Layout>
+                  <MasterCities />
                 </Layout>
               </ProtectedRoute>
             } />

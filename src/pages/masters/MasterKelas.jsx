@@ -8,23 +8,23 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip } from '@/components/ui/tooltip';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Pencil, Search, Filter, Trash2, Tag } from 'lucide-react';
-import AddEditJenisBukuDialog from '@/components/dialogs/masters/AddEditJenisBukuDialog';
+import { Plus, Pencil, Search, Filter, Trash2, School } from 'lucide-react';
+import AddEditKelasDialog from '@/components/dialogs/masters/AddEditKelasDialog';
 import Pagination from '@/components/Pagination';
 import { PAGINATION } from '@/utils/constants';
 
-const MasterJenisBuku = () => {
+const MasterKelas = () => {
   const queryClient = useQueryClient();
   const [showDialog, setShowDialog] = useState(false);
-  const [editingBookType, setEditingBookType] = useState(null);
+  const [editingKelas, setEditingKelas] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(PAGINATION.DEFAULT_PAGE);
   const limit = PAGINATION.DEFAULT_LIMIT;
 
-  const { data: bookTypesData = { jenis_buku: [], pagination: { total: 0, page: 1, limit: PAGINATION.DEFAULT_LIMIT, total_pages: 0 } }, isLoading } = useQuery({
-    queryKey: ['bookTypes', searchTerm, currentPage, limit],
+  const { data: kelasData = { kelas: [], pagination: { total: 0, page: 1, limit: PAGINATION.DEFAULT_LIMIT, total_pages: 0 } }, isLoading } = useQuery({
+    queryKey: ['kelas', searchTerm, currentPage, limit],
     queryFn: async () => {
-      const response = await api.get('/jenis-buku', {
+      const response = await api.get('/kelas', {
         params: {
           search: searchTerm,
           page: currentPage,
@@ -37,17 +37,17 @@ const MasterJenisBuku = () => {
     placeholderData: keepPreviousData,
   });
 
-  const handleEdit = (bookType) => {
-    setEditingBookType(bookType);
+  const handleEdit = (kelas) => {
+    setEditingKelas(kelas);
     setShowDialog(true);
   };
 
   const finishSubmit = (isQuery=true) => {
     if(isQuery) {
-      queryClient.invalidateQueries(['bookTypes']);
+      queryClient.invalidateQueries(['kelas']);
     }
     setShowDialog(false);
-    setEditingBookType(null);
+    setEditingKelas(null);
   };
 
   const handlePageChange = (newPage) => {
@@ -57,15 +57,15 @@ const MasterJenisBuku = () => {
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(PAGINATION.DEFAULT_PAGE); // Reset to first page on search
+    setCurrentPage(PAGINATION.DEFAULT_PAGE);
   };
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      await api.delete(`/jenis-buku/${id}`);
+      await api.delete(`/kelas/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['bookTypes']);
+      queryClient.invalidateQueries(['kelas']);
     }
   });
 
@@ -74,8 +74,8 @@ const MasterJenisBuku = () => {
       <div className="max-w-7xl mx-auto space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Master Jenis Buku</h1>
-            <p className="text-slate-500 font-normal mt-1">Kelola jenis buku</p>
+            <h1 className="text-2xl font-bold text-slate-900">Master Kelas</h1>
+            <p className="text-slate-500 font-normal mt-1">Kelola kelas</p>
           </div>
         </div>
 
@@ -83,17 +83,17 @@ const MasterJenisBuku = () => {
           <CardContent className="pt-6">
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <Tag className="w-5 h-5 text-white" />
+                <School className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900 mb-2">Tentang Master Jenis Buku</h3>
+                <h3 className="font-semibold text-slate-900 mb-2">Tentang Master Kelas</h3>
                 <p className="text-sm text-slate-700 mb-3">
-                  Master Jenis Buku digunakan untuk mengkategorikan jenis dalam sistem.
+                  Master Kelas digunakan untuk mengkategorikan tingkat kelas dalam sistem.
                 </p>
                 <div className="space-y-1 text-sm text-slate-600">
-                  <p>• <strong className="font-semibold">Kode:</strong> Kode unik untuk jenis buku</p>
-                  <p>• <strong className="font-semibold">Nama:</strong> Nama jenis buku</p>
-                  <p>• <strong className="font-semibold">Deskripsi:</strong> Deskripsi atau keterangan jenis buku tsb.</p>
+                  <p>• <strong className="font-semibold">Kode:</strong> Kode unik untuk kelas</p>
+                  <p>• <strong className="font-semibold">Nama:</strong> Nama kelas</p>
+                  <p>• <strong className="font-semibold">Deskripsi:</strong> Deskripsi atau keterangan kelas</p>
                 </div>
               </div>
             </div>
@@ -121,16 +121,16 @@ const MasterJenisBuku = () => {
                 className="bg-blue-900 hover:bg-blue-800"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Tambah Jenis Buku
+                Tambah Kelas
               </Button>
             </div>
           </CardHeader>
           <CardContent className="pt-6">
             {isLoading ? (
               <div className="text-center py-8">Loading...</div>
-            ) : bookTypesData.jenis_buku.length === 0 ? (
+            ) : kelasData.kelas.length === 0 ? (
               <div className="text-center py-8 text-slate-500">
-                Belum ada jenis buku. Tambahkan jenis buku pertama.
+                Belum ada kelas. Tambahkan kelas pertama.
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -144,28 +144,28 @@ const MasterJenisBuku = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {bookTypesData.jenis_buku.map((bookType) => (
-                      <TableRow key={bookType.id}>
+                    {kelasData.kelas.map((kelas) => (
+                      <TableRow key={kelas.id}>
                         <TableCell>
                           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                            {bookType.code || 'N/A'}
+                            {kelas.code || 'N/A'}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <span className="font-medium text-sm">
-                            {bookType.name}
+                            {kelas.name}
                           </span>
                         </TableCell>
                         <TableCell>
-                          {bookType.description.length > 50 ? (
-                            <Tooltip className="text-left" content={bookType.description}>
+                          {kelas.description && kelas.description.length > 50 ? (
+                            <Tooltip className="text-left" content={kelas.description}>
                               <p className="text-sm text-slate-600 max-w-xs truncate">
-                                {bookType.description}
+                                {kelas.description}
                               </p>
                             </Tooltip>
                           ) : (
                             <p className="text-sm text-slate-600">
-                              {bookType.description || 'Tidak ada deskripsi'}
+                              {kelas.description || 'Tidak ada deskripsi'}
                             </p>
                           )}
                         </TableCell>
@@ -174,7 +174,7 @@ const MasterJenisBuku = () => {
                             <Button
                               variant="outline"
                               size="icon"
-                              onClick={() => handleEdit(bookType)}
+                              onClick={() => handleEdit(kelas)}
                             >
                               <Pencil className="w-4 h-4" />
                             </Button>
@@ -182,8 +182,8 @@ const MasterJenisBuku = () => {
                               variant="outline"
                               size="icon"
                               onClick={() => {
-                                if (confirm('Yakin ingin menghapus jenis buku ini?')) {
-                                  deleteMutation.mutate(bookType.id);
+                                if (confirm('Yakin ingin menghapus kelas ini?')) {
+                                  deleteMutation.mutate(kelas.id);
                                 }
                               }}
                               className="text-red-500 hover:text-red-700"
@@ -200,12 +200,12 @@ const MasterJenisBuku = () => {
             )}
 
             {/* Pagination */}
-            {!isLoading && bookTypesData.jenis_buku.length > 0 && bookTypesData.pagination && (
+            {!isLoading && kelasData.kelas.length > 0 && kelasData.pagination && (
               <Pagination
                 currentPage={currentPage}
-                totalPages={bookTypesData.pagination.total_pages}
-                total={bookTypesData.pagination.total}
-                limit={bookTypesData.pagination.limit}
+                totalPages={kelasData.pagination.total_pages}
+                total={kelasData.pagination.total}
+                limit={kelasData.pagination.limit}
                 onPageChange={handlePageChange}
               />
             )}
@@ -213,14 +213,14 @@ const MasterJenisBuku = () => {
         </Card>
       </div>
       {/* Form Dialog */}
-      <AddEditJenisBukuDialog
+      <AddEditKelasDialog
         isOpen={showDialog}
         onClose={() => finishSubmit(false)}
-        editingBookType={editingBookType}
+        editingKelas={editingKelas}
         onFinish={finishSubmit}
         />
     </div>
   );
 };
 
-export default MasterJenisBuku;
+export default MasterKelas;

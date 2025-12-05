@@ -29,6 +29,30 @@ const navigationMasters = [
     icon: Settings,
     roles: ['admin']
   },
+  {
+    title: "Master Jenjang Studi",
+    url: "/master-jenjang-studi",
+    icon: Settings,
+    roles: ['admin']
+  },
+  {
+    title: "Master Bidang Studi",
+    url: "/master-bidang-studi",
+    icon: Settings,
+    roles: ['admin']
+  },
+  {
+    title: "Master Kelas",
+    url: "/master-kelas",
+    icon: Settings,
+    roles: ['admin']
+  },
+  {
+    title: "Master Kota",
+    url: "/master-cities",
+    icon: Settings,
+    roles: ['admin']
+  },
 ];
 
 export default function Layout({ children }) {
