@@ -5,7 +5,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
-import logoGatra from '@/assets/logo-gatra-icon.png';
+import logoGatra from '@/assets/logo-pustaka-icon.png';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ const Login = () => {
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="space-y-4 text-center">
           <div className="mx-auto w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg">
-            <img src={logoGatra} className="w-8 h-8" />
+            <img src={logoGatra} className="w-10 h-10" />
           </div>
           <div>
             <CardTitle className="text-3xl font-bold">PustakaDB</CardTitle>
