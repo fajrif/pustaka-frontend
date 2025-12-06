@@ -1,6 +1,6 @@
 import React from 'react';
 import logoGatra from '@/assets/logo-gatra-icon.png';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import {
   LayoutDashboard,
@@ -64,6 +64,7 @@ const navigationMasters = [
 
 export default function Layout({ children }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
@@ -149,13 +150,20 @@ export default function Layout({ children }) {
           {/* Footer */}
           <div className="border-t border-slate-200 p-4">
             <div className="space-y-3">
-              <div className="flex items-center gap-3 px-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  navigate('/profile');
+                }}
+                className="w-full justify-start items-center gap-3 px-2 py-6 text-slate-600 hover:text-blue-600 hover:border-blue-200"
+              >
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
                   <span className="text-white font-semibold text-sm">
                     {user?.full_name?.charAt(0) || 'U'}
                   </span>
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 text-left min-w-0">
                   <p className="font-medium text-slate-900 text-sm truncate">
                     {user?.full_name || 'User'}
                   </p>
@@ -163,7 +171,7 @@ export default function Layout({ children }) {
                     {user?.role === 'admin' ? 'Administrator' : 'User'}
                   </p>
                 </div>
-              </div>
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
