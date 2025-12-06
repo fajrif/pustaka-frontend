@@ -9,7 +9,8 @@ import {
   Settings,
   LogOut,
   Menu,
-  Calculator
+  Calculator,
+  UserCog,
 } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -19,6 +20,12 @@ const navigationItems = [
     url: "/dashboard",
     icon: LayoutDashboard,
     roles: ['admin', 'user']
+  },
+  {
+    title: "Users",
+    url: "/users",
+    icon: UserCog,
+    roles: ['admin']
   },
 ];
 

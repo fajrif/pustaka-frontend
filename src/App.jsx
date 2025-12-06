@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 // Pages
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import Users from './pages/operationals/Users';
 import MasterJenisBuku from './pages/masters/MasterJenisBuku';
 import MasterJenjangStudi from './pages/masters/MasterJenjangStudi';
 import MasterBidangStudi from './pages/masters/MasterBidangStudi';
@@ -45,6 +46,14 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Dashboard />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/users" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Users />
                 </Layout>
               </ProtectedRoute>
             } />
