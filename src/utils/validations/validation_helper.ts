@@ -25,3 +25,11 @@ export const preprocessOptionalNumber = (val: any) => {
   return num;
 };
 
+// Helper function untuk Preprocessing Email Opsional
+export const preprocessOptionalEmail = (val: any) => {
+  if (typeof val === "string" && val.trim() === "") {
+    return undefined;
+  }
+  return val;
+};
+

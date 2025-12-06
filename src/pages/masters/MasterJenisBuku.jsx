@@ -157,7 +157,7 @@ const MasterJenisBuku = () => {
                           </span>
                         </TableCell>
                         <TableCell>
-                          {bookType.description.length > 50 ? (
+                          {bookType.description && bookType.description.length > 50 ? (
                             <Tooltip className="text-left" content={bookType.description}>
                               <p className="text-sm text-slate-600 max-w-xs truncate">
                                 {bookType.description}

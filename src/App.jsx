@@ -5,9 +5,11 @@ import { AuthProvider } from './context/AuthContext';
 
 // Pages
 import Login from './pages/Login';
+import UserProfile from './pages/UserProfile';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/operationals/Users';
-import UserProfile from './pages/UserProfile';
+import Publishers from './pages/operationals/Publishers';
+
 import MasterJenisBuku from './pages/masters/MasterJenisBuku';
 import MasterJenjangStudi from './pages/masters/MasterJenjangStudi';
 import MasterBidangStudi from './pages/masters/MasterBidangStudi';
@@ -55,6 +57,14 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Users />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/publishers" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Publishers />
                 </Layout>
               </ProtectedRoute>
             } />

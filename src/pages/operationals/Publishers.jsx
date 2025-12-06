@@ -7,24 +7,23 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Plus, Pencil, Search, Filter, Trash2, Tag } from 'lucide-react';
-import AddEditUserDialog from '@/components/dialogs/operationals/AddEditUserDialog';
+import AddEditPublisherDialog from '@/components/dialogs/operationals/AddEditPublisherDialog';
 import Pagination from '@/components/Pagination';
-import { getRoleColor } from '@/utils/helpers/UserHelper';
 import { formatDate } from '@/utils/formatters';
 import { PAGINATION } from '@/utils/constants';
 
-const MasterUser = () => {
+const MasterPublisher = () => {
   const queryClient = useQueryClient();
   const [showDialog, setShowDialog] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
+  const [editingPublisher, setEditingPublisher] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(PAGINATION.DEFAULT_PAGE);
   const limit = PAGINATION.DEFAULT_LIMIT;
 
-  const { data: usersData = { users: [], pagination: { total: 0, page: 1, limit: PAGINATION.DEFAULT_LIMIT, total_pages: 0 } }, isLoading } = useQuery({
-    queryKey: ['users', searchTerm, currentPage, limit],
+  const { data: publishersData = { publishers: [], pagination: { total: 0, page: 1, limit: PAGINATION.DEFAULT_LIMIT, total_pages: 0 } }, isLoading } = useQuery({
+    queryKey: ['publishers', searchTerm, currentPage, limit],
     queryFn: async () => {
-      const response = await api.get('/users', {
+      const response = await api.get('/publishers', {
         params: {
           search: searchTerm,
           page: currentPage,
@@ -37,17 +36,17 @@ const MasterUser = () => {
     placeholderData: keepPreviousData,
   });
 
-  const handleEdit = (user) => {
-    setEditingUser(user);
+  const handleEdit = (publisher) => {
+    setEditingPublisher(publisher);
     setShowDialog(true);
   };
 
   const finishSubmit = (isQuery=true) => {
     if(isQuery) {
-      queryClient.invalidateQueries(['users']);
+      queryClient.invalidateQueries(['publishers']);
     }
     setShowDialog(false);
-    setEditingUser(null);
+    setEditingPublisher(null);
   };
 
   const handlePageChange = (newPage) => {
@@ -62,10 +61,10 @@ const MasterUser = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      await api.delete(`/users/${id}`);
+      await api.delete(`/publishers/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['users']);
+      queryClient.invalidateQueries(['publishers']);
     }
   });
 
@@ -74,8 +73,8 @@ const MasterUser = () => {
       <div className="max-w-7xl mx-auto space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Master Data User</h1>
-            <p className="text-slate-500 font-normal mt-1">Kelola data user anda</p>
+            <h1 className="text-2xl font-bold text-slate-900">Master Data Publisher</h1>
+            <p className="text-slate-500 font-normal mt-1">Kelola data publisher anda</p>
           </div>
         </div>
 
@@ -86,15 +85,13 @@ const MasterUser = () => {
                 <Tag className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900 mb-2">Tentang Master Data User</h3>
+                <h3 className="font-semibold text-slate-900 mb-2">Tentang Master Data Publisher</h3>
                 <p className="text-sm text-slate-700 mb-3">
-                  Master data user atau pengguna digunakan untuk akses system ini.
+                  Master data publisher digunakan untuk data management buku.
                 </p>
                 <div className="space-y-1 text-sm text-slate-600">
-                  <p>• <strong className="font-semibold">Email:</strong> Email pengguna yang di daftarkan</p>
-                  <p>• <strong className="font-semibold">Password:</strong> Password min. 8 karakter, mengandung huruf besar dan kecil, mengandung min. 1 symbol</p>
-                  <p>• <strong className="font-semibold">Nama Lengkap:</strong> Nama lengkap pengguna (min. 3 karakter)</p>
-                  <p>• <strong className="font-semibold">Role:</strong> Role dari pengguna (admin / user / operator)</p>
+                  <p>• <strong className="font-semibold">Nama Publisher:</strong> Nama Publisher</p>
+                  <p>• <strong className="font-semibold">Contact Info:</strong> Contact atau informasi lengkap dari Publisher tsb.</p>
                 </div>
               </div>
             </div>
@@ -122,34 +119,34 @@ const MasterUser = () => {
                 className="bg-blue-900 hover:bg-blue-800"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Tambah User
+                Tambah Publisher
               </Button>
             </div>
           </CardHeader>
           <CardContent className="pt-6">
             {isLoading ? (
               <div className="text-center py-8">Loading...</div>
-            ) : usersData.users.length === 0 ? (
+            ) : publishersData.publishers.length === 0 ? (
               <div className="text-center py-8 text-slate-500">
-                Belum ada user. Tambahkan user pertama anda.
+                Belum ada publisher. Tambahkan publisher pertama anda.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {usersData.users.map((user) => (
-                  <Card key={user.id} className="border-2 border-blue-80 hover:border-blue-300 hover:shadow-md transition-all">
+                {publishersData.publishers.map((publisher) => (
+                  <Card key={publisher.id} className="border-2 border-blue-80 hover:border-blue-300 hover:shadow-md transition-all">
                     <CardHeader className="pb-3">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <Badge variant="outline" className={getRoleColor(user.role) + " mb-2"}>{user.role}</Badge>
+                          <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 mb-2">{publisher.code}</Badge>
                           <CardTitle className="text-lg">
-                            {user.full_name}
+                            {publisher.name}
                           </CardTitle>
                         </div>
                         <div className="flex gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleEdit(user)}
+                            onClick={() => handleEdit(publisher)}
                           >
                             <Pencil className="w-4 h-4" />
                           </Button>
@@ -157,8 +154,8 @@ const MasterUser = () => {
                             variant="ghost"
                             size="icon"
                             onClick={() => {
-                              if (confirm('Yakin ingin menghapus user ini?')) {
-                                deleteMutation.mutate(user.id);
+                              if (confirm('Yakin ingin menghapus publisher ini?')) {
+                                deleteMutation.mutate(publisher.id);
                               }
                             }}
                             className="text-red-500 hover:text-red-700"
@@ -170,8 +167,10 @@ const MasterUser = () => {
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm text-slate-600">
-                        Email: {user.email}<br/>
-                        Dibuat pada: {formatDate(user.created_at)}
+                        Email: {publisher.email || '-'}<br/>
+                        Phone: {publisher.phone1 || publisher.phone2 || '-'}<br/>
+                        Area: {publisher.area || '-'}<br/>
+                        Dibuat pada: {formatDate(publisher.created_at)}
                       </p>
                     </CardContent>
                   </Card>
@@ -180,12 +179,12 @@ const MasterUser = () => {
             )}
 
             {/* Pagination */}
-            {!isLoading && usersData.users.length > 0 && usersData.pagination && (
+            {!isLoading && publishersData.publishers.length > 0 && publishersData.pagination && (
               <Pagination
                 currentPage={currentPage}
-                totalPages={usersData.pagination.total_pages}
-                total={usersData.pagination.total}
-                limit={usersData.pagination.limit}
+                totalPages={publishersData.pagination.total_pages}
+                total={publishersData.pagination.total}
+                limit={publishersData.pagination.limit}
                 onPageChange={handlePageChange}
               />
             )}
@@ -193,14 +192,14 @@ const MasterUser = () => {
         </Card>
       </div>
       {/* Form Dialog */}
-      <AddEditUserDialog
+      <AddEditPublisherDialog
         isOpen={showDialog}
         onClose={() => finishSubmit(false)}
-        editingUser={editingUser}
+        editingPublisher={editingPublisher}
         onFinish={finishSubmit}
         />
     </div>
   );
 };
 
-export default MasterUser;
+export default MasterPublisher;
