@@ -12,6 +12,7 @@ import {
   Calculator,
   UserCog,
   Landmark,
+  PackageOpen,
 } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -32,6 +33,12 @@ const navigationItems = [
     title: "Publishers",
     url: "/publishers",
     icon: Landmark,
+    roles: ['admin', 'user']
+  },
+  {
+    title: "Expeditions",
+    url: "/expeditions",
+    icon: PackageOpen,
     roles: ['admin', 'user']
   },
 ];

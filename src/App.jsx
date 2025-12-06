@@ -9,6 +9,7 @@ import UserProfile from './pages/UserProfile';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/operationals/Users';
 import Publishers from './pages/operationals/Publishers';
+import Expeditions from './pages/operationals/Expeditions';
 
 import MasterJenisBuku from './pages/masters/MasterJenisBuku';
 import MasterJenjangStudi from './pages/masters/MasterJenjangStudi';
@@ -65,6 +66,14 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Publishers />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/expeditions" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Expeditions />
                 </Layout>
               </ProtectedRoute>
             } />

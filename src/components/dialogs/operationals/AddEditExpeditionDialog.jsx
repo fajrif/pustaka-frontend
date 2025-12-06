@@ -9,10 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { publisherSchema } from "@/utils/validations/Publisher";
+import { expeditionSchema } from "@/utils/validations/Expedition";
 import { Edit } from 'lucide-react';
 
-const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish }) => {
+const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish }) => {
   const queryClient = useQueryClient();
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -31,22 +31,22 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
 
   // --- React Hook Form Setup ---
   const { register, control, handleSubmit, formState: { errors }, reset } = useForm({
-    resolver: zodResolver(publisherSchema),
-    defaultValues: editingPublisher || initialData
+    resolver: zodResolver(expeditionSchema),
+    defaultValues: editingExpedition || initialData
   });
 
   useEffect(() => {
-    if (editingPublisher) {
+    if (editingExpedition) {
       const formattedData = {
-        ...editingPublisher,
+        ...editingExpedition,
       };
 
       reset(formattedData);
-      setIsEditMode(false); // Reset to view mode when editingPublisher changes
+      setIsEditMode(false); // Reset to view mode when editingExpedition changes
     } else {
       setIsEditMode(true); // Always in edit mode when creating new
     }
-  }, [editingPublisher, reset]);
+  }, [editingExpedition, reset]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -64,8 +64,8 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
-      console.log('Creating publisher with data:', data);
-      const response = await api.post('/publishers', data);
+      console.log('Creating expedition with data:', data);
+      const response = await api.post('/expeditions', data);
       return response.data;
     },
     onSuccess: () => {
@@ -75,7 +75,7 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }) => {
-      const response = await api.put(`/publishers/${id}`, data);
+      const response = await api.put(`/expeditions/${id}`, data);
       return response.data;
     },
     onSuccess: () => {
@@ -95,8 +95,8 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
   };
 
   const onHandleSubmit = async (data) => {
-    if (editingPublisher) {
-      updateMutation.mutate({ id: editingPublisher.id, data });
+    if (editingExpedition) {
+      updateMutation.mutate({ id: editingExpedition.id, data });
     } else {
       createMutation.mutate(data);
     }
@@ -108,28 +108,28 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
     return city ? city.name : '-';
   };
 
-  const isViewMode = editingPublisher && !isEditMode;
+  const isViewMode = editingExpedition && !isEditMode;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClosing}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>
-            {editingPublisher ? 'Edit Publisher' : 'Tambah Publisher Baru'}
+            {editingExpedition ? 'Edit Ekspedisi' : 'Tambah Ekspedisi Baru'}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onHandleSubmit)}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Kode Publisher *</Label>
+                <Label htmlFor="name">Kode Ekspedisi *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingPublisher.code || '-'}</p>
+                  <p className="text-sm text-slate-900 py-2">{editingExpedition.code || '-'}</p>
                 ) : (
                   <>
                     <Input
                       name="code"
-                      placeholder="Contoh: PUB001"
+                      placeholder="Contoh: EXP001"
                       {...register("code")}
                     />
                     {errors.code && <p className="text-red-500 text-sm">{errors.code.message}</p>}
@@ -137,14 +137,14 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="name">Nama Publisher *</Label>
+                <Label htmlFor="name">Nama Ekspedisi *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingPublisher.name || '-'}</p>
+                  <p className="text-sm text-slate-900 py-2">{editingExpedition.name || '-'}</p>
                 ) : (
                   <>
                     <Input
                       name="name"
-                      placeholder="Contoh: Pustaka Publisher"
+                      placeholder="Contoh: JNE Express"
                       {...register("name")}
                     />
                     {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
@@ -155,7 +155,7 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
             <div className="space-y-2">
               <Label htmlFor="address">Address</Label>
               {isViewMode ? (
-                <p className="text-sm text-slate-900 py-2 whitespace-pre-wrap">{editingPublisher.address || '-'}</p>
+                <p className="text-sm text-slate-900 py-2 whitespace-pre-wrap">{editingExpedition.address || '-'}</p>
               ) : (
                 <>
                   <Textarea
@@ -171,7 +171,7 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
               <div className="space-y-2">
                 <Label htmlFor="city_id">Kota *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{getCityName(editingPublisher.city_id)}</p>
+                  <p className="text-sm text-slate-900 py-2">{getCityName(editingExpedition.city_id)}</p>
                 ) : (
                   <>
                     <Controller
@@ -202,7 +202,7 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
               <div className="space-y-2">
                 <Label htmlFor="description">Area</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingPublisher.area || '-'}</p>
+                  <p className="text-sm text-slate-900 py-2">{editingExpedition.area || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -219,13 +219,13 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
               <div className="space-y-2">
                 <Label htmlFor="code">Email</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingPublisher.email || '-'}</p>
+                  <p className="text-sm text-slate-900 py-2">{editingExpedition.email || '-'}</p>
                 ) : (
                   <>
                     <Input
                       name="email"
                       type="email"
-                      placeholder="Contoh: contact@publisher.com"
+                      placeholder="Contoh: contact@expedition.com"
                       {...register("email")}
                     />
                     {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
@@ -235,12 +235,12 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
               <div className="space-y-2">
                 <Label htmlFor="description">Website</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingPublisher.website || '-'}</p>
+                  <p className="text-sm text-slate-900 py-2">{editingExpedition.website || '-'}</p>
                 ) : (
                   <>
                     <Input
                       name="website"
-                      placeholder="Contoh: https://www.publisher.com"
+                      placeholder="Contoh: https://www.expedition.com"
                       {...register("website")}
                     />
                     {errors.website && <p className="text-red-500 text-sm">{errors.website.message}</p>}
@@ -252,7 +252,7 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
               <div className="space-y-2">
                 <Label htmlFor="description">Phone 1</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingPublisher.phone1 || '-'}</p>
+                  <p className="text-sm text-slate-900 py-2">{editingExpedition.phone1 || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -268,7 +268,7 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
               <div className="space-y-2">
                 <Label htmlFor="description">Phone 2</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingPublisher.phone2 || '-'}</p>
+                  <p className="text-sm text-slate-900 py-2">{editingExpedition.phone2 || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -285,7 +285,7 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
             <div className="space-y-2">
               <Label htmlFor="description">Deskripsi</Label>
               {isViewMode ? (
-                <p className="text-sm text-slate-900 py-2 whitespace-pre-wrap">{editingPublisher.description || '-'}</p>
+                <p className="text-sm text-slate-900 py-2 whitespace-pre-wrap">{editingExpedition.description || '-'}</p>
               ) : (
                 <>
                   <Textarea
@@ -338,5 +338,4 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
   );
 };
 
-export default AddEditPublisherDialog;
-
+export default AddEditExpeditionDialog;

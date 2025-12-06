@@ -79,3 +79,12 @@ export const citiesAPI = {
   update: (id, data) => api.put(`/cities/${id}`, data),
   delete: (id) => api.delete(`/cities/${id}`),
 };
+
+// Expeditions API
+export const expeditionsAPI = {
+  getAll: (params) => api.get('/expeditions', { params }),
+  getById: (id) => api.get(`/expeditions/${id}`),
+  create: (data) => api.post('/expeditions', data),
+  update: (id, data) => api.put(`/expeditions/${id}`, data),
+  delete: (id) => api.delete(`/expeditions/${id}`),
+};
