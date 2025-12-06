@@ -1,0 +1,496 @@
+import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/api/axios';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { bookSchema } from "@/utils/validations/Book";
+import { Edit } from 'lucide-react';
+
+const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
+  const queryClient = useQueryClient();
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  const initialData = {
+    name: '',
+    description: '',
+    author: '',
+    isbn: '',
+    year: '',
+    stock: 0,
+    jenis_buku_id: '',
+    jenjang_studi_id: '',
+    bidang_studi_id: '',
+    kelas_id: '',
+    publisher_id: '',
+    price: 0,
+  }
+
+  // --- React Hook Form Setup ---
+  const { register, control, handleSubmit, formState: { errors }, reset } = useForm({
+    resolver: zodResolver(bookSchema),
+    defaultValues: editingBook || initialData
+  });
+
+  useEffect(() => {
+    if (editingBook) {
+      const formattedData = {
+        ...editingBook,
+      };
+
+      reset(formattedData);
+      setIsEditMode(false); // Reset to view mode when editingBook changes
+    } else {
+      setIsEditMode(true); // Always in edit mode when creating new
+    }
+  }, [editingBook, reset]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsEditMode(false); // Reset edit mode when dialog closes
+    }
+  }, [isOpen]);
+
+  // Fetch dropdown data
+  const { data: bookTypesData = { jenis_buku: [] } } = useQuery({
+    queryKey: ['bookTypes'],
+    queryFn: async () => {
+      const response = await api.get('/jenis-buku?all=true');
+      return response.data;
+    }
+  });
+
+  const { data: educationLevelsData = { jenjang_studi: [] } } = useQuery({
+    queryKey: ['educationLevels'],
+    queryFn: async () => {
+      const response = await api.get('/jenjang-studi?all=true');
+      return response.data;
+    }
+  });
+
+  const { data: studyFieldsData = { bidang_studi: [] } } = useQuery({
+    queryKey: ['studyFields'],
+    queryFn: async () => {
+      const response = await api.get('/bidang-studi?all=true');
+      return response.data;
+    }
+  });
+
+  const { data: classesData = { kelas: [] } } = useQuery({
+    queryKey: ['classes'],
+    queryFn: async () => {
+      const response = await api.get('/kelas?all=true');
+      return response.data;
+    }
+  });
+
+  const { data: publishersData = { publishers: [] } } = useQuery({
+    queryKey: ['publishers'],
+    queryFn: async () => {
+      const response = await api.get('/publishers?all=true');
+      return response.data;
+    }
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data) => {
+      console.log('Creating book with data:', data);
+      const response = await api.post('/books', data);
+      return response.data;
+    },
+    onSuccess: () => {
+      onFinishing();
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }) => {
+      const response = await api.put(`/books/${id}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      onFinishing();
+    }
+  });
+
+  const onFinishing = () => {
+    reset(initialData);
+    onFinish();
+  };
+
+  const onClosing = () => {
+    reset(initialData);
+    setIsEditMode(false);
+    onClose();
+  };
+
+  const onHandleSubmit = async (data) => {
+    if (editingBook) {
+      updateMutation.mutate({ id: editingBook.id, data });
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
+  // Helper functions to get names by ID
+  const getBookTypeName = (id) => {
+    const item = bookTypesData.jenis_buku.find(t => t.id === id);
+    return item ? item.name : '-';
+  };
+
+  const getEducationLevelName = (id) => {
+    const item = educationLevelsData.jenjang_studi.find(t => t.id === id);
+    return item ? item.name : '-';
+  };
+
+  const getStudyFieldName = (id) => {
+    const item = studyFieldsData.bidang_studi.find(t => t.id === id);
+    return item ? item.name : '-';
+  };
+
+  const getClassName = (id) => {
+    const item = classesData.kelas.find(t => t.id === id);
+    return item ? item.name : '-';
+  };
+
+  const getPublisherName = (id) => {
+    const item = publishersData.publishers.find(t => t.id === id);
+    return item ? item.name : '-';
+  };
+
+  const isViewMode = editingBook && !isEditMode;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClosing}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            {editingBook ? 'Edit Buku' : 'Tambah Buku Baru'}
+          </DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit(onHandleSubmit)}>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nama Buku *</Label>
+                {isViewMode ? (
+                  <p className="text-sm text-slate-900 py-2">{editingBook.name || '-'}</p>
+                ) : (
+                  <>
+                    <Input
+                      name="name"
+                      placeholder="Contoh: Matematika Kelas 5"
+                      {...register("name")}
+                    />
+                    {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+                  </>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="author">Penulis</Label>
+                {isViewMode ? (
+                  <p className="text-sm text-slate-900 py-2">{editingBook.author || '-'}</p>
+                ) : (
+                  <>
+                    <Input
+                      name="author"
+                      placeholder="Contoh: John Doe"
+                      {...register("author")}
+                    />
+                    {errors.author && <p className="text-red-500 text-sm">{errors.author.message}</p>}
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="isbn">ISBN</Label>
+                {isViewMode ? (
+                  <p className="text-sm text-slate-900 py-2">{editingBook.isbn || '-'}</p>
+                ) : (
+                  <>
+                    <Input
+                      name="isbn"
+                      placeholder="Contoh: 978-3-16-148410-0"
+                      {...register("isbn")}
+                    />
+                    {errors.isbn && <p className="text-red-500 text-sm">{errors.isbn.message}</p>}
+                  </>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="year">Tahun</Label>
+                {isViewMode ? (
+                  <p className="text-sm text-slate-900 py-2">{editingBook.year || '-'}</p>
+                ) : (
+                  <>
+                    <Input
+                      name="year"
+                      placeholder="Contoh: 2024"
+                      {...register("year")}
+                    />
+                    {errors.year && <p className="text-red-500 text-sm">{errors.year.message}</p>}
+                  </>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="stock">Stok</Label>
+                {isViewMode ? (
+                  <p className="text-sm text-slate-900 py-2">{editingBook.stock || 0}</p>
+                ) : (
+                  <>
+                    <Input
+                      name="stock"
+                      type="number"
+                      placeholder="0"
+                      {...register("stock", { valueAsNumber: true })}
+                    />
+                    {errors.stock && <p className="text-red-500 text-sm">{errors.stock.message}</p>}
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Deskripsi</Label>
+              {isViewMode ? (
+                <p className="text-sm text-slate-900 py-2 whitespace-pre-wrap">{editingBook.description || '-'}</p>
+              ) : (
+                <>
+                  <Textarea
+                    id="description"
+                    rows={2}
+                    {...register("description")}
+                  />
+                  {errors.description && <p className="text-red-500 text-sm">{errors.description.message}</p>}
+                </>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="jenis_buku_id">Jenis Buku *</Label>
+                {isViewMode ? (
+                  <p className="text-sm text-slate-900 py-2">{getBookTypeName(editingBook.jenis_buku_id)}</p>
+                ) : (
+                  <>
+                    <Controller
+                      name="jenis_buku_id"
+                      control={control}
+                      render={({ field: { onChange, value } }) => (
+                        <Select
+                          value={value}
+                          onValueChange={onChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Pilih jenis buku" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {bookTypesData.jenis_buku.map((type) => (
+                              <SelectItem key={type.id} value={type.id}>
+                                <span className="font-medium">{type.name}</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {errors.jenis_buku_id && <p className="text-red-500 text-sm">{errors.jenis_buku_id.message}</p>}
+                  </>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="jenjang_studi_id">Jenjang Studi *</Label>
+                {isViewMode ? (
+                  <p className="text-sm text-slate-900 py-2">{getEducationLevelName(editingBook.jenjang_studi_id)}</p>
+                ) : (
+                  <>
+                    <Controller
+                      name="jenjang_studi_id"
+                      control={control}
+                      render={({ field: { onChange, value } }) => (
+                        <Select
+                          value={value}
+                          onValueChange={onChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Pilih jenjang studi" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {educationLevelsData.jenjang_studi.map((level) => (
+                              <SelectItem key={level.id} value={level.id}>
+                                <span className="font-medium">{level.name}</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {errors.jenjang_studi_id && <p className="text-red-500 text-sm">{errors.jenjang_studi_id.message}</p>}
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="bidang_studi_id">Bidang Studi *</Label>
+                {isViewMode ? (
+                  <p className="text-sm text-slate-900 py-2">{getStudyFieldName(editingBook.bidang_studi_id)}</p>
+                ) : (
+                  <>
+                    <Controller
+                      name="bidang_studi_id"
+                      control={control}
+                      render={({ field: { onChange, value } }) => (
+                        <Select
+                          value={value}
+                          onValueChange={onChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Pilih bidang studi" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {studyFieldsData.bidang_studi.map((field) => (
+                              <SelectItem key={field.id} value={field.id}>
+                                <span className="font-medium">{field.name}</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {errors.bidang_studi_id && <p className="text-red-500 text-sm">{errors.bidang_studi_id.message}</p>}
+                  </>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="kelas_id">Kelas *</Label>
+                {isViewMode ? (
+                  <p className="text-sm text-slate-900 py-2">{getClassName(editingBook.kelas_id)}</p>
+                ) : (
+                  <>
+                    <Controller
+                      name="kelas_id"
+                      control={control}
+                      render={({ field: { onChange, value } }) => (
+                        <Select
+                          value={value}
+                          onValueChange={onChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Pilih kelas" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {classesData.kelas.map((kelas) => (
+                              <SelectItem key={kelas.id} value={kelas.id}>
+                                <span className="font-medium">{kelas.name}</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {errors.kelas_id && <p className="text-red-500 text-sm">{errors.kelas_id.message}</p>}
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="publisher_id">Publisher *</Label>
+                {isViewMode ? (
+                  <p className="text-sm text-slate-900 py-2">{getPublisherName(editingBook.publisher_id)}</p>
+                ) : (
+                  <>
+                    <Controller
+                      name="publisher_id"
+                      control={control}
+                      render={({ field: { onChange, value } }) => (
+                        <Select
+                          value={value}
+                          onValueChange={onChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Pilih publisher" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {publishersData.publishers.map((publisher) => (
+                              <SelectItem key={publisher.id} value={publisher.id}>
+                                <span className="font-medium">{publisher.name}</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {errors.publisher_id && <p className="text-red-500 text-sm">{errors.publisher_id.message}</p>}
+                  </>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="price">Harga</Label>
+                {isViewMode ? (
+                  <p className="text-sm text-slate-900 py-2">Rp {editingBook.price?.toLocaleString('id-ID') || 0}</p>
+                ) : (
+                  <>
+                    <Input
+                      name="price"
+                      type="number"
+                      placeholder="0"
+                      {...register("price", { valueAsNumber: true })}
+                    />
+                    {errors.price && <p className="text-red-500 text-sm">{errors.price.message}</p>}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            {isViewMode ? (
+              <>
+                <Button type="button" variant="outline" onClick={onClosing}>
+                  Tutup
+                </Button>
+                <Button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsEditMode(true);
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 gap-2"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button type="button" variant="outline" onClick={onClosing}>
+                  Batal
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {(createMutation.isPending || updateMutation.isPending) ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default AddEditBookDialog;

@@ -10,6 +10,8 @@ import Dashboard from './pages/Dashboard';
 import Users from './pages/operationals/Users';
 import Publishers from './pages/operationals/Publishers';
 import Expeditions from './pages/operationals/Expeditions';
+import Books from './pages/operationals/Books';
+import SalesAssociates from './pages/operationals/SalesAssociates';
 
 import MasterJenisBuku from './pages/masters/MasterJenisBuku';
 import MasterJenjangStudi from './pages/masters/MasterJenjangStudi';
@@ -58,6 +60,22 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Users />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/books" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Books />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/sales-associates" element={
+              <ProtectedRoute>
+                <Layout>
+                  <SalesAssociates />
                 </Layout>
               </ProtectedRoute>
             } />

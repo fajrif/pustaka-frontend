@@ -1,6 +1,8 @@
 // Fungsi helper untuk mengubah string tanggal sederhana (YYYY-MM-DD) menjadi timestamp lengkap (ISO 8601)
 export const toISOString = (dateString: string) => {
-  if (!dateString) return null;
+  if (dateString === null || dateString === undefined || dateString === "") {
+    return undefined;
+  }
   // Ini mengasumsikan waktu lokal tengah malam di lokasi browser,
   // lalu mengonversinya menjadi UTC (format Z di akhir)
   try {

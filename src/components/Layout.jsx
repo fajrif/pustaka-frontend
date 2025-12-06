@@ -11,8 +11,10 @@ import {
   Menu,
   Calculator,
   UserCog,
+  UserStar,
   Landmark,
-  PackageOpen,
+  Truck,
+  BookText,
 } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -24,21 +26,33 @@ const navigationItems = [
     roles: ['admin', 'user']
   },
   {
-    title: "Users",
+    title: "Data User",
     url: "/users",
     icon: UserCog,
     roles: ['admin']
   },
   {
-    title: "Publishers",
+    title: "Daftar Buku",
+    url: "/books",
+    icon: BookText,
+    roles: ['admin']
+  },
+  {
+    title: "Sales Buku",
+    url: "/sales-associates",
+    icon: UserStar,
+    roles: ['admin']
+  },
+  {
+    title: "Penerbit",
     url: "/publishers",
     icon: Landmark,
     roles: ['admin', 'user']
   },
   {
-    title: "Expeditions",
+    title: "Ekspedisi",
     url: "/expeditions",
-    icon: PackageOpen,
+    icon: Truck,
     roles: ['admin', 'user']
   },
 ];
