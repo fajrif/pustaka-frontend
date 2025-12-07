@@ -6,9 +6,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { userSchema, userSchemaWithPasswordConfirmation } from "@/utils/validations/User";
 import { useToast } from '@/components/ui/use-toast';
+import { USER_ROLES } from '@/utils/constants';
 
 const AddEditUserDialog = ({ isOpen, onClose, editingUser, onFinish }) => {
   const queryClient = useQueryClient();
@@ -147,11 +149,25 @@ const AddEditUserDialog = ({ isOpen, onClose, editingUser, onFinish }) => {
               {errors.password_confirmation && <p className="text-red-500 text-sm">{errors.password_confirmation.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">Role</Label>
-              <Input
+              <Label htmlFor="role">Role</Label>
+              <Controller
                 name="role"
-                placeholder="Contoh: user"
-                {...register("role")}
+                control={control}
+                render={({ field: { onChange, value } }) => (
+                  <Select
+                    value={value}
+                    onValueChange={onChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih Role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {USER_ROLES.map((role) => (
+                        <SelectItem key={role} value={role}>{role}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               />
               {errors.role && <p className="text-red-500 text-sm">{errors.role.message}</p>}
             </div>

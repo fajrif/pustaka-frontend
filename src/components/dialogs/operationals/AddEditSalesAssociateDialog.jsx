@@ -166,7 +166,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
               <div className="space-y-2">
                 <Label htmlFor="code">Kode Sales Associate *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingSalesAssociate.code || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingSalesAssociate.code || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -181,7 +181,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
               <div className="space-y-2">
                 <Label htmlFor="name">Nama Sales Associate *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingSalesAssociate.name || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingSalesAssociate.name || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -197,7 +197,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
             <div className="space-y-2">
               <Label htmlFor="address">Alamat</Label>
               {isViewMode ? (
-                <p className="text-sm text-slate-900 py-2 whitespace-pre-wrap">{editingSalesAssociate.address || '-'}</p>
+                <p className="text-sm text-slate-900 p-2 border whitespace-pre-wrap">{editingSalesAssociate.address || '-'}</p>
               ) : (
                 <>
                   <Textarea
@@ -213,7 +213,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
               <div className="space-y-2">
                 <Label htmlFor="city_id">Kota *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{getCityName(editingSalesAssociate.city_id)}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{getCityName(editingSalesAssociate.city_id)}</p>
                 ) : (
                   <>
                     <Controller
@@ -244,7 +244,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
               <div className="space-y-2">
                 <Label htmlFor="area">Area</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingSalesAssociate.area || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingSalesAssociate.area || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -261,7 +261,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingSalesAssociate.email || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingSalesAssociate.email || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -277,7 +277,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
               <div className="space-y-2">
                 <Label htmlFor="website">Website</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingSalesAssociate.website || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingSalesAssociate.website || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -294,7 +294,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
               <div className="space-y-2">
                 <Label htmlFor="phone1">Phone 1</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingSalesAssociate.phone1 || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingSalesAssociate.phone1 || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -310,7 +310,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
               <div className="space-y-2">
                 <Label htmlFor="phone2">Phone 2</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingSalesAssociate.phone2 || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingSalesAssociate.phone2 || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -328,7 +328,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
               <div className="space-y-2">
                 <Label htmlFor="jenis_pembayaran">Jenis Pembayaran</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingSalesAssociate.jenis_pembayaran || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingSalesAssociate.jenis_pembayaran || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -343,7 +343,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
               <div className="space-y-2">
                 <Label htmlFor="discount">Diskon (%)</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingSalesAssociate.discount || 0}%</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingSalesAssociate.discount || 0}%</p>
                 ) : (
                   <>
                     <Input
@@ -362,7 +362,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
               <div className="space-y-2">
                 <Label htmlFor="join_date">Tanggal Bergabung</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{formatDisplayDate(editingSalesAssociate.join_date)}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{formatDisplayDate(editingSalesAssociate.join_date)}</p>
                 ) : (
                   <>
                     <Input
@@ -377,7 +377,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
               <div className="space-y-2">
                 <Label htmlFor="end_join_date">Tanggal Berakhir</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{formatDisplayDate(editingSalesAssociate.end_join_date)}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{formatDisplayDate(editingSalesAssociate.end_join_date)}</p>
                 ) : (
                   <>
                     <Input
@@ -393,7 +393,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
             <div className="space-y-2">
               <Label htmlFor="description">Deskripsi</Label>
               {isViewMode ? (
-                <p className="text-sm text-slate-900 py-2 whitespace-pre-wrap">{editingSalesAssociate.description || '-'}</p>
+                <p className="text-sm text-slate-900 p-2 border whitespace-pre-wrap">{editingSalesAssociate.description || '-'}</p>
               ) : (
                 <>
                   <Textarea

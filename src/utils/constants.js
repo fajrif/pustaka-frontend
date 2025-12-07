@@ -5,3 +5,8 @@ export const PAGINATION = {
 };
 
 // Other global constants can be added here
+export const USER_ROLES = [
+  "admin",
+  "user",
+  "operator",
+];

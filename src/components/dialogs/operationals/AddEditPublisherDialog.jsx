@@ -150,7 +150,7 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
               <div className="space-y-2">
                 <Label htmlFor="name">Kode Publisher *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingPublisher.code || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingPublisher.code || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -165,7 +165,7 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
               <div className="space-y-2">
                 <Label htmlFor="name">Nama Publisher *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingPublisher.name || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingPublisher.name || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -181,7 +181,7 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
             <div className="space-y-2">
               <Label htmlFor="address">Address</Label>
               {isViewMode ? (
-                <p className="text-sm text-slate-900 py-2 whitespace-pre-wrap">{editingPublisher.address || '-'}</p>
+                <p className="text-sm text-slate-900 p-2 border whitespace-pre-wrap">{editingPublisher.address || '-'}</p>
               ) : (
                 <>
                   <Textarea
@@ -197,7 +197,7 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
               <div className="space-y-2">
                 <Label htmlFor="city_id">Kota *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{getCityName(editingPublisher.city_id)}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{getCityName(editingPublisher.city_id)}</p>
                 ) : (
                   <>
                     <Controller
@@ -228,7 +228,7 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
               <div className="space-y-2">
                 <Label htmlFor="description">Area</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingPublisher.area || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingPublisher.area || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -245,7 +245,7 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
               <div className="space-y-2">
                 <Label htmlFor="code">Email</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingPublisher.email || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingPublisher.email || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -261,7 +261,7 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
               <div className="space-y-2">
                 <Label htmlFor="description">Website</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingPublisher.website || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingPublisher.website || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -278,7 +278,7 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
               <div className="space-y-2">
                 <Label htmlFor="description">Phone 1</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingPublisher.phone1 || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingPublisher.phone1 || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -294,7 +294,7 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
               <div className="space-y-2">
                 <Label htmlFor="description">Phone 2</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingPublisher.phone2 || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingPublisher.phone2 || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -311,7 +311,7 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
             <div className="space-y-2">
               <Label htmlFor="description">Deskripsi</Label>
               {isViewMode ? (
-                <p className="text-sm text-slate-900 py-2 whitespace-pre-wrap">{editingPublisher.description || '-'}</p>
+                <p className="text-sm text-slate-900 p-2 border whitespace-pre-wrap">{editingPublisher.description || '-'}</p>
               ) : (
                 <>
                   <Textarea

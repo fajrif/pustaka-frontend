@@ -150,7 +150,7 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
               <div className="space-y-2">
                 <Label htmlFor="name">Kode Ekspedisi *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingExpedition.code || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingExpedition.code || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -165,7 +165,7 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
               <div className="space-y-2">
                 <Label htmlFor="name">Nama Ekspedisi *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingExpedition.name || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingExpedition.name || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -181,7 +181,7 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
             <div className="space-y-2">
               <Label htmlFor="address">Address</Label>
               {isViewMode ? (
-                <p className="text-sm text-slate-900 py-2 whitespace-pre-wrap">{editingExpedition.address || '-'}</p>
+                <p className="text-sm text-slate-900 p-2 border whitespace-pre-wrap">{editingExpedition.address || '-'}</p>
               ) : (
                 <>
                   <Textarea
@@ -197,7 +197,7 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
               <div className="space-y-2">
                 <Label htmlFor="city_id">Kota *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{getCityName(editingExpedition.city_id)}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{getCityName(editingExpedition.city_id)}</p>
                 ) : (
                   <>
                     <Controller
@@ -228,7 +228,7 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
               <div className="space-y-2">
                 <Label htmlFor="description">Area</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingExpedition.area || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingExpedition.area || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -245,7 +245,7 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
               <div className="space-y-2">
                 <Label htmlFor="code">Email</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingExpedition.email || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingExpedition.email || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -261,7 +261,7 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
               <div className="space-y-2">
                 <Label htmlFor="description">Website</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingExpedition.website || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingExpedition.website || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -278,7 +278,7 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
               <div className="space-y-2">
                 <Label htmlFor="description">Phone 1</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingExpedition.phone1 || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingExpedition.phone1 || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -294,7 +294,7 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
               <div className="space-y-2">
                 <Label htmlFor="description">Phone 2</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingExpedition.phone2 || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingExpedition.phone2 || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -311,7 +311,7 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
             <div className="space-y-2">
               <Label htmlFor="description">Deskripsi</Label>
               {isViewMode ? (
-                <p className="text-sm text-slate-900 py-2 whitespace-pre-wrap">{editingExpedition.description || '-'}</p>
+                <p className="text-sm text-slate-900 p-2 border whitespace-pre-wrap">{editingExpedition.description || '-'}</p>
               ) : (
                 <>
                   <Textarea

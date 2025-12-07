@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { bookSchema } from "@/utils/validations/Book";
@@ -205,7 +206,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
               <div className="space-y-2">
                 <Label htmlFor="name">Nama Buku *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingBook.name || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingBook.name || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -220,7 +221,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
               <div className="space-y-2">
                 <Label htmlFor="author">Penulis</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingBook.author || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingBook.author || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -238,7 +239,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
               <div className="space-y-2">
                 <Label htmlFor="isbn">ISBN</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingBook.isbn || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingBook.isbn || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -253,7 +254,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
               <div className="space-y-2">
                 <Label htmlFor="year">Tahun</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingBook.year || '-'}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingBook.year || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -268,7 +269,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
               <div className="space-y-2">
                 <Label htmlFor="stock">Stok</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{editingBook.stock || 0}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{editingBook.stock || 0}</p>
                 ) : (
                   <>
                     <Input
@@ -286,7 +287,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
             <div className="space-y-2">
               <Label htmlFor="description">Deskripsi</Label>
               {isViewMode ? (
-                <p className="text-sm text-slate-900 py-2 whitespace-pre-wrap">{editingBook.description || '-'}</p>
+                <p className="text-sm text-slate-900 p-2 border whitespace-pre-wrap">{editingBook.description || '-'}</p>
               ) : (
                 <>
                   <Textarea
@@ -303,7 +304,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
               <div className="space-y-2">
                 <Label htmlFor="jenis_buku_id">Jenis Buku *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{getBookTypeName(editingBook.jenis_buku_id)}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{getBookTypeName(editingBook.jenis_buku_id)}</p>
                 ) : (
                   <>
                     <Controller
@@ -334,7 +335,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
               <div className="space-y-2">
                 <Label htmlFor="jenjang_studi_id">Jenjang Studi *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{getEducationLevelName(editingBook.jenjang_studi_id)}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{getEducationLevelName(editingBook.jenjang_studi_id)}</p>
                 ) : (
                   <>
                     <Controller
@@ -368,7 +369,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
               <div className="space-y-2">
                 <Label htmlFor="bidang_studi_id">Bidang Studi *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{getStudyFieldName(editingBook.bidang_studi_id)}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{getStudyFieldName(editingBook.bidang_studi_id)}</p>
                 ) : (
                   <>
                     <Controller
@@ -399,7 +400,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
               <div className="space-y-2">
                 <Label htmlFor="kelas_id">Kelas *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{getClassName(editingBook.kelas_id)}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{getClassName(editingBook.kelas_id)}</p>
                 ) : (
                   <>
                     <Controller
@@ -433,7 +434,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
               <div className="space-y-2">
                 <Label htmlFor="publisher_id">Publisher *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">{getPublisherName(editingBook.publisher_id)}</p>
+                  <p className="text-sm text-slate-900 p-2 border">{getPublisherName(editingBook.publisher_id)}</p>
                 ) : (
                   <>
                     <Controller
@@ -464,14 +465,13 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
               <div className="space-y-2">
                 <Label htmlFor="price">Harga</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 py-2">Rp {editingBook.price?.toLocaleString('id-ID') || 0}</p>
+                  <p className="text-sm text-slate-900 p-2 border">Rp {editingBook.price?.toLocaleString('id-ID') || 0}</p>
                 ) : (
                   <>
-                    <Input
+                    <CurrencyInput
                       name="price"
-                      type="number"
-                      placeholder="0"
-                      {...register("price", { valueAsNumber: true })}
+                      control={control}
+                      placeholder="Contoh: Rp.10,000"
                     />
                     {errors.price && <p className="text-red-500 text-sm">{errors.price.message}</p>}
                   </>

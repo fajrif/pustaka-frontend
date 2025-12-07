@@ -192,7 +192,7 @@ const MasterBook = () => {
                         <TableCell className="text-center">
                           {book.jenjang_studi ? (
                             <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                              {book.jenjang_studi?.name}
+                              {book.jenjang_studi?.code}
                             </Badge>
                           ) : (
                             <span className="text-sm text-slate-500">N/A</span>
