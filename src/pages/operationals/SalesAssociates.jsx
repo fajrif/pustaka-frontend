@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Plus, Pencil, Search, Filter, Trash2, Users } from 'lucide-react';
 import AddEditSalesAssociateDialog from '@/components/dialogs/operationals/AddEditSalesAssociateDialog';
@@ -146,57 +147,97 @@ const MasterSalesAssociate = () => {
                 Belum ada sales associate. Tambahkan sales associate pertama anda.
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {salesAssociatesData.sales_associates.map((salesAssociate) => (
-                  <Card key={salesAssociate.id} className="border-2 border-blue-80 hover:border-blue-300 hover:shadow-md transition-all">
-                    <CardHeader className="pb-3">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 mb-2">{salesAssociate.code}</Badge>
-                          <CardTitle className="text-lg">
-                            {salesAssociate.name}
-                          </CardTitle>
-                          {salesAssociate.discount > 0 && (
-                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 mt-2">
-                              Diskon: {salesAssociate.discount}%
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[150px]">Kode</TableHead>
+                        <TableHead>Nama</TableHead>
+                        <TableHead>Wilayah</TableHead>
+                        <TableHead>Pembayaran</TableHead>
+                        <TableHead>Diskon</TableHead>
+                        <TableHead>Dibuat</TableHead>
+                        <TableHead className="w-[150px] text-center">Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {salesAssociatesData.sales_associates.map((sales_associate) => (
+                        <TableRow key={sales_associate.id}>
+                          <TableCell>
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                              {sales_associate.code || 'N/A'}
                             </Badge>
-                          )}
-                        </div>
-                        <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(salesAssociate)}
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              if (confirm('Yakin ingin menghapus sales associate ini?')) {
-                                deleteMutation.mutate(salesAssociate.id);
-                              }
-                            }}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-slate-600">
-                        Email: {salesAssociate.email || '-'}<br/>
-                        Phone: {salesAssociate.phone1 || salesAssociate.phone2 || '-'}<br/>
-                        Area: {salesAssociate.area || '-'}<br/>
-                        {salesAssociate.jenis_pembayaran && <>Pembayaran: {salesAssociate.jenis_pembayaran}<br/></>}
-                        Dibuat pada: {formatDate(salesAssociate.created_at)}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-medium text-sm inline-block mb-1">
+                              {sales_associate.name}
+                            </span>
+                            <span className="text-xs block">
+                              Email: {sales_associate.author || '-'}
+                            </span>
+                            <span className="text-xs">
+                              Phone: {sales_associate.phone1 || sales_associate.phone2 || '-'}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-medium text-sm inline-block mb-1">
+                              {sales_associate.city?.name || 'N/A'}
+                            </span>
+                            <span className="text-xs block">
+                              Area: {sales_associate.area || '-'}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {sales_associate.jenis_pembayaran === 'T' ? (
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                Tunai
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                Kredit
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {sales_associate.discount > 0 && (
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 mt-2">
+                                {sales_associate.discount}%
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm text-slate-500">
+                              {formatDate(sales_associate.created_at)}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex justify-center gap-1">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => handleEdit(sales_associate)}
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => {
+                                  if (confirm('Yakin ingin menghapus sales_associate ini?')) {
+                                    deleteMutation.mutate(sales_associate.id);
+                                  }
+                                }}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
             )}
 
             {/* Pagination */}

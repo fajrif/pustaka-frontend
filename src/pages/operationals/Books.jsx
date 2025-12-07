@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Plus, Pencil, Search, Filter, Trash2, BookOpen } from 'lucide-react';
 import AddEditBookDialog from '@/components/dialogs/operationals/AddEditBookDialog';
@@ -105,7 +106,7 @@ const MasterBook = () => {
                 </p>
                 <div className="space-y-1 text-sm text-slate-600">
                   <p>• <strong className="font-semibold">Informasi Buku:</strong> Nama, penulis, ISBN, dan tahun terbit</p>
-                  <p>• <strong className="font-semibold">Klasifikasi:</strong> Jenis buku, jenjang studi, bidang studi, dan kelas</p>
+                  <p>• <strong className="font-semibold">Klasifikasi:</strong> Jenis buku, jenjang studi, bidang studi, dan book</p>
                   <p>• <strong className="font-semibold">Manajemen Stok:</strong> Kelola stok dan harga buku</p>
                 </div>
               </div>
@@ -146,62 +147,103 @@ const MasterBook = () => {
                 Belum ada buku. Tambahkan buku pertama anda.
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {booksData.books.map((book) => (
-                  <Card key={book.id} className="border-2 border-blue-80 hover:border-blue-300 hover:shadow-md transition-all">
-                    <CardHeader className="pb-3">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex gap-2 mb-2">
-                            {book.jenis_buku && (
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{book.jenis_buku.name}</Badge>
-                            )}
-                            {book.stock !== undefined && book.stock > 0 ? (
-                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Stok: {book.stock}</Badge>
-                            ) : (
-                              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Kosong</Badge>
-                            )}
-                          </div>
-                          <CardTitle className="text-lg">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[150px]">Kode Jenis</TableHead>
+                      <TableHead>Nama</TableHead>
+                      <TableHead>Publisher</TableHead>
+                      <TableHead>Kode Jenjang</TableHead>
+                      <TableHead>Harga</TableHead>
+                      <TableHead>Stock</TableHead>
+                      <TableHead>Dibuat</TableHead>
+                      <TableHead className="w-[150px] text-center">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {booksData.books.map((book) => (
+                      <TableRow key={book.id}>
+                        <TableCell>
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                            {book.jenis_buku?.code || 'N/A'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium text-sm inline-block mb-1">
                             {book.name}
-                          </CardTitle>
-                        </div>
-                        <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(book)}
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              if (confirm('Yakin ingin menghapus buku ini?')) {
-                                deleteMutation.mutate(book.id);
-                              }
-                            }}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-slate-600">
-                        {book.author && <><strong>Penulis:</strong> {book.author}<br/></>}
-                        {book.isbn && <><strong>ISBN:</strong> {book.isbn}<br/></>}
-                        {book.year && <><strong>Tahun:</strong> {book.year}<br/></>}
-                        {book.publisher && <><strong>Publisher:</strong> {book.publisher.name}<br/></>}
-                        {book.kelas && <><strong>Kelas:</strong> {book.kelas.name}<br/></>}
-                        {book.price !== undefined && <><strong>Harga:</strong> {formatRupiah(book.price)}<br/></>}
-                        <strong>Dibuat:</strong> {formatDate(book.created_at)}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
+                          </span>
+                          <span className="text-xs block">
+                            Pengarang: {book.author || '-'}
+                          </span>
+                          <span className="text-xs">
+                            ISBN: {book.isbn || '-'}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {book.publisher ? (
+                            <span className="text-sm">
+                              {book.publisher.name}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-slate-500">N/A</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {book.jenjang_studi ? (
+                            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                              {book.jenjang_studi?.name}
+                            </Badge>
+                          ) : (
+                            <span className="text-sm text-slate-500">N/A</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {book.price !== undefined ? (
+                            <span className="font-medium text-sm">
+                              {formatRupiah(book.price)}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-slate-500">Rp.0</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className="text-sm">
+                            {book.stock !== undefined ? book.stock : '0'}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-slate-500">
+                            {formatDate(book.created_at)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-center gap-1">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleEdit(book)}
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => {
+                                if (confirm('Yakin ingin menghapus book ini?')) {
+                                  deleteMutation.mutate(book.id);
+                                }
+                              }}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             )}
 
