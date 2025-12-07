@@ -12,9 +12,11 @@ import { Plus, Pencil, Search, Filter, Trash2, GraduationCap } from 'lucide-reac
 import AddEditJenjangStudiDialog from '@/components/dialogs/masters/AddEditJenjangStudiDialog';
 import Pagination from '@/components/Pagination';
 import { PAGINATION } from '@/utils/constants';
+import { useToast } from '@/components/ui/use-toast';
 
 const MasterJenjangStudi = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [showDialog, setShowDialog] = useState(false);
   const [editingJenjangStudi, setEditingJenjangStudi] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -66,6 +68,18 @@ const MasterJenjangStudi = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['jenjangStudi']);
+      toast({
+        title: "Success",
+        description: "Jenjang studi berhasil dihapus.",
+        variant: "success",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menghapus jenjang studi.",
+        variant: "destructive",
+      });
     }
   });
 

@@ -10,10 +10,12 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { updateProfileSchema } from "@/utils/validations/User";
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/components/ui/use-toast';
 
 const EditProfileDialog = ({ isOpen, onClose, user, onFinish }) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { toast } = useToast();
 
   const initialData = {
     full_name: user?.full_name || '',
@@ -50,6 +52,11 @@ const EditProfileDialog = ({ isOpen, onClose, user, onFinish }) => {
       return { data: response.data, passwordChanged: !!data.password };
     },
     onSuccess: ({ passwordChanged }) => {
+      toast({
+        title: "Success",
+        description: passwordChanged ? "Profile berhasil diperbarui. Silakan login kembali." : "Profile berhasil diperbarui.",
+        variant: "success",
+      });
       reset(initialData);
       onFinish(passwordChanged);
 
@@ -63,6 +70,11 @@ const EditProfileDialog = ({ isOpen, onClose, user, onFinish }) => {
     },
     onError: (error) => {
       console.error('Failed to update profile:', error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal memperbarui profile.",
+        variant: "destructive",
+      });
     }
   });
 

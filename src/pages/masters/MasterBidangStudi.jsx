@@ -12,9 +12,11 @@ import { Plus, Pencil, Search, Filter, Trash2, BookOpen } from 'lucide-react';
 import AddEditBidangStudiDialog from '@/components/dialogs/masters/AddEditBidangStudiDialog';
 import Pagination from '@/components/Pagination';
 import { PAGINATION } from '@/utils/constants';
+import { useToast } from '@/components/ui/use-toast';
 
 const MasterBidangStudi = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [showDialog, setShowDialog] = useState(false);
   const [editingBidangStudi, setEditingBidangStudi] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -66,6 +68,18 @@ const MasterBidangStudi = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['bidangStudi']);
+      toast({
+        title: "Success",
+        description: "Bidang studi berhasil dihapus.",
+        variant: "success",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menghapus bidang studi.",
+        variant: "destructive",
+      });
     }
   });
 

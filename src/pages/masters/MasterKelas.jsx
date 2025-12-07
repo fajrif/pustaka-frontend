@@ -12,9 +12,11 @@ import { Plus, Pencil, Search, Filter, Trash2, School } from 'lucide-react';
 import AddEditKelasDialog from '@/components/dialogs/masters/AddEditKelasDialog';
 import Pagination from '@/components/Pagination';
 import { PAGINATION } from '@/utils/constants';
+import { useToast } from '@/components/ui/use-toast';
 
 const MasterKelas = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [showDialog, setShowDialog] = useState(false);
   const [editingKelas, setEditingKelas] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -66,6 +68,18 @@ const MasterKelas = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['kelas']);
+      toast({
+        title: "Success",
+        description: "Kelas berhasil dihapus.",
+        variant: "success",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menghapus kelas.",
+        variant: "destructive",
+      });
     }
   });
 

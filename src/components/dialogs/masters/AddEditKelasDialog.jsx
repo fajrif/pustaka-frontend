@@ -9,9 +9,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { kelasSchema } from "@/utils/validations/Kelas";
+import { useToast } from '@/components/ui/use-toast';
 
 const AddEditKelasDialog = ({ isOpen, onClose, editingKelas, onFinish }) => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const initialData = {
     code: '',
@@ -41,7 +43,19 @@ const AddEditKelasDialog = ({ isOpen, onClose, editingKelas, onFinish }) => {
       return response.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Kelas berhasil ditambahkan.",
+        variant: "success",
+      });
       onFinishing();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menambahkan kelas.",
+        variant: "destructive",
+      });
     }
   });
 
@@ -51,7 +65,19 @@ const AddEditKelasDialog = ({ isOpen, onClose, editingKelas, onFinish }) => {
       return response.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Kelas berhasil diperbarui.",
+        variant: "success",
+      });
       onFinishing();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal memperbarui kelas.",
+        variant: "destructive",
+      });
     }
   });
 

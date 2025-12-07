@@ -12,9 +12,11 @@ import { Plus, Pencil, Search, Filter, Trash2, Tag } from 'lucide-react';
 import AddEditJenisBukuDialog from '@/components/dialogs/masters/AddEditJenisBukuDialog';
 import Pagination from '@/components/Pagination';
 import { PAGINATION } from '@/utils/constants';
+import { useToast } from '@/components/ui/use-toast';
 
 const MasterJenisBuku = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [showDialog, setShowDialog] = useState(false);
   const [editingBookType, setEditingBookType] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -66,6 +68,18 @@ const MasterJenisBuku = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['bookTypes']);
+      toast({
+        title: "Success",
+        description: "Jenis buku berhasil dihapus.",
+        variant: "success",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menghapus jenis buku.",
+        variant: "destructive",
+      });
     }
   });
 

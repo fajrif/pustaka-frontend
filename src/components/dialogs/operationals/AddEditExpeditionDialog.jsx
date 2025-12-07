@@ -11,9 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { expeditionSchema } from "@/utils/validations/Expedition";
 import { Edit } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish }) => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [isEditMode, setIsEditMode] = useState(false);
 
   const initialData = {
@@ -69,7 +71,19 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
       return response.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Ekspedisi berhasil ditambahkan.",
+        variant: "success",
+      });
       onFinishing();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menambahkan ekspedisi.",
+        variant: "destructive",
+      });
     }
   });
 
@@ -79,7 +93,19 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
       return response.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Ekspedisi berhasil diperbarui.",
+        variant: "success",
+      });
       onFinishing();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal memperbarui ekspedisi.",
+        variant: "destructive",
+      });
     }
   });
 

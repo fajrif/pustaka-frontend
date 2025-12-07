@@ -12,9 +12,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { salesAssociateSchema } from "@/utils/validations/SalesAssociate";
 import { Edit } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import { useToast } from '@/components/ui/use-toast';
 
 const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, onFinish }) => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [isEditMode, setIsEditMode] = useState(false);
 
   const initialData = {
@@ -76,7 +78,19 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
       return response.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Sales associate berhasil ditambahkan.",
+        variant: "success",
+      });
       onFinishing();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menambahkan sales associate.",
+        variant: "destructive",
+      });
     }
   });
 
@@ -86,7 +100,19 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
       return response.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Sales associate berhasil diperbarui.",
+        variant: "success",
+      });
       onFinishing();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal memperbarui sales associate.",
+        variant: "destructive",
+      });
     }
   });
 
