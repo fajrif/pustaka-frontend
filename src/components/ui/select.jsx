@@ -1,11 +1,19 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, Search } from "lucide-react"
 
 const Select = ({ children, value, onValueChange, ...props }) => {
   const [open, setOpen] = React.useState(false)
   const selectRef = React.useRef(null)
   const [selectedLabel, setSelectedLabel] = React.useState("")
+  const [searchTerm, setSearchTerm] = React.useState("")
+
+  // Reset search term when dropdown closes
+  React.useEffect(() => {
+    if (!open) {
+      setSearchTerm("")
+    }
+  }, [open])
 
   // Extract label from selected value
   React.useEffect(() => {
@@ -28,13 +36,16 @@ const Select = ({ children, value, onValueChange, ...props }) => {
   }, [value, children])
 
   return (
-    <div className="relative" ref__={selectRef}>
+    <div
+      className="relative"
+      ref__={selectRef}
+    >
       {React.Children.map(children, child => {
         if (child.type === SelectTrigger) {
           return React.cloneElement(child, { open, setOpen, value, selectedLabel })
         }
         if (child.type === SelectContent) {
-          return React.cloneElement(child, { open, setOpen, onValueChange, selectRef })
+          return React.cloneElement(child, { open, setOpen, onValueChange, selectRef, searchTerm, setSearchTerm })
         }
         return child
       })}
@@ -80,7 +91,9 @@ const SelectValue = ({ placeholder, selectedLabel, value }) => {
 }
 SelectValue.displayName = "SelectValue"
 
-const SelectContent = ({ className, children, open, setOpen, onValueChange, selectRef, ...props }) => {
+const SelectContent = ({ className, children, open, setOpen, onValueChange, selectRef, searchTerm, setSearchTerm, ...props }) => {
+  const searchInputRef = React.useRef(null)
+
   React.useEffect(() => {
     const handleClickOutside = (event) => {
       if (selectRef.current && !selectRef.current.contains(event.target)) {
@@ -99,17 +112,64 @@ const SelectContent = ({ className, children, open, setOpen, onValueChange, sele
 
   if (!open) return null
 
+  // Helper function to extract text from nested React elements
+  const extractText = (element) => {
+    if (typeof element === 'string') return element
+    if (typeof element === 'number') return element.toString()
+    if (!element) return ''
+
+    if (Array.isArray(element)) {
+      return element.map(extractText).join(' ')
+    }
+
+    if (React.isValidElement(element)) {
+      return extractText(element.props?.children)
+    }
+
+    return ''
+  }
+
+  // Filter children based on search term
+  const filteredChildren = React.Children.toArray(children).filter(child => {
+    if (!searchTerm) return true
+
+    const childText = extractText(child.props?.children).toLowerCase()
+    return childText.includes(searchTerm.toLowerCase())
+  })
+
   return (
     <div
       className={cn(
-        "absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md",
+        "absolute z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md",
         className
       )}
       {...props}
     >
-      {React.Children.map(children, child =>
-        React.cloneElement(child, { onValueChange, setOpen })
-      )}
+      {/* Search Input */}
+      <div className="flex items-center border-b px-3 py-2">
+        <Search className="h-4 w-4 opacity-50 mr-2" />
+        <input
+          ref__={searchInputRef}
+          type="text"
+          className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+          placeholder="Search..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      {/* Items List */}
+      <div className="max-h-60 overflow-auto p-1">
+        {filteredChildren.length > 0 ? (
+          React.Children.map(filteredChildren, child =>
+            React.cloneElement(child, { onValueChange, setOpen })
+          )
+        ) : (
+          <div className="py-6 text-center text-sm text-muted-foreground">
+            No results found.
+          </div>
+        )}
+      </div>
     </div>
   )
 }
