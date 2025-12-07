@@ -9,9 +9,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { jenjangStudiSchema } from "@/utils/validations/JenjangStudi";
+import { useToast } from '@/components/ui/use-toast';
 
 const AddEditJenjangStudiDialog = ({ isOpen, onClose, editingJenjangStudi, onFinish }) => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const initialData = {
     code: '',
@@ -42,7 +44,19 @@ const AddEditJenjangStudiDialog = ({ isOpen, onClose, editingJenjangStudi, onFin
       return response.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Jenjang studi berhasil ditambahkan.",
+        variant: "success",
+      });
       onFinishing();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menambahkan jenjang studi.",
+        variant: "destructive",
+      });
     }
   });
 
@@ -52,7 +66,19 @@ const AddEditJenjangStudiDialog = ({ isOpen, onClose, editingJenjangStudi, onFin
       return response.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Jenjang studi berhasil diperbarui.",
+        variant: "success",
+      });
       onFinishing();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal memperbarui jenjang studi.",
+        variant: "destructive",
+      });
     }
   });
 

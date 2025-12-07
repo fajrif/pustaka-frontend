@@ -8,9 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { citySchema } from "@/utils/validations/City";
+import { useToast } from '@/components/ui/use-toast';
 
 const AddEditCityDialog = ({ isOpen, onClose, editingCity, onFinish }) => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const initialData = {
     code: '',
@@ -39,7 +41,19 @@ const AddEditCityDialog = ({ isOpen, onClose, editingCity, onFinish }) => {
       return response.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "City berhasil ditambahkan.",
+        variant: "success",
+      });
       onFinishing();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menambahkan city.",
+        variant: "destructive",
+      });
     }
   });
 
@@ -49,7 +63,19 @@ const AddEditCityDialog = ({ isOpen, onClose, editingCity, onFinish }) => {
       return response.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "City berhasil diperbarui.",
+        variant: "success",
+      });
       onFinishing();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal memperbarui city.",
+        variant: "destructive",
+      });
     }
   });
 

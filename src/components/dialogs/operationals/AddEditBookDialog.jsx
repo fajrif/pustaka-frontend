@@ -11,9 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { bookSchema } from "@/utils/validations/Book";
 import { Edit } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [isEditMode, setIsEditMode] = useState(false);
 
   const initialData = {
@@ -104,7 +106,19 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
       return response.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Buku berhasil ditambahkan.",
+        variant: "success",
+      });
       onFinishing();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menambahkan buku.",
+        variant: "destructive",
+      });
     }
   });
 
@@ -114,7 +128,19 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
       return response.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Buku berhasil diperbarui.",
+        variant: "success",
+      });
       onFinishing();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal memperbarui buku.",
+        variant: "destructive",
+      });
     }
   });
 

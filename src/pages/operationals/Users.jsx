@@ -12,9 +12,11 @@ import Pagination from '@/components/Pagination';
 import { getRoleColor } from '@/utils/helpers/UserHelper';
 import { formatDate } from '@/utils/formatters';
 import { PAGINATION } from '@/utils/constants';
+import { useToast } from '@/components/ui/use-toast';
 
 const MasterUser = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [showDialog, setShowDialog] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -66,6 +68,18 @@ const MasterUser = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['users']);
+      toast({
+        title: "Success",
+        description: "User berhasil dihapus.",
+        variant: "success",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menghapus user.",
+        variant: "destructive",
+      });
     }
   });
 

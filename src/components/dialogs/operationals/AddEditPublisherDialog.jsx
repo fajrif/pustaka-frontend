@@ -11,9 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { publisherSchema } from "@/utils/validations/Publisher";
 import { Edit } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish }) => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [isEditMode, setIsEditMode] = useState(false);
 
   const initialData = {
@@ -69,7 +71,19 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
       return response.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Publisher berhasil ditambahkan.",
+        variant: "success",
+      });
       onFinishing();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menambahkan publisher.",
+        variant: "destructive",
+      });
     }
   });
 
@@ -79,7 +93,19 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
       return response.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Publisher berhasil diperbarui.",
+        variant: "success",
+      });
       onFinishing();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal memperbarui publisher.",
+        variant: "destructive",
+      });
     }
   });
 

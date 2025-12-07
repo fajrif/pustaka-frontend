@@ -9,9 +9,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { jenisBukuSchema } from "@/utils/validations/JenisBuku";
+import { useToast } from '@/components/ui/use-toast';
 
 const AddEditJenisBukuDialog = ({ isOpen, onClose, editingBookType, onFinish }) => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const initialData = {
     code: '',
@@ -41,7 +43,19 @@ const AddEditJenisBukuDialog = ({ isOpen, onClose, editingBookType, onFinish }) 
       return response.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Jenis buku berhasil ditambahkan.",
+        variant: "success",
+      });
       onFinishing();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menambahkan jenis buku.",
+        variant: "destructive",
+      });
     }
   });
 
@@ -51,7 +65,19 @@ const AddEditJenisBukuDialog = ({ isOpen, onClose, editingBookType, onFinish }) 
       return response.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Jenis buku berhasil diperbarui.",
+        variant: "success",
+      });
       onFinishing();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal memperbarui jenis buku.",
+        variant: "destructive",
+      });
     }
   });
 

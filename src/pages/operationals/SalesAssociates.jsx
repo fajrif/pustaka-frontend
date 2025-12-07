@@ -11,9 +11,11 @@ import AddEditSalesAssociateDialog from '@/components/dialogs/operationals/AddEd
 import Pagination from '@/components/Pagination';
 import { formatDate } from '@/utils/formatters';
 import { PAGINATION } from '@/utils/constants';
+import { useToast } from '@/components/ui/use-toast';
 
 const MasterSalesAssociate = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [showDialog, setShowDialog] = useState(false);
   const [editingSalesAssociate, setEditingSalesAssociate] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -65,6 +67,18 @@ const MasterSalesAssociate = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['salesAssociates']);
+      toast({
+        title: "Success",
+        description: "Sales associate berhasil dihapus.",
+        variant: "success",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menghapus sales associate.",
+        variant: "destructive",
+      });
     }
   });
 

@@ -11,9 +11,11 @@ import { Plus, Pencil, Search, Filter, Trash2, MapPin } from 'lucide-react';
 import AddEditCityDialog from '@/components/dialogs/masters/AddEditCityDialog';
 import Pagination from '@/components/Pagination';
 import { PAGINATION } from '@/utils/constants';
+import { useToast } from '@/components/ui/use-toast';
 
 const MasterCities = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [showDialog, setShowDialog] = useState(false);
   const [editingCity, setEditingCity] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -65,6 +67,18 @@ const MasterCities = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['cities']);
+      toast({
+        title: "Success",
+        description: "City berhasil dihapus.",
+        variant: "success",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menghapus city.",
+        variant: "destructive",
+      });
     }
   });
 

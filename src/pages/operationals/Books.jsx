@@ -11,9 +11,11 @@ import AddEditBookDialog from '@/components/dialogs/operationals/AddEditBookDial
 import Pagination from '@/components/Pagination';
 import { formatDate, formatRupiah } from '@/utils/formatters';
 import { PAGINATION } from '@/utils/constants';
+import { useToast } from '@/components/ui/use-toast';
 
 const MasterBook = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [showDialog, setShowDialog] = useState(false);
   const [editingBook, setEditingBook] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -65,6 +67,18 @@ const MasterBook = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['books']);
+      toast({
+        title: "Success",
+        description: "Buku berhasil dihapus.",
+        variant: "success",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menghapus buku.",
+        variant: "destructive",
+      });
     }
   });
 

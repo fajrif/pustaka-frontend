@@ -11,9 +11,11 @@ import AddEditExpeditionDialog from '@/components/dialogs/operationals/AddEditEx
 import Pagination from '@/components/Pagination';
 import { formatDate } from '@/utils/formatters';
 import { PAGINATION } from '@/utils/constants';
+import { useToast } from '@/components/ui/use-toast';
 
 const MasterExpedition = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [showDialog, setShowDialog] = useState(false);
   const [editingExpedition, setEditingExpedition] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -65,6 +67,18 @@ const MasterExpedition = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['expeditions']);
+      toast({
+        title: "Success",
+        description: "Ekspedisi berhasil dihapus.",
+        variant: "success",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menghapus ekspedisi.",
+        variant: "destructive",
+      });
     }
   });
 

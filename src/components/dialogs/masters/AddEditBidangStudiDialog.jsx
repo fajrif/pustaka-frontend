@@ -9,9 +9,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { bidangStudiSchema } from "@/utils/validations/BidangStudi";
+import { useToast } from '@/components/ui/use-toast';
 
 const AddEditBidangStudiDialog = ({ isOpen, onClose, editingBidangStudi, onFinish }) => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const initialData = {
     code: '',
@@ -41,7 +43,19 @@ const AddEditBidangStudiDialog = ({ isOpen, onClose, editingBidangStudi, onFinis
       return response.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Bidang studi berhasil ditambahkan.",
+        variant: "success",
+      });
       onFinishing();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menambahkan bidang studi.",
+        variant: "destructive",
+      });
     }
   });
 
@@ -51,7 +65,19 @@ const AddEditBidangStudiDialog = ({ isOpen, onClose, editingBidangStudi, onFinis
       return response.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Bidang studi berhasil diperbarui.",
+        variant: "success",
+      });
       onFinishing();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal memperbarui bidang studi.",
+        variant: "destructive",
+      });
     }
   });
 

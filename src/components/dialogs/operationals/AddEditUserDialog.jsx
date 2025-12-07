@@ -8,9 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { userSchema, userSchemaWithPasswordConfirmation } from "@/utils/validations/User";
+import { useToast } from '@/components/ui/use-toast';
 
 const AddEditUserDialog = ({ isOpen, onClose, editingUser, onFinish }) => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const initialData = {
     email: '',
@@ -40,7 +42,19 @@ const AddEditUserDialog = ({ isOpen, onClose, editingUser, onFinish }) => {
       return response.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "User berhasil ditambahkan.",
+        variant: "success",
+      });
       onFinishing();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menambahkan user.",
+        variant: "destructive",
+      });
     }
   });
 
@@ -50,7 +64,19 @@ const AddEditUserDialog = ({ isOpen, onClose, editingUser, onFinish }) => {
       return response.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "User berhasil diperbarui.",
+        variant: "success",
+      });
       onFinishing();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal memperbarui user.",
+        variant: "destructive",
+      });
     }
   });
 
