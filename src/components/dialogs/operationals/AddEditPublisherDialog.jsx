@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Select from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { publisherSchema } from "@/utils/validations/Publisher";
 import { Edit } from 'lucide-react';
@@ -203,22 +203,19 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
                     <Controller
                       name="city_id"
                       control={control}
-                      render={({ field: { onChange, value } }) => (
+                      render={({ field: { onChange, value }, fieldState: { error } }) => (
                         <Select
+                          options={citiesData.cities.map((type) => ({
+                            value: type.id,
+                            label: type.name
+                          }))}
                           value={value}
-                          onValueChange={onChange}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Pilih kota" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {citiesData.cities.map((city) => (
-                              <SelectItem key={city.id} value={city.id}>
-                                <span className="font-medium">{city.name}</span>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          onChange={onChange}
+                          placeholder="Pilih kota"
+                          error={!!error}
+                          searchable={true}
+                          clearable={true}
+                        />
                       )}
                     />
                     {errors.city_id && <p className="text-red-500 text-sm">{errors.city_id.message}</p>}

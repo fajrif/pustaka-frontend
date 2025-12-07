@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Select from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { bookSchema } from "@/utils/validations/Book";
 import { Edit } from 'lucide-react';
@@ -310,22 +310,19 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
                     <Controller
                       name="jenis_buku_id"
                       control={control}
-                      render={({ field: { onChange, value } }) => (
+                      render={({ field: { onChange, value }, fieldState: { error } }) => (
                         <Select
+                          options={bookTypesData.jenis_buku.map((type) => ({
+                            value: type.id,
+                            label: type.name
+                          }))}
                           value={value}
-                          onValueChange={onChange}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Pilih jenis buku" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {bookTypesData.jenis_buku.map((type) => (
-                              <SelectItem key={type.id} value={type.id}>
-                                <span className="font-medium">{type.name}</span>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          onChange={onChange}
+                          placeholder="Pilih jenis buku"
+                          error={!!error}
+                          searchable={true}
+                          clearable={true}
+                        />
                       )}
                     />
                     {errors.jenis_buku_id && <p className="text-red-500 text-sm">{errors.jenis_buku_id.message}</p>}
@@ -341,22 +338,19 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
                     <Controller
                       name="jenjang_studi_id"
                       control={control}
-                      render={({ field: { onChange, value } }) => (
+                      render={({ field: { onChange, value }, fieldState: { error } }) => (
                         <Select
+                          options={educationLevelsData.jenjang_studi.map((type) => ({
+                            value: type.id,
+                            label: type.name
+                          }))}
                           value={value}
-                          onValueChange={onChange}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Pilih jenjang studi" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {educationLevelsData.jenjang_studi.map((level) => (
-                              <SelectItem key={level.id} value={level.id}>
-                                <span className="font-medium">{level.name}</span>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          onChange={onChange}
+                          placeholder="Pilih jenjang studi"
+                          error={!!error}
+                          searchable={true}
+                          clearable={true}
+                        />
                       )}
                     />
                     {errors.jenjang_studi_id && <p className="text-red-500 text-sm">{errors.jenjang_studi_id.message}</p>}
@@ -375,22 +369,19 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
                     <Controller
                       name="bidang_studi_id"
                       control={control}
-                      render={({ field: { onChange, value } }) => (
+                      render={({ field: { onChange, value }, fieldState: { error } }) => (
                         <Select
+                          options={studyFieldsData.bidang_studi.map((type) => ({
+                            value: type.id,
+                            label: type.name
+                          }))}
                           value={value}
-                          onValueChange={onChange}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Pilih bidang studi" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {studyFieldsData.bidang_studi.map((field) => (
-                              <SelectItem key={field.id} value={field.id}>
-                                <span className="font-medium">{field.name}</span>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          onChange={onChange}
+                          placeholder="Pilih bidang studi"
+                          error={!!error}
+                          searchable={true}
+                          clearable={true}
+                        />
                       )}
                     />
                     {errors.bidang_studi_id && <p className="text-red-500 text-sm">{errors.bidang_studi_id.message}</p>}
@@ -406,22 +397,19 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
                     <Controller
                       name="kelas_id"
                       control={control}
-                      render={({ field: { onChange, value } }) => (
+                      render={({ field: { onChange, value }, fieldState: { error } }) => (
                         <Select
+                          options={classesData.kelas.map((type) => ({
+                            value: type.id,
+                            label: type.name
+                          }))}
                           value={value}
-                          onValueChange={onChange}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Pilih kelas" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {classesData.kelas.map((kelas) => (
-                              <SelectItem key={kelas.id} value={kelas.id}>
-                                <span className="font-medium">{kelas.name}</span>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          onChange={onChange}
+                          placeholder="Pilih kelas"
+                          error={!!error}
+                          searchable={true}
+                          clearable={true}
+                        />
                       )}
                     />
                     {errors.kelas_id && <p className="text-red-500 text-sm">{errors.kelas_id.message}</p>}
@@ -440,22 +428,19 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
                     <Controller
                       name="publisher_id"
                       control={control}
-                      render={({ field: { onChange, value } }) => (
+                      render={({ field: { onChange, value }, fieldState: { error } }) => (
                         <Select
+                          options={publishersData.publishers.map((type) => ({
+                            value: type.id,
+                            label: type.name
+                          }))}
                           value={value}
-                          onValueChange={onChange}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Pilih publisher" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {publishersData.publishers.map((publisher) => (
-                              <SelectItem key={publisher.id} value={publisher.id}>
-                                <span className="font-medium">{publisher.name}</span>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          onChange={onChange}
+                          placeholder="Pilih publisher"
+                          error={!!error}
+                          searchable={true}
+                          clearable={true}
+                        />
                       )}
                     />
                     {errors.publisher_id && <p className="text-red-500 text-sm">{errors.publisher_id.message}</p>}
