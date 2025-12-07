@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Select from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { userSchema, userSchemaWithPasswordConfirmation } from "@/utils/validations/User";
 import { useToast } from '@/components/ui/use-toast';
@@ -153,20 +153,19 @@ const AddEditUserDialog = ({ isOpen, onClose, editingUser, onFinish }) => {
               <Controller
                 name="role"
                 control={control}
-                render={({ field: { onChange, value } }) => (
+                render={({ field: { onChange, value }, fieldState: { error } }) => (
                   <Select
+                    options={USER_ROLES.map((role) => ({
+                      value: role,
+                      label: role
+                    }))}
                     value={value}
-                    onValueChange={onChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih Role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {USER_ROLES.map((role) => (
-                        <SelectItem key={role} value={role}>{role}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onChange={onChange}
+                    placeholder="Pilih role"
+                    error={!!error}
+                    searchable={false}
+                    clearable={false}
+                  />
                 )}
               />
               {errors.role && <p className="text-red-500 text-sm">{errors.role.message}</p>}

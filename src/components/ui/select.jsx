@@ -1,195 +1,207 @@
-import * as React from "react"
-import { cn } from "@/lib/utils"
-import { ChevronDown, Search } from "lucide-react"
+import React, { useState, useRef, useEffect } from 'react'
+import { cn } from '@/lib/utils'
+import { ChevronDown, Search, X } from 'lucide-react'
 
-const Select = ({ children, value, onValueChange, ...props }) => {
-  const [open, setOpen] = React.useState(false)
-  const selectRef = React.useRef(null)
-  const [selectedLabel, setSelectedLabel] = React.useState("")
-  const [searchTerm, setSearchTerm] = React.useState("")
+/**
+ * Select Component - A searchable select component that works with react-hook-form
+ *
+ * @param {Object} props
+ * @param {Array} props.options - Array of options [{value: string, label: string}]
+ * @param {string} props.value - Selected value
+ * @param {Function} props.onChange - Change handler
+ * @param {string} props.placeholder - Placeholder text
+ * @param {boolean} props.disabled - Disabled state
+ * @param {string} props.className - Additional classes
+ * @param {boolean} props.error - Error state
+ * @param {boolean} props.searchable - Enable search (default: true)
+ * @param {boolean} props.clearable - Show clear button (default: true)
+ * @param {string} props.emptyMessage - Message when no options (default: "No options available")
+ */
+const Select = ({
+  options = [],
+  value,
+  onChange,
+  placeholder = 'Select...',
+  disabled = false,
+  className = '',
+  error = false,
+  searchable = true,
+  clearable = true,
+  emptyMessage = 'No options available',
+  ...props
+}) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const selectRef = useRef(null)
+  const searchInputRef = useRef(null)
 
-  // Reset search term when dropdown closes
-  React.useEffect(() => {
-    if (!open) {
-      setSearchTerm("")
-    }
-  }, [open])
+  // Get selected option label
+  const selectedOption = options.find(opt => opt.value === value)
+  const selectedLabel = selectedOption?.label || ''
 
-  // Extract label from selected value
-  React.useEffect(() => {
-    if (value && children) {
-      const content = React.Children.toArray(children).find(
-        child => child.type === SelectContent
+  // Filter options based on search term
+  const filteredOptions = searchable && searchTerm
+    ? options.filter(option =>
+        option.label.toLowerCase().includes(searchTerm.toLowerCase())
       )
+    : options
 
-      if (content) {
-        const items = React.Children.toArray(content.props.children)
-        const selectedItem = items.find(item => item.props.value === value)
-
-        if (selectedItem) {
-          setSelectedLabel(selectedItem.props.children)
-        }
-      }
-    } else {
-      setSelectedLabel("")
-    }
-  }, [value, children])
-
-  return (
-    <div
-      className="relative"
-      ref__={selectRef}
-    >
-      {React.Children.map(children, child => {
-        if (child.type === SelectTrigger) {
-          return React.cloneElement(child, { open, setOpen, value, selectedLabel })
-        }
-        if (child.type === SelectContent) {
-          return React.cloneElement(child, { open, setOpen, onValueChange, selectRef, searchTerm, setSearchTerm })
-        }
-        return child
-      })}
-    </div>
-  )
-}
-Select.displayName = "Select"
-
-const SelectTrigger = React.forwardRef(({ className, children, open, setOpen, value, selectedLabel, ...props }, ref) => {
-  // Find SelectValue child and pass selectedLabel to it
-  const updatedChildren = React.Children.map(children, child => {
-    if (child?.type === SelectValue) {
-      return React.cloneElement(child, { selectedLabel, value })
-    }
-    return child
-  })
-
-  return (
-    <button
-      type="button"
-      ref__={ref}
-      className={cn(
-        "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-        className
-      )}
-      onClick={() => setOpen(!open)}
-      {...props}
-    >
-      {updatedChildren}
-      <ChevronDown className="h-4 w-4 opacity-50" />
-    </button>
-  )
-})
-SelectTrigger.displayName = "SelectTrigger"
-
-const SelectValue = ({ placeholder, selectedLabel, value }) => {
-  // Show selected label if exists, otherwise show placeholder
-  return (
-    <span className={!selectedLabel ? "text-muted-foreground" : ""}>
-      {selectedLabel || placeholder}
-    </span>
-  )
-}
-SelectValue.displayName = "SelectValue"
-
-const SelectContent = ({ className, children, open, setOpen, onValueChange, selectRef, searchTerm, setSearchTerm, ...props }) => {
-  const searchInputRef = React.useRef(null)
-
-  React.useEffect(() => {
+  // Handle click outside
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (selectRef.current && !selectRef.current.contains(event.target)) {
-        setOpen(false)
+        setIsOpen(false)
+        setSearchTerm('')
       }
     }
 
-    if (open) {
+    if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside)
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [open, setOpen, selectRef])
+  }, [isOpen])
 
-  if (!open) return null
+  // Auto-focus search input when dropdown opens
+  useEffect(() => {
+    if (isOpen && searchable && searchInputRef.current) {
+      setTimeout(() => {
+        searchInputRef.current?.focus()
+      }, 0)
+    }
+  }, [isOpen, searchable])
 
-  // Helper function to extract text from nested React elements
-  const extractText = (element) => {
-    if (typeof element === 'string') return element
-    if (typeof element === 'number') return element.toString()
-    if (!element) return ''
-
-    if (Array.isArray(element)) {
-      return element.map(extractText).join(' ')
+  // Handle escape key
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape' && isOpen) {
+        setIsOpen(false)
+        setSearchTerm('')
+      }
     }
 
-    if (React.isValidElement(element)) {
-      return extractText(element.props?.children)
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
     }
+  }, [isOpen])
 
-    return ''
+  const handleToggle = () => {
+    if (!disabled) {
+      setIsOpen(!isOpen)
+      if (isOpen) {
+        setSearchTerm('')
+      }
+    }
   }
 
-  // Filter children based on search term
-  const filteredChildren = React.Children.toArray(children).filter(child => {
-    if (!searchTerm) return true
+  const handleSelect = (option) => {
+    onChange(option.value)
+    setIsOpen(false)
+    setSearchTerm('')
+  }
 
-    const childText = extractText(child.props?.children).toLowerCase()
-    return childText.includes(searchTerm.toLowerCase())
-  })
+  const handleClear = (e) => {
+    e.stopPropagation()
+    onChange('')
+    setSearchTerm('')
+  }
 
   return (
-    <div
-      className={cn(
-        "absolute z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md",
-        className
-      )}
-      {...props}
-    >
-      {/* Search Input */}
-      <div className="flex items-center border-b px-3 py-2">
-        <Search className="h-4 w-4 opacity-50 mr-2" />
-        <input
-          ref__={searchInputRef}
-          type="text"
-          className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-          placeholder="Search..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
-
-      {/* Items List */}
-      <div className="max-h-60 overflow-auto p-1">
-        {filteredChildren.length > 0 ? (
-          React.Children.map(filteredChildren, child =>
-            React.cloneElement(child, { onValueChange, setOpen })
-          )
-        ) : (
-          <div className="py-6 text-center text-sm text-muted-foreground">
-            No results found.
-          </div>
+    <div ref={selectRef} className={cn('relative w-full', className)} {...props}>
+      {/* Trigger Button */}
+      <button
+        type="button"
+        onClick={handleToggle}
+        disabled={disabled}
+        className={cn(
+          'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm',
+          'ring-offset-background placeholder:text-muted-foreground',
+          'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+          'disabled:cursor-not-allowed disabled:opacity-50',
+          'transition-colors',
+          error && 'border-red-500 focus:ring-red-500',
+          className
         )}
-      </div>
+      >
+        <span className={cn('truncate', !selectedLabel && 'text-muted-foreground')}>
+          {selectedLabel || placeholder}
+        </span>
+
+        <div className="flex items-center gap-1">
+          {clearable && selectedLabel && !disabled && (
+            <X
+              className="h-4 w-4 opacity-50 hover:opacity-100 transition-opacity"
+              onClick={handleClear}
+            />
+          )}
+          <ChevronDown
+            className={cn(
+              'h-4 w-4 opacity-50 transition-transform',
+              isOpen && 'transform rotate-180'
+            )}
+          />
+        </div>
+      </button>
+
+      {/* Dropdown */}
+      {isOpen && (
+        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95">
+          {/* Search Input */}
+          {searchable && (
+            <div className="flex items-center border-b px-3 py-2 bg-background/50">
+              <Search className="h-4 w-4 opacity-50 mr-2 flex-shrink-0" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              {searchTerm && (
+                <X
+                  className="h-4 w-4 opacity-50 hover:opacity-100 cursor-pointer transition-opacity ml-2 flex-shrink-0"
+                  onClick={() => setSearchTerm('')}
+                />
+              )}
+            </div>
+          )}
+
+          {/* Options List */}
+          <div className="max-h-60 overflow-auto p-1">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((option) => (
+                <div
+                  key={option.value}
+                  onClick={() => handleSelect(option)}
+                  className={cn(
+                    'relative flex w-full cursor-pointer select-none items-center rounded-sm py-2 px-3 text-sm outline-none',
+                    'hover:bg-accent hover:text-accent-foreground',
+                    'transition-colors',
+                    option.value === value && 'bg-accent/50 font-medium'
+                  )}
+                >
+                  {option.label}
+                  {option.value === value && (
+                    <span className="ml-auto text-xs opacity-50">✓</span>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="py-6 text-center text-sm text-muted-foreground">
+                {searchTerm ? 'No results found.' : emptyMessage}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
-SelectContent.displayName = "SelectContent"
 
-const SelectItem = ({ className, children, value, onValueChange, setOpen, ...props }) => (
-  <div
-    className={cn(
-      "relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-      className
-    )}
-    onClick={() => {
-      onValueChange(value)
-      setOpen(false)
-    }}
-    {...props}
-  >
-    {children}
-  </div>
-)
-SelectItem.displayName = "SelectItem"
+Select.displayName = 'Select'
 
-export { Select, SelectTrigger, SelectValue, SelectContent, SelectItem }
+export default Select
