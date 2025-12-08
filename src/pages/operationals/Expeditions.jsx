@@ -21,9 +21,9 @@ const MasterExpedition = () => {
   const [editingExpedition, setEditingExpedition] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(PAGINATION.DEFAULT_PAGE);
-  const limit = PAGINATION.DEFAULT_LIMIT;
+  const limit = 9;
 
-  const { data: expeditionsData = { expeditions: [], pagination: { total: 0, page: 1, limit: PAGINATION.DEFAULT_LIMIT, total_pages: 0 } }, isLoading } = useQuery({
+  const { data: expeditionsData = { expeditions: [], pagination: { total: 0, page: 1, limit: 9, total_pages: 0 } }, isLoading } = useQuery({
     queryKey: ['expeditions', searchTerm, currentPage, limit],
     queryFn: async () => {
       const response = await api.get('/expeditions', {
