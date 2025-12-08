@@ -43,7 +43,7 @@ const AddEditUserDialog = ({ isOpen, onClose, editingUser, onFinish }) => {
       const response = await api.post('/users', data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: async (responseData) => {
       toast({
         title: "Success",
         description: "User berhasil ditambahkan.",
@@ -65,7 +65,7 @@ const AddEditUserDialog = ({ isOpen, onClose, editingUser, onFinish }) => {
       const response = await api.put(`/users/${id}`, data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: async (responseData, variables) => {
       toast({
         title: "Success",
         description: "User berhasil diperbarui.",

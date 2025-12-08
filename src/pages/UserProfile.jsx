@@ -4,13 +4,16 @@ import { authAPI } from '@/api/endpoints';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { User, Mail, Shield, Pencil, UserCircle } from 'lucide-react';
+import { User, Mail, Shield, Pencil, UserCircle, Camera } from 'lucide-react';
 import { getRoleColor } from '@/utils/helpers/UserHelper';
+import { getAssetUrl } from '@/helpers/AssetHelper';
 import EditProfileDialog from '@/components/dialogs/EditProfileDialog';
+import UserUploadPhotoDialog from '@/components/dialogs/UserUploadPhotoDialog';
 
 const UserProfile = () => {
   const queryClient = useQueryClient();
   const [showDialog, setShowDialog] = useState(false);
+  const [showPhotoDialog, setShowPhotoDialog] = useState(false);
 
   const { data: profileData, isLoading } = useQuery({
     queryKey: ['userProfile'],
@@ -31,6 +34,11 @@ const UserProfile = () => {
       queryClient.invalidateQueries(['userProfile']);
     }
     setShowDialog(false);
+  };
+
+  const handlePhotoUploadFinish = () => {
+    queryClient.invalidateQueries(['userProfile']);
+    setShowPhotoDialog(false);
   };
 
   return (
@@ -91,10 +99,34 @@ const UserProfile = () => {
               <div className="space-y-6">
                 {/* Avatar Section */}
                 <div className="flex items-center gap-4 pb-6 border-b border-slate-100">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-2xl">
-                      {profileData?.full_name?.charAt(0) || 'U'}
-                    </span>
+                  <div
+                    className="relative group cursor-pointer"
+                    onClick={() => setShowPhotoDialog(true)}
+                  >
+                    {profileData?.photo_url ? (
+                      <img
+                        src={getAssetUrl(profileData.photo_url)}
+                        alt="Profile Photo"
+                        className="w-20 h-20 rounded-full object-cover border-2 border-slate-200"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center"
+                      style={{ display: profileData?.photo_url ? 'none' : 'flex' }}
+                    >
+                      <span className="text-white font-bold text-2xl">
+                        {profileData?.full_name?.charAt(0) || 'U'}
+                      </span>
+                    </div>
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Camera className="w-6 h-6 text-white" />
+                    </div>
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold text-slate-900">
@@ -164,6 +196,15 @@ const UserProfile = () => {
         onClose={() => setShowDialog(false)}
         user={profileData}
         onFinish={handleFinishEdit}
+      />
+
+      {/* Upload Photo Dialog */}
+      <UserUploadPhotoDialog
+        isOpen={showPhotoDialog}
+        onClose={() => setShowPhotoDialog(false)}
+        userId={profileData?.id}
+        currentPhotoUrl={profileData?.photo_url}
+        onFinish={handlePhotoUploadFinish}
       />
     </div>
   );

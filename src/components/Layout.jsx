@@ -17,6 +17,7 @@ import {
   BookText,
 } from 'lucide-react';
 import { Button } from './ui/button';
+import { getAssetUrl } from '@/helpers/AssetHelper';
 
 const navigationItems = [
   {
@@ -186,9 +187,24 @@ export default function Layout({ children }) {
                 }}
                 className="w-full justify-start items-center gap-3 px-2 py-6 text-slate-600 hover:text-blue-600 hover:border-blue-200"
               >
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                {user.photo_url ? (
+                  <img
+                    src={getAssetUrl(user.photo_url)}
+                    alt="Profile Photo"
+                    className="w-10 h-10 rounded-full object-cover border-2 border-slate-200"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div
+                  className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center"
+                  style={{ display: user.photo_url ? 'none' : 'flex' }}
+                >
                   <span className="text-white font-semibold text-sm">
-                    {user?.full_name?.charAt(0) || 'U'}
+                    {user.full_name?.charAt(0) || 'U'}
                   </span>
                 </div>
                 <div className="flex-1 text-left min-w-0">

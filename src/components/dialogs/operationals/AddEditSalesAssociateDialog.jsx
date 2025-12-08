@@ -10,14 +10,17 @@ import { Textarea } from '@/components/ui/textarea';
 import Select from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { salesAssociateSchema } from "@/utils/validations/SalesAssociate";
-import { Edit } from 'lucide-react';
+import { Edit, FileText, X } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
+import { getAssetUrl, validateImageFile, validatePdfFile, getFilenameFromUrl } from '@/helpers/AssetHelper';
 
 const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, onFinish }) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [isEditMode, setIsEditMode] = useState(false);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [pdfFile, setPdfFile] = useState(null);
 
   const initialData = {
     code: '',
@@ -63,6 +66,62 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
     }
   }, [isOpen]);
 
+  // Handle file upload
+  const uploadFile = async (salesAssociateId, file, field) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      await api.post(`/upload/sales-associates/${field}/${salesAssociateId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    } catch (error) {
+      toast({
+        title: "Warning",
+        description: `Data berhasil disimpan, tetapi gagal mengupload ${field}.`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const validation = validateImageFile(file);
+      if (validation.valid) {
+        setPhotoFile(file);
+      } else {
+        toast({
+          title: "Error",
+          description: validation.error,
+          variant: "destructive",
+        });
+        e.target.value = '';
+        setPhotoFile(null);
+      }
+    }
+  };
+
+  const handlePdfChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const validation = validatePdfFile(file);
+      if (validation.valid) {
+        setPdfFile(file);
+      } else {
+        toast({
+          title: "Error",
+          description: validation.error,
+          variant: "destructive",
+        });
+        e.target.value = '';
+        setPdfFile(null);
+      }
+    }
+  };
+
   const { data: citiesData = { cities: [] } } = useQuery({
     queryKey: ['cities'],
     queryFn: async () => {
@@ -77,7 +136,17 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
       const response = await api.post('/sales-associates', data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: async (responseData) => {
+      // Upload files if provided
+      if (responseData.sales_associate?.id) {
+        if (photoFile) {
+          await uploadFile(responseData.sales_associate.id, photoFile, 'photo');
+        }
+        if (pdfFile) {
+          await uploadFile(responseData.sales_associate.id, pdfFile, 'file');
+        }
+      }
+
       toast({
         title: "Success",
         description: "Sales associate berhasil ditambahkan.",
@@ -99,7 +168,15 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
       const response = await api.put(`/sales-associates/${id}`, data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: async (responseData, variables) => {
+      // Upload files if provided
+      if (photoFile) {
+        await uploadFile(variables.id, photoFile, 'photo');
+      }
+      if (pdfFile) {
+        await uploadFile(variables.id, pdfFile, 'file');
+      }
+
       toast({
         title: "Success",
         description: "Sales associate berhasil diperbarui.",
@@ -116,13 +193,73 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
     }
   });
 
+  const deletePhotoMutation = useMutation({
+    mutationFn: async () => {
+      await api.delete(`/upload/sales-associates/photo/${editingSalesAssociate.id}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Photo berhasil dihapus.",
+        variant: "success",
+      });
+      queryClient.invalidateQueries(['salesAssociates']);
+      onFinish();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menghapus photo.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const deleteFileMutation = useMutation({
+    mutationFn: async () => {
+      await api.delete(`/upload/sales-associates/file/${editingSalesAssociate.id}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Dokumen berhasil dihapus.",
+        variant: "success",
+      });
+      queryClient.invalidateQueries(['salesAssociates']);
+      onFinish();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menghapus dokumen.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleDeletePhoto = () => {
+    if (window.confirm('Apakah Anda yakin ingin menghapus photo?')) {
+      deletePhotoMutation.mutate();
+    }
+  };
+
+  const handleDeleteFile = () => {
+    if (window.confirm('Apakah Anda yakin ingin menghapus dokumen?')) {
+      deleteFileMutation.mutate();
+    }
+  };
+
   const onFinishing = () => {
     reset(initialData);
+    setPhotoFile(null);
+    setPdfFile(null);
     onFinish();
   };
 
   const onClosing = () => {
     reset(initialData);
+    setPhotoFile(null);
+    setPdfFile(null);
     setIsEditMode(false);
     onClose();
   };
@@ -162,6 +299,63 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
         </DialogHeader>
         <form onSubmit={handleSubmit(onHandleSubmit)}>
           <div className="grid gap-4 py-4">
+            {isViewMode && (editingSalesAssociate.photo_url || editingSalesAssociate.file_url) && (
+              <div className="grid grid-cols-2 gap-4">
+                {editingSalesAssociate.photo_url && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Photo</Label>
+                      <button
+                        type="button"
+                        onClick={handleDeletePhoto}
+                        disabled={deletePhotoMutation.isPending}
+                        className="text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors"
+                        title="Hapus photo"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-3 py-2">
+                      <img
+                        src={getAssetUrl(editingSalesAssociate.photo_url)}
+                        alt="Sales Photo"
+                        className="w-20 h-20 object-cover border rounded"
+                        onError={(e) => {
+                          e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjRTVFN0VCIi8+CjxwYXRoIGQ9Ik0zMiAzMkMzNS4zMTM3IDMyIDM4IDI5LjMxMzcgMzggMjZDMzggMjIuNjg2MyAzNS4zMTM3IDIwIDMyIDIwQzI4LjY4NjMgMjAgMjYgMjIuNjg2MyAyNiAyNkMyNiAyOS4zMTM3IDI4LjY4NjMgMzIgMzIgMzJaIiBmaWxsPSIjOUM5Qzk3Ii8+CjxwYXRoIGQ9Ik0yMCA0NFYzOEMyMCAzNS43OTA5IDIxLjc5MDkgMzQgMjQgMzRINDBDNDIuMjA5MSAzNCA0NCAzNS43OTA5IDQ0IDM4VjQ0IiBmaWxsPSIjOUM5Qzk3Ii8+Cjwvc3ZnPgo=';
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+                {editingSalesAssociate.file_url && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Dokumen</Label>
+                      <button
+                        type="button"
+                        onClick={handleDeleteFile}
+                        disabled={deleteFileMutation.isPending}
+                        className="text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors"
+                        title="Hapus dokumen"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <a
+                      href={getAssetUrl(editingSalesAssociate.file_url)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-2 border rounded hover:bg-slate-50 transition-colors cursor-pointer"
+                    >
+                      <FileText className="w-8 h-8 text-red-600" />
+                      <span className="text-sm text-blue-600 hover:underline">
+                        {getFilenameFromUrl(editingSalesAssociate.file_url)}
+                      </span>
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="code">Kode Sales Associate *</Label>
@@ -402,6 +596,37 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
                 </>
               )}
             </div>
+
+            {!isViewMode && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="photo">Photo (JPEG/PNG, max 5MB)</Label>
+                  <Input
+                    id="photo"
+                    name="photo"
+                    type="file"
+                    accept="image/jpeg,image/png"
+                    onChange={handlePhotoChange}
+                  />
+                  {photoFile && (
+                    <p className="text-sm text-green-600">File dipilih: {photoFile.name}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="file">Dokumen PDF (PDF, max 10MB)</Label>
+                  <Input
+                    id="file"
+                    name="file"
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handlePdfChange}
+                  />
+                  {pdfFile && (
+                    <p className="text-sm text-green-600">File dipilih: {pdfFile.name}</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter>
             {isViewMode ? (
