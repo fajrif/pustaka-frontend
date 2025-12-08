@@ -12,6 +12,7 @@ import Pagination from '@/components/Pagination';
 import { formatDate } from '@/utils/formatters';
 import { PAGINATION } from '@/utils/constants';
 import { useToast } from '@/components/ui/use-toast';
+import { getAssetUrl } from '@/helpers/AssetHelper';
 
 const MasterExpedition = () => {
   const queryClient = useQueryClient();
@@ -150,11 +151,23 @@ const MasterExpedition = () => {
                   <Card key={expedition.id} className="border-2 border-blue-80 hover:border-blue-300 hover:shadow-md transition-all">
                     <CardHeader className="pb-3">
                       <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 mb-2">{expedition.code}</Badge>
-                          <CardTitle className="text-lg">
-                            {expedition.name}
-                          </CardTitle>
+                        <div className="flex justify-center items-center gap-4">
+                          {expedition.logo_url && (
+                            <img
+                              src={getAssetUrl(expedition.logo_url)}
+                              alt="expedition Logo"
+                              className="w-10 h-10 object-cover border rounded"
+                              onError={(e) => {
+                                e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjRTVFN0VCIi8+CjxwYXRoIGQ9Ik0zMiAzMkMzNS4zMTM3IDMyIDM4IDI5LjMxMzcgMzggMjZDMzggMjIuNjg2MyAzNS4zMTM3IDIwIDMyIDIwQzI4LjY4NjMgMjAgMjYgMjIuNjg2MyAyNiAyNkMyNiAyOS4zMTM3IDI4LjY4NjMgMzIgMzIgMzJaIiBmaWxsPSIjOUM5Qzk3Ii8+CjxwYXRoIGQ9Ik0yMCA0NFYzOEMyMCAzNS43OTA5IDIxLjc5MDkgMzQgMjQgMzRINDBDNDIuMjA5MSAzNCA0NCAzNS43OTA5IDQ0IDM4VjQ0IiBmaWxsPSIjOUM5Qzk3Ii8+Cjwvc3ZnPgo=';
+                              }}
+                            />
+                          )}
+                          <div className="flex-1">
+                            <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">{expedition.code}</Badge>
+                            <CardTitle className="text-lg">
+                              {expedition.name}
+                            </CardTitle>
+                          </div>
                         </div>
                         <div className="flex gap-1">
                           <Button

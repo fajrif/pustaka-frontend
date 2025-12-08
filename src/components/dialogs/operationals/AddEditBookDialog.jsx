@@ -11,7 +11,7 @@ import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import Select from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { bookSchema } from "@/utils/validations/Book";
-import { Edit } from 'lucide-react';
+import { Edit, FileText } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
@@ -106,7 +106,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
       const response = await api.post('/books', data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: async (responseData) => {
       toast({
         title: "Success",
         description: "Buku berhasil ditambahkan.",
@@ -128,7 +128,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
       const response = await api.put(`/books/${id}`, data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: async (responseData, variables) => {
       toast({
         title: "Success",
         description: "Buku berhasil diperbarui.",

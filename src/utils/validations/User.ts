@@ -24,8 +24,24 @@ export const userSchema = z.object({
 
 export const updateProfileSchema = z.object({
   full_name: z.string().min(3, "Nama lengkap harus diisi"),
-  password: z.string().min(8, passwordErrorMessage).regex(passwordRegex, passwordErrorMessage),
-  password_confirmation: z.string().min(8, passwordErrorMessage).regex(passwordRegex, passwordErrorMessage),
-}).refine((data) => data.password === data.password_confirmation, {
+  password: z.string().optional().or(z.literal('')),
+  password_confirmation: z.string().optional().or(z.literal('')),
+}).refine((data) => {
+  // If password is provided (not empty), it must meet requirements
+  if (data.password && data.password.length > 0) {
+    return data.password.length >= 8 && passwordRegex.test(data.password);
+  }
+  return true;
+}, {
+  message: passwordErrorMessage,
+  path: ['password'],
+}).refine((data) => {
+  // If password is provided, password_confirmation must match
+  if (data.password && data.password.length > 0) {
+    return data.password === data.password_confirmation;
+  }
+  return true;
+}, {
   message: passwordConfirmationErrorMessage,
+  path: ['password_confirmation'],
 })

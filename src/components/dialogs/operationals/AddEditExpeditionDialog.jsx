@@ -10,13 +10,16 @@ import { Textarea } from '@/components/ui/textarea';
 import Select from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { expeditionSchema } from "@/utils/validations/Expedition";
-import { Edit } from 'lucide-react';
+import { Edit, FileText, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { getAssetUrl, validateImageFile, validatePdfFile, getFilenameFromUrl } from '@/helpers/AssetHelper';
 
 const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish }) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [isEditMode, setIsEditMode] = useState(false);
+  const [logoFile, setLogoFile] = useState(null);
+  const [pdfFile, setPdfFile] = useState(null);
 
   const initialData = {
     code: '',
@@ -56,6 +59,62 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
     }
   }, [isOpen]);
 
+  // Handle file upload
+  const uploadFile = async (expeditionId, file, field) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      await api.post(`/upload/expeditions/${field}/${expeditionId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    } catch (error) {
+      toast({
+        title: "Warning",
+        description: `Data berhasil disimpan, tetapi gagal mengupload ${field}.`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const validation = validateImageFile(file);
+      if (validation.valid) {
+        setLogoFile(file);
+      } else {
+        toast({
+          title: "Error",
+          description: validation.error,
+          variant: "destructive",
+        });
+        e.target.value = '';
+        setLogoFile(null);
+      }
+    }
+  };
+
+  const handlePdfChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const validation = validatePdfFile(file);
+      if (validation.valid) {
+        setPdfFile(file);
+      } else {
+        toast({
+          title: "Error",
+          description: validation.error,
+          variant: "destructive",
+        });
+        e.target.value = '';
+        setPdfFile(null);
+      }
+    }
+  };
+
   const { data: citiesData = { cities: [] } } = useQuery({
     queryKey: ['cities'],
     queryFn: async () => {
@@ -70,7 +129,17 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
       const response = await api.post('/expeditions', data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: async (responseData) => {
+      // Upload files if provided
+      if (responseData.expedition?.id) {
+        if (logoFile) {
+          await uploadFile(responseData.expedition.id, logoFile, 'logo');
+        }
+        if (pdfFile) {
+          await uploadFile(responseData.expedition.id, pdfFile, 'file');
+        }
+      }
+
       toast({
         title: "Success",
         description: "Ekspedisi berhasil ditambahkan.",
@@ -92,7 +161,15 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
       const response = await api.put(`/expeditions/${id}`, data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: async (responseData, variables) => {
+      // Upload files if provided
+      if (logoFile) {
+        await uploadFile(variables.id, logoFile, 'logo');
+      }
+      if (pdfFile) {
+        await uploadFile(variables.id, pdfFile, 'file');
+      }
+
       toast({
         title: "Success",
         description: "Ekspedisi berhasil diperbarui.",
@@ -109,13 +186,73 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
     }
   });
 
+  const deleteLogoMutation = useMutation({
+    mutationFn: async () => {
+      await api.delete(`/upload/expeditions/logo/${editingExpedition.id}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Logo berhasil dihapus.",
+        variant: "success",
+      });
+      queryClient.invalidateQueries(['expeditions']);
+      onFinish();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menghapus logo.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const deleteFileMutation = useMutation({
+    mutationFn: async () => {
+      await api.delete(`/upload/expeditions/file/${editingExpedition.id}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Dokumen berhasil dihapus.",
+        variant: "success",
+      });
+      queryClient.invalidateQueries(['expeditions']);
+      onFinish();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Gagal menghapus dokumen.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleDeleteLogo = () => {
+    if (window.confirm('Apakah Anda yakin ingin menghapus logo?')) {
+      deleteLogoMutation.mutate();
+    }
+  };
+
+  const handleDeleteFile = () => {
+    if (window.confirm('Apakah Anda yakin ingin menghapus dokumen?')) {
+      deleteFileMutation.mutate();
+    }
+  };
+
   const onFinishing = () => {
     reset(initialData);
+    setLogoFile(null);
+    setPdfFile(null);
     onFinish();
   };
 
   const onClosing = () => {
     reset(initialData);
+    setLogoFile(null);
+    setPdfFile(null);
     setIsEditMode(false);
     onClose();
   };
@@ -145,7 +282,64 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onHandleSubmit)}>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-2 py-4">
+            {isViewMode && (editingExpedition.logo_url || editingExpedition.file_url) && (
+              <div className="grid grid-cols-2 gap-4">
+                {editingExpedition.logo_url && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Logo</Label>
+                      <button
+                        type="button"
+                        onClick={handleDeleteLogo}
+                        disabled={deleteLogoMutation.isPending}
+                        className="text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors"
+                        title="Hapus logo"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-3 py-2">
+                      <img
+                        src={getAssetUrl(editingExpedition.logo_url)}
+                        alt="Expedition Logo"
+                        className="w-20 h-20 object-cover border rounded"
+                        onError={(e) => {
+                          e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjRTVFN0VCIi8+CjxwYXRoIGQ9Ik0zMiAzMkMzNS4zMTM3IDMyIDM4IDI5LjMxMzcgMzggMjZDMzggMjIuNjg2MyAzNS4zMTM3IDIwIDMyIDIwQzI4LjY4NjMgMjAgMjYgMjIuNjg2MyAyNiAyNkMyNiAyOS4zMTM3IDI4LjY4NjMgMzIgMzIgMzJaIiBmaWxsPSIjOUM5Qzk3Ci8+CjxwYXRoIGQ9Ik0yMCA0NFYzOEMyMCAzNS43OTA5IDIxLjc5MDkgMzQgMjQgMzRINDBDNDIuMjA5MSAzNCA0NCAzNS43OTA5IDQ0IDM4VjQ0IiBmaWxsPSIjOUM5Qzk3Ci8+Cjwvc3ZnPgo=';
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+                {editingExpedition.file_url && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Dokumen</Label>
+                      <button
+                        type="button"
+                        onClick={handleDeleteFile}
+                        disabled={deleteFileMutation.isPending}
+                        className="text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors"
+                        title="Hapus dokumen"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <a
+                      href={getAssetUrl(editingExpedition.file_url)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-2 border rounded hover:bg-slate-50 transition-colors cursor-pointer"
+                    >
+                      <FileText className="w-8 h-8 text-red-600" />
+                      <span className="text-sm text-blue-600 hover:underline">
+                        {getFilenameFromUrl(editingExpedition.file_url)}
+                      </span>
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Kode Ekspedisi *</Label>
@@ -320,6 +514,37 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
                 </>
               )}
             </div>
+
+            {!isViewMode && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="logo">Logo (JPEG/PNG, max 5MB)</Label>
+                  <Input
+                    id="logo"
+                    name="logo"
+                    type="file"
+                    accept="image/jpeg,image/png"
+                    onChange={handleLogoChange}
+                  />
+                  {logoFile && (
+                    <p className="text-sm text-green-600">File dipilih: {logoFile.name}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="file">Dokumen PDF (PDF, max 10MB)</Label>
+                  <Input
+                    id="file"
+                    name="file"
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handlePdfChange}
+                  />
+                  {pdfFile && (
+                    <p className="text-sm text-green-600">File dipilih: {pdfFile.name}</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter>
             {isViewMode ? (
