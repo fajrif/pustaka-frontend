@@ -1,13 +1,12 @@
 import { z } from "zod";
-import { preprocessOptionalEmail } from "./validation_helper";
 
 export const bookSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(3, "Nama Buku harus diisi"),
-  description: z.string().optional(),
-  author: z.string().optional(),
-  isbn: z.string().optional(),
-  year: z.string().optional(),
+  description: z.string().nullable().optional(),
+  author: z.string().nullable().optional(),
+  isbn: z.string().nullable().optional(),
+  year: z.string().nullable().optional(),
   stock: z.number().min(0, "Stok tidak boleh negatif").optional(),
   jenis_buku_id: z.string().uuid("Invalid Jenis Buku ID format").min(1, "Jenis Buku harus diisi"),
   jenjang_studi_id: z.string().uuid("Invalid Jenjang Studi ID format").min(1, "Jenjang Studi harus diisi"),
