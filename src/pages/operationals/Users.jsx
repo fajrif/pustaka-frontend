@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Pencil, Search, Filter, Trash2, Tag } from 'lucide-react';
+import { Plus, Pencil, Search, Filter, Trash2, Tag, User } from 'lucide-react';
 import AddEditUserDialog from '@/components/dialogs/operationals/AddEditUserDialog';
 import Pagination from '@/components/Pagination';
 import { getRoleColor } from '@/utils/helpers/UserHelper';
@@ -97,7 +97,7 @@ const MasterUser = () => {
           <CardContent className="pt-6">
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <Tag className="w-5 h-5 text-white" />
+                <User className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h3 className="font-semibold text-slate-900 mb-2">Tentang Master Data User</h3>
