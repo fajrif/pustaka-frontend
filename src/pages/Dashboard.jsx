@@ -4,18 +4,20 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Plus, Wallet, TrendingUp, AlertCircle, FolderKanban } from 'lucide-react';
-import { formatRupiah } from '@/utils/formatters';
+import BudgetTrendChart from "@/components/dashboard/BudgetTrendChart";
+import PaymentSLAChart from "@/components/dashboard/PaymentSLAChart";
+import { formatRupiah, formatShortRupiah } from '@/utils/formatters';
 
 const Dashboard = () => {
 
   const calculateMetrics = () => {
-    const totalSales = 0;
-    const totalSalesCount = 0;
-    const totalCredit = 0;
+    const totalSales = 2437000000;
+    const totalSalesCount = 257;
+    const totalCredit = 1653000000;
     const remainingCredit = 0;
     const percentageCredit = 0;
     const activeProjects = 0;
-    const alertCount = 0;
+    const alertCount = 56;
 
     return {
       totalSales,
@@ -33,7 +35,7 @@ const Dashboard = () => {
   const cards = [
     {
       title: "Total Penjualan",
-      value: formatRupiah(metrics.totalSales),
+      value: formatShortRupiah(metrics.totalSales),
       icon: Wallet,
       bgColor: "bg-blue-500",
       trend: `${metrics.totalSalesCount} sales`,
@@ -41,7 +43,7 @@ const Dashboard = () => {
     },
     {
       title: "Total Piutang",
-      value: formatRupiah(metrics.totalCredit),
+      value: formatShortRupiah(metrics.totalCredit),
       icon: TrendingUp,
       bgColor: "bg-green-500",
       trend: `${metrics.percentageCredit.toFixed(1)}% belum terbayar`,
@@ -49,14 +51,14 @@ const Dashboard = () => {
     },
     {
       title: "Total Sisa Kredit",
-      value: formatRupiah(metrics.remainingCredit),
+      value: formatShortRupiah(metrics.remainingCredit),
       icon: FolderKanban,
       bgColor: "bg-purple-500",
       trendColor: "text-purple-600"
     },
     {
       title: "Alert Tagihan",
-      value: metrics.alertCount,
+      value: `${metrics.alertCount} tagihan`,
       icon: AlertCircle,
       bgColor: "bg-orange-500",
       trend: metrics.alertCount > 0 ? "Perlu perhatian" : "Semua aman",
@@ -113,6 +115,14 @@ const Dashboard = () => {
             </Link>
           </CardContent>
         </Card>
+
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <BudgetTrendChart />
+            <PaymentSLAChart />
+          </div>
+        </div>
+
       </div>
     </div>
   );
