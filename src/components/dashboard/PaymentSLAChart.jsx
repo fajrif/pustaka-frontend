@@ -77,7 +77,7 @@ export default function PaymentSLAChart({ sales }) {
   return (
     <Card className="border-none shadow-lg">
       <CardHeader className="border-b border-slate-100">
-        <CardTitle className="text-xl font-bold">Ketepatan Pembayaran Sales</CardTitle>
+        <CardTitle className="text-xl font-semibold">Ketepatan Pembayaran Sales</CardTitle>
         <p className="text-sm text-slate-500">Statistik SLA pembayaran sales berdasarkan tanggal PO/Tagihan</p>
       </CardHeader>
       <CardContent className="pt-6">
@@ -111,7 +111,7 @@ export default function PaymentSLAChart({ sales }) {
             <div className="space-y-4">
               <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border-2 border-green-200">
                 <p className="text-sm text-slate-600 mb-1">Tingkat Kepatuhan SLA</p>
-                <p className="text-4xl font-bold text-green-600">{complianceRate}%</p>
+                <p className="text-4xl font-semibold text-green-600">{complianceRate}%</p>
                 <p className="text-xs text-slate-500 mt-1">
                   {slaStats.ontime || 0} dari {totalWithSLA} transaksi tepat waktu
                 </p>
@@ -139,7 +139,7 @@ export default function PaymentSLAChart({ sales }) {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-2xl font-bold" style={{ color: item.color }}>
+                        <p className="text-2xl font-semibold" style={{ color: item.color }}>
                           {item.value}
                         </p>
                         <p className="text-xs text-slate-500">transaksi</p>

@@ -71,7 +71,7 @@ export default function BudgetTrendChart({ sales }) {
   return (
     <Card className="border-none shadow-lg">
       <CardHeader className="border-b border-slate-100">
-        <CardTitle className="text-xl font-bold">Trend Penjualan vs Kredit</CardTitle>
+        <CardTitle className="text-xl font-semibold">Trend Penjualan vs Kredit</CardTitle>
         <p className="text-sm text-slate-500">Perbandingan penjualan tunai dan kredit per bulan (dalam juta rupiah)</p>
       </CardHeader>
       <CardContent className="pt-6">

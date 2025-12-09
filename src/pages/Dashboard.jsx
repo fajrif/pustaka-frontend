@@ -71,7 +71,7 @@ const Dashboard = () => {
       <div className="max-w-7xl mx-auto space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+            <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
             <p className="text-slate-500 font-normal mt-1">Monitoring Transaksi Penjualan Buku</p>
           </div>
         </div>
@@ -91,7 +91,7 @@ const Dashboard = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-slate-900 mb-1">
+                <div className="text-2xl font-semibold text-slate-900 mb-1">
                   {card.value}
                 </div>
                 <p className={`text-sm font-medium ${card.trendColor}`}>
