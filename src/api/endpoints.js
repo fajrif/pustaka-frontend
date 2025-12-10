@@ -70,3 +70,14 @@ export const salesAssociatesAPI = {
   update: (id, data) => api.put(`/sales-associates/${id}`, data),
   delete: (id) => api.delete(`/sales-associates/${id}`),
 };
+
+// Sales Transactions API
+export const salesTransactionsAPI = {
+  getAll: (params) => api.get('/sales-transactions', { params }),
+  getById: (id) => api.get(`/sales-transactions/${id}`),
+  create: (data) => api.post('/sales-transactions', data),
+  update: (id, data) => api.put(`/sales-transactions/${id}`, data),
+  delete: (id) => api.delete(`/sales-transactions/${id}`),
+  getInstallments: (transactionId) => api.get(`/sales-transactions/${transactionId}/installments`),
+  addInstallment: (transactionId, data) => api.post(`/sales-transactions/${transactionId}/installments`, data),
+};

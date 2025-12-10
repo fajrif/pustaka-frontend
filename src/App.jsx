@@ -13,6 +13,7 @@ import Publishers from './pages/operationals/Publishers';
 import Expeditions from './pages/operationals/Expeditions';
 import Books from './pages/operationals/Books';
 import SalesAssociates from './pages/operationals/SalesAssociates';
+import SalesTransactions from './pages/transactions/SalesTransactions';
 
 import MasterJenisBuku from './pages/masters/MasterJenisBuku';
 import MasterJenjangStudi from './pages/masters/MasterJenjangStudi';
@@ -94,6 +95,14 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Expeditions />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/sales-transactions" element={
+              <ProtectedRoute>
+                <Layout>
+                  <SalesTransactions />
                 </Layout>
               </ProtectedRoute>
             } />

@@ -15,6 +15,7 @@ import {
   Landmark,
   Truck,
   BookText,
+  ShoppingCart,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { getAssetUrl } from '@/helpers/AssetHelper';
@@ -54,6 +55,12 @@ const navigationItems = [
     title: "Ekspedisi",
     url: "/expeditions",
     icon: Truck,
+    roles: ['admin', 'user']
+  },
+  {
+    title: "Transaksi Penjualan",
+    url: "/sales-transactions",
+    icon: ShoppingCart,
     roles: ['admin', 'user']
   },
 ];
