@@ -20,6 +20,7 @@ import MasterJenjangStudi from './pages/masters/MasterJenjangStudi';
 import MasterBidangStudi from './pages/masters/MasterBidangStudi';
 import MasterKelas from './pages/masters/MasterKelas';
 import MasterCities from './pages/masters/MasterCities';
+import MasterBillers from './pages/masters/MasterBillers';
 
 // Layout
 import Layout from './components/Layout';
@@ -151,6 +152,14 @@ function App() {
               <ProtectedRoute adminOnly>
                 <Layout>
                   <MasterCities />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/master-billers" element={
+              <ProtectedRoute adminOnly>
+                <Layout>
+                  <MasterBillers />
                 </Layout>
               </ProtectedRoute>
             } />

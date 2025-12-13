@@ -81,3 +81,12 @@ export const salesTransactionsAPI = {
   getInstallments: (transactionId) => api.get(`/sales-transactions/${transactionId}/installments`),
   addInstallment: (transactionId, data) => api.post(`/sales-transactions/${transactionId}/installments`, data),
 };
+
+// Billers API
+export const billersAPI = {
+  getAll: (params) => api.get('/billers', { params }),
+  getById: (id) => api.get(`/billers/${id}`),
+  create: (data) => api.post('/billers', data),
+  update: (id, data) => api.put(`/billers/${id}`, data),
+  delete: (id) => api.delete(`/billers/${id}`),
+};

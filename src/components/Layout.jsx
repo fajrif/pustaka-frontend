@@ -96,6 +96,12 @@ const navigationMasters = [
     icon: Settings,
     roles: ['admin']
   },
+  {
+    title: "Master Biller",
+    url: "/master-billers",
+    icon: Settings,
+    roles: ['admin']
+  },
 ];
 
 export default function Layout({ children }) {
