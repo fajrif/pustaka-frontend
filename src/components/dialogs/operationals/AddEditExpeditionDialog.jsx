@@ -282,13 +282,13 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onHandleSubmit)}>
-          <div className="grid gap-2 py-4">
+          <div className={`grid gap-2 py-4 ${isViewMode ? 'bg-slate-50 p-4 rounded-lg' : ''}`}>
             {isViewMode && (editingExpedition.logo_url || editingExpedition.file_url) && (
               <div className="grid grid-cols-2 gap-4">
                 {editingExpedition.logo_url && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label>Logo</Label>
+                      <Label className="text-slate-500">Logo</Label>
                       <button
                         type="button"
                         onClick={handleDeleteLogo}
@@ -314,7 +314,7 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
                 {editingExpedition.file_url && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label>Dokumen</Label>
+                      <Label className="text-slate-500">Dokumen</Label>
                       <button
                         type="button"
                         onClick={handleDeleteFile}
@@ -341,10 +341,10 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
               </div>
             )}
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Kode Ekspedisi *</Label>
+              <div className={`space-y-2 ${!isViewMode ? 'border-l-2 border-blue-400 pl-3' : ''}`}>
+                <Label htmlFor="name" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Kode Ekspedisi {!isViewMode && <span className="text-red-500">*</span>}</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{editingExpedition.code || '-'}</p>
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingExpedition.code || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -356,10 +356,10 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
                   </>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="name">Nama Ekspedisi *</Label>
+              <div className={`space-y-2 ${!isViewMode ? 'border-l-2 border-blue-400 pl-3' : ''}`}>
+                <Label htmlFor="name" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Nama Ekspedisi {!isViewMode && <span className="text-red-500">*</span>}</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-blue-700 p-2 border">{editingExpedition.name || '-'}</p>
+                  <p className="text-sm text-blue-700 font-medium px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingExpedition.name || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -373,9 +373,9 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="address">Address</Label>
+              <Label htmlFor="address" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Address</Label>
               {isViewMode ? (
-                <p className="text-sm text-slate-900 p-2 border whitespace-pre-wrap">{editingExpedition.address || '-'}</p>
+                <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200 whitespace-pre-wrap">{editingExpedition.address || '-'}</p>
               ) : (
                 <>
                   <Textarea
@@ -388,10 +388,10 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
               )}
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="city_id">Kota *</Label>
+              <div className={`space-y-2 ${!isViewMode ? 'border-l-2 border-blue-400 pl-3' : ''}`}>
+                <Label htmlFor="city_id" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Kota {!isViewMode && <span className="text-red-500">*</span>}</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{getCityName(editingExpedition.city_id)}</p>
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{getCityName(editingExpedition.city_id)}</p>
                 ) : (
                   <>
                     <Controller
@@ -417,9 +417,9 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description">Area</Label>
+                <Label htmlFor="description" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Area</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{editingExpedition.area || '-'}</p>
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingExpedition.area || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -434,9 +434,9 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="code">Email</Label>
+                <Label htmlFor="code" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Email</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{editingExpedition.email || '-'}</p>
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingExpedition.email || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -450,9 +450,9 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description">Website</Label>
+                <Label htmlFor="description" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Website</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{editingExpedition.website || '-'}</p>
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingExpedition.website || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -467,9 +467,9 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="description">Phone 1</Label>
+                <Label htmlFor="description" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Phone 1</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{editingExpedition.phone1 || '-'}</p>
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingExpedition.phone1 || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -483,9 +483,9 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description">Phone 2</Label>
+                <Label htmlFor="description" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Phone 2</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{editingExpedition.phone2 || '-'}</p>
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingExpedition.phone2 || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -500,9 +500,9 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">Deskripsi</Label>
+              <Label htmlFor="description" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Deskripsi</Label>
               {isViewMode ? (
-                <p className="text-sm text-slate-900 p-2 border whitespace-pre-wrap">{editingExpedition.description || '-'}</p>
+                <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200 whitespace-pre-wrap">{editingExpedition.description || '-'}</p>
               ) : (
                 <>
                   <Textarea
@@ -518,7 +518,7 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
             {!isViewMode && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="logo">Logo (JPEG/PNG, max 5MB)</Label>
+                  <Label htmlFor="logo" className="text-slate-700">Logo (JPEG/PNG, max 5MB)</Label>
                   <Input
                     id="logo"
                     name="logo"
@@ -531,7 +531,7 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="file">Dokumen PDF (PDF, max 10MB)</Label>
+                  <Label htmlFor="file" className="text-slate-700">Dokumen PDF (PDF, max 10MB)</Label>
                   <Input
                     id="file"
                     name="file"

@@ -299,13 +299,13 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onHandleSubmit)}>
-          <div className="grid gap-4 py-4">
+          <div className={`grid gap-4 py-4 ${isViewMode ? 'bg-slate-50 p-4 rounded-lg' : ''}`}>
             {isViewMode && (editingSalesAssociate.photo_url || editingSalesAssociate.file_url) && (
               <div className="grid grid-cols-2 gap-4">
                 {editingSalesAssociate.photo_url && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label>Photo</Label>
+                      <Label className="text-slate-500">Photo</Label>
                       <button
                         type="button"
                         onClick={handleDeletePhoto}
@@ -331,7 +331,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
                 {editingSalesAssociate.file_url && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label>Dokumen</Label>
+                      <Label className="text-slate-500">Dokumen</Label>
                       <button
                         type="button"
                         onClick={handleDeleteFile}
@@ -358,10 +358,10 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
               </div>
             )}
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="code">Kode Sales Associate *</Label>
+              <div className={`space-y-2 ${!isViewMode ? 'border-l-2 border-blue-400 pl-3' : ''}`}>
+                <Label htmlFor="code" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Kode Sales Associate {!isViewMode && <span className="text-red-500">*</span>}</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{editingSalesAssociate.code || '-'}</p>
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingSalesAssociate.code || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -373,10 +373,10 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
                   </>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="name">Nama Sales Associate *</Label>
+              <div className={`space-y-2 ${!isViewMode ? 'border-l-2 border-blue-400 pl-3' : ''}`}>
+                <Label htmlFor="name" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Nama Sales Associate {!isViewMode && <span className="text-red-500">*</span>}</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-blue-700 p-2 border">{editingSalesAssociate.name || '-'}</p>
+                  <p className="text-sm text-blue-700 font-medium px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingSalesAssociate.name || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -390,9 +390,9 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="address">Alamat</Label>
+              <Label htmlFor="address" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Alamat</Label>
               {isViewMode ? (
-                <p className="text-sm text-slate-900 p-2 border whitespace-pre-wrap">{editingSalesAssociate.address || '-'}</p>
+                <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200 whitespace-pre-wrap">{editingSalesAssociate.address || '-'}</p>
               ) : (
                 <>
                   <Textarea
@@ -405,10 +405,10 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
               )}
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="city_id">Kota *</Label>
+              <div className={`space-y-2 ${!isViewMode ? 'border-l-2 border-blue-400 pl-3' : ''}`}>
+                <Label htmlFor="city_id" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Kota {!isViewMode && <span className="text-red-500">*</span>}</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{getCityName(editingSalesAssociate.city_id)}</p>
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{getCityName(editingSalesAssociate.city_id)}</p>
                 ) : (
                   <>
                     <Controller
@@ -434,9 +434,9 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="area">Area</Label>
+                <Label htmlFor="area" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Area</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{editingSalesAssociate.area || '-'}</p>
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingSalesAssociate.area || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -451,9 +451,9 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Email</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{editingSalesAssociate.email || '-'}</p>
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingSalesAssociate.email || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -467,9 +467,9 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="website">Website</Label>
+                <Label htmlFor="website" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Website</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{editingSalesAssociate.website || '-'}</p>
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingSalesAssociate.website || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -484,9 +484,9 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="phone1">Phone 1</Label>
+                <Label htmlFor="phone1" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Phone 1</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{editingSalesAssociate.phone1 || '-'}</p>
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingSalesAssociate.phone1 || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -500,9 +500,9 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone2">Phone 2</Label>
+                <Label htmlFor="phone2" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Phone 2</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{editingSalesAssociate.phone2 || '-'}</p>
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingSalesAssociate.phone2 || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -518,11 +518,11 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="jenis_pembayaran">Jenis Pembayaran</Label>
+                <Label htmlFor="jenis_pembayaran" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Jenis Pembayaran</Label>
                 {isViewMode ? (
                   <>
-                    <div className="text-sm text-slate-900 p-2 border">
-                      {editingSalesAssociate.jenis_pembayaran ? 
+                    <div className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">
+                      {editingSalesAssociate.jenis_pembayaran ?
                         editingSalesAssociate.jenis_pembayaran === 'T' ? (
                           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                             Tunai
@@ -532,7 +532,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
                               Kredit
                             </Badge>
                           )
-                        : 
+                        :
                         '-'}
                     </div>
                   </>
@@ -563,9 +563,9 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="discount">Diskon (%)</Label>
+                <Label htmlFor="discount" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Diskon (%)</Label>
                 {isViewMode ? (
-                  <div className="p-2 border">
+                  <div className="px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">
                     {editingSalesAssociate.discount ?
                       editingSalesAssociate.discount > 0 && (
                         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
@@ -590,9 +590,9 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="join_date">Tanggal Bergabung</Label>
+                <Label htmlFor="join_date" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Tanggal Bergabung</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{formatDisplayDate(editingSalesAssociate.join_date)}</p>
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{formatDisplayDate(editingSalesAssociate.join_date)}</p>
                 ) : (
                   <>
                     <Input
@@ -605,9 +605,9 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="end_join_date">Tanggal Berakhir</Label>
+                <Label htmlFor="end_join_date" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Tanggal Berakhir</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{formatDisplayDate(editingSalesAssociate.end_join_date)}</p>
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{formatDisplayDate(editingSalesAssociate.end_join_date)}</p>
                 ) : (
                   <>
                     <Input
@@ -621,9 +621,9 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">Deskripsi</Label>
+              <Label htmlFor="description" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Deskripsi</Label>
               {isViewMode ? (
-                <p className="text-sm text-slate-900 p-2 border whitespace-pre-wrap">{editingSalesAssociate.description || '-'}</p>
+                <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200 whitespace-pre-wrap">{editingSalesAssociate.description || '-'}</p>
               ) : (
                 <>
                   <Textarea
@@ -639,7 +639,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
             {!isViewMode && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="photo">Photo (JPEG/PNG, max 5MB)</Label>
+                  <Label htmlFor="photo" className="text-slate-700">Photo (JPEG/PNG, max 5MB)</Label>
                   <Input
                     id="photo"
                     name="photo"
@@ -652,7 +652,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="file">Dokumen PDF (PDF, max 10MB)</Label>
+                  <Label htmlFor="file" className="text-slate-700">Dokumen PDF (PDF, max 10MB)</Label>
                   <Input
                     id="file"
                     name="file"

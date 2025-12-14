@@ -344,26 +344,26 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
           </DialogHeader>
 
           <form onSubmit={handleSubmit(onHandleSubmit)}>
-            <div className="space-y-6 py-4">
+            <div className={`space-y-6 py-4 ${isViewMode ? 'bg-slate-50 p-4 rounded-lg' : ''}`}>
               {/* Transaction Information */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-slate-900 border-b pb-2">Informasi Transaksi</h3>
+                <h3 className={`font-semibold border-b pb-2 ${isViewMode ? 'text-slate-600' : 'text-slate-900'}`}>Informasi Transaksi</h3>
 
                 {isViewMode && displayTransaction?.no_invoice && (
                   <div className="space-y-2">
-                    <Label>No Invoice</Label>
-                    <div className="p-2 uppercase text-blue-700 border rounded">
+                    <Label className="text-slate-500">No Invoice</Label>
+                    <div className="px-3 py-2 uppercase text-blue-700 font-medium bg-white rounded-md shadow-sm border border-slate-200">
                       {displayTransaction.no_invoice}
                     </div>
                   </div>
                 )}
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Sales Associate *</Label>
+                  <div className={`space-y-2 ${!isViewMode ? 'border-l-2 border-blue-400 pl-3' : ''}`}>
+                    <Label className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Sales Associate {!isViewMode && <span className="text-red-500">*</span>}</Label>
                     {isViewMode ? (
-                      <div className="p-2 border rounded">
-                        <span className="text-sm">{displayTransaction?.sales_associate?.name || '-'}</span>
+                      <div className="px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">
+                        <span className="text-sm text-slate-700">{displayTransaction?.sales_associate?.name || '-'}</span>
                       </div>
                     ) : (
                       <>
@@ -390,10 +390,10 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Payment Type *</Label>
+                  <div className={`space-y-2 ${!isViewMode ? 'border-l-2 border-blue-400 pl-3' : ''}`}>
+                    <Label className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Payment Type {!isViewMode && <span className="text-red-500">*</span>}</Label>
                     {isViewMode ? (
-                      <div className="p-2 border rounded">
+                      <div className="px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">
                         <Badge variant="outline" className={displayTransaction?.payment_type === 'T' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}>
                           {displayTransaction?.payment_type === 'T' ? 'Cash' : 'Credit'}
                         </Badge>
@@ -424,11 +424,11 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Transaction Date *</Label>
+                  <div className={`space-y-2 ${!isViewMode ? 'border-l-2 border-blue-400 pl-3' : ''}`}>
+                    <Label className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Transaction Date {!isViewMode && <span className="text-red-500">*</span>}</Label>
                     {isViewMode ? (
-                      <div className="p-2 border rounded">
-                        <span className="text-sm">{formatDate(displayTransaction?.transaction_date)}</span>
+                      <div className="px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">
+                        <span className="text-sm text-slate-700">{formatDate(displayTransaction?.transaction_date)}</span>
                       </div>
                     ) : (
                       <>
@@ -444,11 +444,11 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
                   </div>
 
                   {paymentType === 'K' && (
-                    <div className="space-y-2">
-                      <Label>Due Date *</Label>
+                    <div className={`space-y-2 ${!isViewMode ? 'border-l-2 border-blue-400 pl-3' : ''}`}>
+                      <Label className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Due Date {!isViewMode && <span className="text-red-500">*</span>}</Label>
                       {isViewMode ? (
-                        <div className="p-2 border rounded">
-                          <span className="text-sm">{displayTransaction?.due_date ? formatDate(displayTransaction.due_date) : '-'}</span>
+                        <div className="px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">
+                          <span className="text-sm text-slate-700">{displayTransaction?.due_date ? formatDate(displayTransaction.due_date) : '-'}</span>
                         </div>
                       ) : (
                         <>
@@ -467,9 +467,9 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
                   {/* Status field - only in view/edit mode */}
                   {editingTransaction && (
                     <div className="space-y-2">
-                      <Label>Status</Label>
+                      <Label className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Status</Label>
                       {isViewMode ? (
-                        <div className="p-2 border rounded">
+                        <div className="px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">
                           <StatusBadge status={displayTransaction.status} />
                         </div>
                       ) : (
@@ -499,7 +499,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
               {/* Books Section */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center pb-2">
-                  <h3 className="font-semibold text-slate-900">Items</h3>
+                  <h3 className={`font-semibold ${isViewMode ? 'text-slate-600' : 'text-slate-900'}`}>Items</h3>
                   {!isViewMode && canEditItems && (
                     <Button
                       type="button"
@@ -611,7 +611,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
               {/* Expedition Section */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-slate-900">Ekspedisi (Optional)</h3>
+                  <h3 className={`font-semibold ${isViewMode ? 'text-slate-600' : 'text-slate-900'}`}>Ekspedisi (Optional)</h3>
                   {!isViewMode && canEditItems && (
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -640,10 +640,10 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
                 {(showExpedition || editingTransaction?.expedition_id) && (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Ekspedisi</Label>
+                      <Label className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Ekspedisi</Label>
                       {isViewMode ? (
-                        <div className="p-2 border rounded">
-                          <span className="text-sm">{displayTransaction?.expedition?.name || '-'}</span>
+                        <div className="px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">
+                          <span className="text-sm text-slate-700">{displayTransaction?.expedition?.name || '-'}</span>
                         </div>
                       ) : canEditItems ? (
                         <Controller
@@ -671,10 +671,10 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Harga Ekspedisi</Label>
+                      <Label className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Harga Ekspedisi</Label>
                       {isViewMode ? (
-                        <div className="p-2 border rounded">
-                          <span className="text-sm">{formatRupiah(displayTransaction?.expedition_price || 0)}</span>
+                        <div className="px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">
+                          <span className="text-sm text-slate-700">{formatRupiah(displayTransaction?.expedition_price || 0)}</span>
                         </div>
                       ) : canEditItems ? (
                         <Input

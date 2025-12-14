@@ -58,6 +58,15 @@
   }
 }
 
+/* File input styling */
+input[type="file"] {
+  font-weight: 300;
+}
+
+input[type="file"]::file-selector-button {
+  font-weight: 400;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
