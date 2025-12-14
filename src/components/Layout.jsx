@@ -16,9 +16,13 @@ import {
   Truck,
   BookText,
   ShoppingCart,
+  ChevronDown,
+  Database,
 } from 'lucide-react';
 import { Button } from './ui/button';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from './ui/collapsible';
 import { getAssetUrl } from '@/helpers/AssetHelper';
+import { useSidebarMenuState } from '@/hooks/useSidebarMenuState';
 
 const navigationItems = [
   {
@@ -65,64 +69,74 @@ const navigationItems = [
   },
 ];
 
-const navigationMasters = [
-  {
-    title: "Master Merk Buku",
-    url: "/master-merk-buku",
-    icon: Settings,
-    roles: ['admin']
-  },
-  {
-    title: "Master Jenis Buku",
-    url: "/master-jenis-buku",
-    icon: Settings,
-    roles: ['admin']
-  },
-  {
-    title: "Master Jenjang Studi",
-    url: "/master-jenjang-studi",
-    icon: Settings,
-    roles: ['admin']
-  },
-  {
-    title: "Master Bidang Studi",
-    url: "/master-bidang-studi",
-    icon: Settings,
-    roles: ['admin']
-  },
-  {
-    title: "Master Kelas",
-    url: "/master-kelas",
-    icon: Settings,
-    roles: ['admin']
-  },
-  {
-    title: "Master Kota",
-    url: "/master-cities",
-    icon: Settings,
-    roles: ['admin']
-  },
-  {
-    title: "Master Biller",
-    url: "/master-billers",
-    icon: Settings,
-    roles: ['admin']
-  },
-];
+const navigationMastersGroup = {
+  title: "Data Masters",
+  icon: Database,
+  key: "dataMasters",
+  roles: ['admin'],
+  children: [
+    {
+      title: "Master Merk Buku",
+      url: "/master-merk-buku",
+      icon: Settings,
+      roles: ['admin']
+    },
+    {
+      title: "Master Jenis Buku",
+      url: "/master-jenis-buku",
+      icon: Settings,
+      roles: ['admin']
+    },
+    {
+      title: "Master Jenjang Studi",
+      url: "/master-jenjang-studi",
+      icon: Settings,
+      roles: ['admin']
+    },
+    {
+      title: "Master Bidang Studi",
+      url: "/master-bidang-studi",
+      icon: Settings,
+      roles: ['admin']
+    },
+    {
+      title: "Master Kelas",
+      url: "/master-kelas",
+      icon: Settings,
+      roles: ['admin']
+    },
+    {
+      title: "Master Kota",
+      url: "/master-cities",
+      icon: Settings,
+      roles: ['admin']
+    },
+    {
+      title: "Master Biller",
+      url: "/master-billers",
+      icon: Settings,
+      roles: ['admin']
+    },
+  ]
+};
 
 export default function Layout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const { isMenuOpen, toggleMenu } = useSidebarMenuState({ dataMasters: true });
 
   const filteredNavItems = navigationItems.filter(item =>
     !item.roles || item.roles.includes(user?.role)
   );
 
-  const filteredNavMasters = navigationMasters.filter(item =>
+  const filteredMasterChildren = navigationMastersGroup.children.filter(item =>
     !item.roles || item.roles.includes(user?.role)
   );
+
+  const canSeeMastersGroup = navigationMastersGroup.roles.includes(user?.role)
+    && filteredMasterChildren.length > 0;
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-slate-50 to-slate-100">
@@ -171,28 +185,60 @@ export default function Layout({ children }) {
               })}
             </div>
             <div className="h-px bg-slate-200 my-2"></div>
-            <div className="space-y-1">
-              {filteredNavMasters.map((item) => {
-                const isActive = location.pathname === item.url;
-                return (
-                  <Link
-                    key={item.title}
-                    to={item.url}
-                    onClick={() => setSidebarOpen(false)}
+
+            {/* Collapsible Masters Group */}
+            {canSeeMastersGroup && (
+              <Collapsible
+                open={isMenuOpen('dataMasters')}
+                onOpenChange={() => toggleMenu('dataMasters')}
+              >
+                <CollapsibleTrigger asChild>
+                  <button
                     className={`
-                      flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-all duration-200
-                      ${isActive
-                        ? 'bg-blue-50 text-blue-900 font-medium shadow-sm'
-                        : 'hover:bg-blue-50 hover:text-blue-700'
+                      flex w-full items-center gap-3 px-3 py-2.5 text-sm rounded-lg
+                      transition-all duration-200 hover:bg-slate-100
+                      ${filteredMasterChildren.some(item => location.pathname === item.url)
+                        ? 'text-blue-900 font-medium'
+                        : 'text-slate-700'
                       }
                     `}
                   >
-                    <item.icon className="w-5 h-5" />
-                    <span>{item.title}</span>
-                  </Link>
-                );
-              })}
-            </div>
+                    <Database className="w-5 h-5" />
+                    <span className="flex-1 text-left">{navigationMastersGroup.title}</span>
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform duration-200 ${
+                        isMenuOpen('dataMasters') ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+                </CollapsibleTrigger>
+
+                <CollapsibleContent>
+                  <div className="ml-4 pl-4 border-l border-slate-200 space-y-1 mt-1">
+                    {filteredMasterChildren.map((item) => {
+                      const isActive = location.pathname === item.url;
+                      return (
+                        <Link
+                          key={item.title}
+                          to={item.url}
+                          onClick={() => setSidebarOpen(false)}
+                          className={`
+                            flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-200
+                            ${isActive
+                              ? 'bg-blue-50 text-blue-900 font-medium'
+                              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                            }
+                          `}
+                        >
+                          <item.icon className="w-4 h-4" />
+                          <span>{item.title}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
           </nav>
 
           {/* Footer */}
