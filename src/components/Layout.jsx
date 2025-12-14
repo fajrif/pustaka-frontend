@@ -67,6 +67,12 @@ const navigationItems = [
 
 const navigationMasters = [
   {
+    title: "Master Merk Buku",
+    url: "/master-merk-buku",
+    icon: Settings,
+    roles: ['admin']
+  },
+  {
     title: "Master Jenis Buku",
     url: "/master-jenis-buku",
     icon: Settings,

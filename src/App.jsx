@@ -21,6 +21,7 @@ import MasterBidangStudi from './pages/masters/MasterBidangStudi';
 import MasterKelas from './pages/masters/MasterKelas';
 import MasterCities from './pages/masters/MasterCities';
 import MasterBillers from './pages/masters/MasterBillers';
+import MasterMerkBuku from './pages/masters/MasterMerkBuku';
 
 // Layout
 import Layout from './components/Layout';
@@ -160,6 +161,14 @@ function App() {
               <ProtectedRoute adminOnly>
                 <Layout>
                   <MasterBillers />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/master-merk-buku" element={
+              <ProtectedRoute adminOnly>
+                <Layout>
+                  <MasterMerkBuku />
                 </Layout>
               </ProtectedRoute>
             } />
