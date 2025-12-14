@@ -360,7 +360,7 @@ const AddEditPublisherDialog = ({ isOpen, onClose, editingPublisher, onFinish })
               <div className="space-y-2">
                 <Label htmlFor="name">Nama Publisher *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{editingPublisher.name || '-'}</p>
+                  <p className="text-sm text-blue-700 p-2 border">{editingPublisher.name || '-'}</p>
                 ) : (
                   <>
                     <Input

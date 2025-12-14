@@ -170,7 +170,10 @@ const MasterBook = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <span className="font-medium text-sm inline-block mb-1">
+                          <span
+                            className="font-medium text-sm inline-block cursor-pointer hover:underline hover:text-blue-600 mb-1"
+                            onClick={() => handleEdit(book)}
+                            >
                             {book.name}
                           </span>
                           <span className="text-xs block">

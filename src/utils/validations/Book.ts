@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { preprocessOptionalYear } from "./validation_helper";
 
 const currentYear = new Date().getFullYear();
 const yearRegex = /^\d{4}$/;
@@ -6,6 +7,7 @@ const yearErrorMessage = "Tahun harus berupa angka 4 digit.";
 const yearRangeErrorMessage = "Tahun harus antara 1900 sampai tahun sekarang.";
 
 const yearSchema = z
+  .preprocess(preprocessOptionalYear, z
   .string()
   .regex(yearRegex, yearErrorMessage)
   .transform((val) => Number(val))
@@ -16,7 +18,7 @@ const yearSchema = z
     message: `Tahun maksimal ${currentYear}`,
   })
   .optional()
-  .nullable();
+  .nullable());
 
 export const bookSchema = z.object({
   id: z.string().optional(),

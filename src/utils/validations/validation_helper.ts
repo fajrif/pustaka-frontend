@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 // Fungsi helper untuk mengubah string tanggal sederhana (YYYY-MM-DD) menjadi timestamp lengkap (ISO 8601)
 export const toISOString = (dateString: string) => {
   if (dateString === null || dateString === undefined || dateString === "") {
@@ -28,10 +30,28 @@ export const preprocessOptionalNumber = (val: any) => {
 };
 
 // Helper function untuk Preprocessing Email Opsional
+// Returns empty string instead of undefined to ensure field is always sent in JSON payload
 export const preprocessOptionalEmail = (val: any) => {
+  if (val === null || val === undefined || (typeof val === "string" && val.trim() === "")) {
+    return "";
+  }
+  return val;
+};
+
+// Zod schema untuk email opsional yang selalu mengirim field (empty string jika kosong)
+export const optionalEmailSchema = () =>
+  z.preprocess(
+    preprocessOptionalEmail,
+    z.string().refine(
+      (val) => val === "" || z.string().email().safeParse(val).success,
+      { message: "Format email tidak valid" }
+    )
+  );
+
+// Helper function untuk Preprocessing Year Opsional
+export const preprocessOptionalYear = (val: any) => {
   if (typeof val === "string" && val.trim() === "") {
     return undefined;
   }
   return val;
 };
-

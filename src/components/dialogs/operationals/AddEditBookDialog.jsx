@@ -206,7 +206,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
               <div className="space-y-2">
                 <Label htmlFor="name">Nama Buku *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{editingBook.name || '-'}</p>
+                  <p className="text-sm text-blue-700 p-2 border">{editingBook.name || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -314,7 +314,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
                         <Select
                           options={bookTypesData.jenis_buku.map((type) => ({
                             value: type.id,
-                            label: type.name
+                            label: `[${ type.code }] ${ type.name }`
                           }))}
                           value={value}
                           onChange={onChange}
@@ -342,7 +342,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
                         <Select
                           options={educationLevelsData.jenjang_studi.map((type) => ({
                             value: type.id,
-                            label: type.name
+                            label: `[${ type.code }] ${ type.name }`
                           }))}
                           value={value}
                           onChange={onChange}
@@ -373,7 +373,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
                         <Select
                           options={studyFieldsData.bidang_studi.map((type) => ({
                             value: type.id,
-                            label: type.name
+                            label: `[${ type.code }] ${ type.name }`
                           }))}
                           value={value}
                           onChange={onChange}
@@ -401,7 +401,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
                         <Select
                           options={classesData.kelas.map((type) => ({
                             value: type.id,
-                            label: type.name
+                            label: `[${ type.code }] ${ type.name }`
                           }))}
                           value={value}
                           onChange={onChange}
@@ -432,7 +432,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
                         <Select
                           options={publishersData.publishers.map((type) => ({
                             value: type.id,
-                            label: type.name
+                            label: `[${ type.code }] ${ type.name }`
                           }))}
                           value={value}
                           onChange={onChange}

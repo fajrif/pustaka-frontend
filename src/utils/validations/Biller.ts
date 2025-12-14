@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { preprocessOptionalEmail } from "./validation_helper";
+import { optionalEmailSchema } from "./validation_helper";
 
 export const billerSchema = z.object({
   id: z.string().optional(),
@@ -12,6 +12,6 @@ export const billerSchema = z.object({
   phone1: z.string().min(1, "Phone 1 harus diisi"),
   phone2: z.string().nullable().optional(),
   fax: z.string().nullable().optional(),
-  email: z.preprocess(preprocessOptionalEmail, z.string().email("Format email tidak valid").nullable().optional()),
+  email: optionalEmailSchema(),
   website: z.string().nullable().optional(),
 })

@@ -359,7 +359,7 @@ const AddEditExpeditionDialog = ({ isOpen, onClose, editingExpedition, onFinish 
               <div className="space-y-2">
                 <Label htmlFor="name">Nama Ekspedisi *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{editingExpedition.name || '-'}</p>
+                  <p className="text-sm text-blue-700 p-2 border">{editingExpedition.name || '-'}</p>
                 ) : (
                   <>
                     <Input

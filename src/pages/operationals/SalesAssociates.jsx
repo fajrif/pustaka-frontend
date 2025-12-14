@@ -169,7 +169,10 @@ const MasterSalesAssociate = () => {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <span className="font-medium text-sm inline-block mb-1">
+                            <span 
+                              className="font-medium text-sm inline-block cursor-pointer hover:underline hover:text-blue-600 mb-1"
+                              onClick={() => handleEdit(sales_associate)}
+                              >
                               {sales_associate.name}
                             </span>
                             <span className="text-xs block">

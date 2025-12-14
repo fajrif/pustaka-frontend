@@ -374,7 +374,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
                             <Select
                               options={salesAssociatesData.sales_associates.map(sa => ({
                                 value: sa.id,
-                                label: sa.name
+                                label: `[${ sa.code }] ${ sa.name }`
                               }))}
                               value={value}
                               onChange={onChange}

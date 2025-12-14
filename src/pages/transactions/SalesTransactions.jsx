@@ -233,8 +233,13 @@ const SalesTransactions = () => {
                   <TableBody>
                     {transactionsData.sales_transactions.map((transaction) => (
                       <TableRow key={transaction.id}>
-                        <TableCell className="text-blue-700 uppercase">
-                          {transaction.no_invoice || 'N/A'}
+                        <TableCell>
+                          <span
+                            className="uppercase cursor-pointer hover:underline hover:text-blue-600 font-medium"
+                            onClick={() => handleView(transaction)}
+                            >
+                            {transaction.no_invoice || 'N/A'}
+                          </span>
                         </TableCell>
                         <TableCell>
                           <span className="font-medium text-sm">

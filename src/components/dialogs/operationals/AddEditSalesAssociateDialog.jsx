@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import Select from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { salesAssociateSchema } from "@/utils/validations/SalesAssociate";
@@ -375,7 +376,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
               <div className="space-y-2">
                 <Label htmlFor="name">Nama Sales Associate *</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{editingSalesAssociate.name || '-'}</p>
+                  <p className="text-sm text-blue-700 p-2 border">{editingSalesAssociate.name || '-'}</p>
                 ) : (
                   <>
                     <Input
@@ -519,14 +520,44 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
               <div className="space-y-2">
                 <Label htmlFor="jenis_pembayaran">Jenis Pembayaran</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{editingSalesAssociate.jenis_pembayaran || '-'}</p>
+                  <>
+                    <div className="text-sm text-slate-900 p-2 border">
+                      {editingSalesAssociate.jenis_pembayaran ? 
+                        editingSalesAssociate.jenis_pembayaran === 'T' ? (
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                            Tunai
+                          </Badge>
+                        ) : (
+                            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                              Kredit
+                            </Badge>
+                          )
+                        : 
+                        '-'}
+                    </div>
+                  </>
                 ) : (
                   <>
-                    <Input
-                      name="jenis_pembayaran"
-                      placeholder="Contoh: Transfer, Cash"
-                      {...register("jenis_pembayaran")}
-                    />
+                    <div className="flex gap-4 items-center pt-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          value="T"
+                          {...register("jenis_pembayaran")}
+                          className="w-4 h-4 text-blue-600"
+                        />
+                        <span>Cash</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          value="K"
+                          {...register("jenis_pembayaran")}
+                          className="w-4 h-4 text-blue-600"
+                        />
+                        <span>Credit</span>
+                      </label>
+                    </div>
                     {errors.jenis_pembayaran && <p className="text-red-500 text-sm">{errors.jenis_pembayaran.message}</p>}
                   </>
                 )}
@@ -534,7 +565,15 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
               <div className="space-y-2">
                 <Label htmlFor="discount">Diskon (%)</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-900 p-2 border">{editingSalesAssociate.discount || 0}%</p>
+                  <div className="p-2 border">
+                    {editingSalesAssociate.discount ?
+                      editingSalesAssociate.discount > 0 && (
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          {editingSalesAssociate.discount}%
+                        </Badge>
+                      ) : '-'
+                    }
+                  </div>
                 ) : (
                   <>
                     <Input
