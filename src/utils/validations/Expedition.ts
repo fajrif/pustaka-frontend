@@ -13,4 +13,4 @@ export const expeditionSchema = z.object({
   phone1: z.string().nullable().optional(),
   phone2: z.string().nullable().optional(),
   website: z.string().nullable().optional(),
-})
+});

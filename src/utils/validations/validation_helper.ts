@@ -29,9 +29,9 @@ export const preprocessOptionalNumber = (val: any) => {
   return num;
 };
 
-// Helper function untuk Preprocessing Email Opsional
+// Helper function untuk Preprocessing String Opsional
 // Returns empty string instead of undefined to ensure field is always sent in JSON payload
-export const preprocessOptionalEmail = (val: any) => {
+export const preProcessOptionalString = (val: any) => {
   if (val === null || val === undefined || (typeof val === "string" && val.trim() === "")) {
     return "";
   }
@@ -41,17 +41,29 @@ export const preprocessOptionalEmail = (val: any) => {
 // Zod schema untuk email opsional yang selalu mengirim field (empty string jika kosong)
 export const optionalEmailSchema = () =>
   z.preprocess(
-    preprocessOptionalEmail,
+    preProcessOptionalString,
     z.string().refine(
       (val) => val === "" || z.string().email().safeParse(val).success,
       { message: "Format email tidak valid" }
     )
   );
 
-// Helper function untuk Preprocessing Year Opsional
-export const preprocessOptionalYear = (val: any) => {
-  if (typeof val === "string" && val.trim() === "") {
-    return undefined;
-  }
-  return val;
-};
+// const currentYear = new Date().getFullYear();
+// const yearRegex = /^\d{4}$/;
+// const yearErrorMessage = "Tahun harus berupa angka 4 digit.";
+// const yearRangeErrorMessage = "Tahun harus antara 1900 sampai tahun sekarang.";
+// 
+// export const optionalYearSchema = () =>
+//   z.preprocess(
+//     preProcessOptionalString,
+//     z.string().refine(
+//       (val) => yearRegex.test(val),
+//       { message: yearErrorMessage }
+//     )
+//     .transform((val) => Number(val))
+//     .pipe(
+//         z.number()
+//           .min(1900, yearRangeErrorMessage)
+//           .max(currentYear, `Tahun maksimal ${currentYear}`)
+//       )
+//   );

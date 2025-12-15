@@ -83,6 +83,18 @@ const MasterBook = () => {
     }
   });
 
+  const getPeriodeLabel = (periode, year) => {
+    let _year = ""
+    if (year != undefined || year != null) {
+      _year = year
+    }
+    if (periode == 1) {
+      return `Semester Ganjil ${_year}`;
+    } else if (periode == 2) {
+      return `Semester Genap ${_year}`;
+    }
+  };
+
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
       <div className="max-w-7xl mx-auto space-y-4">
@@ -176,11 +188,18 @@ const MasterBook = () => {
                             >
                             {book.name}
                           </span>
-                          <span className="text-xs block">
-                            Pengarang: {book.author || '-'}
-                          </span>
+                          {book.author && (
+                            <span className="text-xs block">
+                              Pengarang: {book.author}
+                            </span>
+                          )}
+                          {book.isbn && (
+                            <span className="text-xs block">
+                              ISBN: {book.isbn}
+                            </span>
+                          )}
                           <span className="text-xs">
-                            ISBN: {book.isbn || '-'}
+                            Periode: {getPeriodeLabel(book.periode, book.year)}
                           </span>
                         </TableCell>
                         <TableCell>

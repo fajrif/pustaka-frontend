@@ -176,7 +176,7 @@ const MasterSalesAssociate = () => {
                               {sales_associate.name}
                             </span>
                             <span className="text-xs block">
-                              Email: {sales_associate.author || '-'}
+                              No KTP: {sales_associate.no_ktp || '-'}
                             </span>
                             <span className="text-xs">
                               Phone: {sales_associate.phone1 || sales_associate.phone2 || '-'}

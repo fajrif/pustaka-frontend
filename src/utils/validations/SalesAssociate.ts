@@ -6,6 +6,7 @@ export const salesAssociateSchema = z.object({
   code: z.string().min(1, "Kode Publisher harus diisi"),
   name: z.string().min(3, "Nama Publisher harus diisi"),
   description: z.string().nullable().optional(),
+  no_ktp: z.string().nullable().optional(),
   email: optionalEmailSchema(),
   address: z.string().nullable().optional(),
   city_id: z.string().uuid("Invalid city ID format").min(1, "Kota harus diisi"),

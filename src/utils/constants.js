@@ -10,3 +10,8 @@ export const USER_ROLES = [
   "user",
   "operator",
 ];
+
+export const ENUM_PERIODE = [
+  { value: 1, name: "Semester Ganjil" },
+  { value: 2, name: "Semester Genap" }
+];

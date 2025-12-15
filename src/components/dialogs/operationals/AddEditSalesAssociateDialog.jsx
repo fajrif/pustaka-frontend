@@ -27,6 +27,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
     code: '',
     name: '',
     description: '',
+    no_ktp: '',
     email: '',
     address: '',
     city_id: '',
@@ -389,6 +390,39 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
                 )}
               </div>
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="no_ktp" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>No KTP</Label>
+                {isViewMode ? (
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingSalesAssociate.no_ktp || '-'}</p>
+                ) : (
+                  <>
+                    <Input
+                      name="no_ktp"
+                      placeholder="Nomor KTP terdaftar"
+                      {...register("no_ktp")}
+                    />
+                    {errors.no_ktp && <p className="text-red-500 text-sm">{errors.no_ktp.message}</p>}
+                  </>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Email</Label>
+                {isViewMode ? (
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingSalesAssociate.email || '-'}</p>
+                ) : (
+                  <>
+                    <Input
+                      name="email"
+                      type="email"
+                      placeholder="Contoh: contact@sales.com"
+                      {...register("email")}
+                    />
+                    {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+                  </>
+                )}
+              </div>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="address" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Alamat</Label>
               {isViewMode ? (
@@ -445,39 +479,6 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
                       {...register("area")}
                     />
                     {errors.area && <p className="text-red-500 text-sm">{errors.area.message}</p>}
-                  </>
-                )}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Email</Label>
-                {isViewMode ? (
-                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingSalesAssociate.email || '-'}</p>
-                ) : (
-                  <>
-                    <Input
-                      name="email"
-                      type="email"
-                      placeholder="Contoh: contact@sales.com"
-                      {...register("email")}
-                    />
-                    {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
-                  </>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="website" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Website</Label>
-                {isViewMode ? (
-                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingSalesAssociate.website || '-'}</p>
-                ) : (
-                  <>
-                    <Input
-                      name="website"
-                      placeholder="Contoh: https://www.sales.com"
-                      {...register("website")}
-                    />
-                    {errors.website && <p className="text-red-500 text-sm">{errors.website.message}</p>}
                   </>
                 )}
               </div>
