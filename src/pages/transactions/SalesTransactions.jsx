@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Pencil, Search, Trash2, ShoppingCart, Eye } from 'lucide-react';
+import { Plus, Pencil, Search, Trash2, ShoppingCart, Eye, FileText } from 'lucide-react';
 import AddEditSalesTransactionDialog from '@/components/dialogs/transactions/AddEditSalesTransactionDialog';
 import ViewSalesTransactionDialog from '@/components/dialogs/transactions/ViewSalesTransactionDialog';
+import InvoiceDialog from '@/components/dialogs/transactions/InvoiceDialog';
 import Pagination from '@/components/Pagination';
 import { formatDate, formatRupiah } from '@/utils/formatters';
 import { PAGINATION } from '@/utils/constants';
@@ -24,6 +25,10 @@ const SalesTransactions = () => {
   // View Dialog State
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [viewTransaction, setViewTransaction] = useState(null);
+
+  // Invoice Dialog State
+  const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
+  const [invoiceTransaction, setInvoiceTransaction] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [paymentTypeFilter, setPaymentTypeFilter] = useState('');
@@ -51,6 +56,11 @@ const SalesTransactions = () => {
   const handleView = (transaction) => {
     setViewTransaction(transaction);
     setShowViewDialog(true);
+  };
+
+  const handleInvoice = (transaction) => {
+    setInvoiceTransaction(transaction);
+    setShowInvoiceDialog(true);
   };
 
   const handleEdit = (transaction) => {
@@ -278,6 +288,15 @@ const SalesTransactions = () => {
                             <Button
                               variant="outline"
                               size="icon"
+                              onClick={() => handleInvoice(transaction)}
+                              className="text-green-600 hover:text-green-700"
+                              title="View Invoice"
+                            >
+                              <FileText className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
                               onClick={() => handleEdit(transaction)}
                               className="text-blue-600 hover:text-blue-700"
                               title="Edit Transaction"
@@ -327,6 +346,12 @@ const SalesTransactions = () => {
         onClose={() => setShowViewDialog(false)}
         transactionId={viewTransaction?.id}
         initialData={viewTransaction}
+      />
+
+      <InvoiceDialog
+        isOpen={showInvoiceDialog}
+        onClose={() => setShowInvoiceDialog(false)}
+        transactionId={invoiceTransaction?.id}
       />
     </div>
   );
