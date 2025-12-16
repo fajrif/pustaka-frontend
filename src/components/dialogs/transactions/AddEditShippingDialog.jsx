@@ -25,7 +25,6 @@ const AddEditShippingDialog = ({ isOpen, onClose, transactionId, editingShipping
 
     const {
         register,
-        control,
         handleSubmit,
         reset,
         control,
@@ -179,9 +178,9 @@ const AddEditShippingDialog = ({ isOpen, onClose, transactionId, editingShipping
                     <div className="space-y-2">
                         <Label htmlFor="total_amount">Biaya Ongkir</Label>
                         <CurrencyInput
-                          name="total_amount"
-                          control={control}
-                          placeholder="Contoh: Rp.10,000"
+                            name="total_amount"
+                            control={control}
+                            placeholder="Contoh: Rp.10,000"
                         />
                         {errors.total_amount && (
                             <p className="text-red-500 text-sm">{errors.total_amount.message}</p>

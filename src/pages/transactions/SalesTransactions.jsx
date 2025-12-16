@@ -146,7 +146,7 @@ const SalesTransactions = () => {
                 <div className="space-y-1 text-sm text-slate-600">
                   <p>• <strong className="font-semibold">Cash (Tunai):</strong> Pembayaran langsung, transaksi selesai saat dibuat</p>
                   <p>• <strong className="font-semibold">Credit (Kredit):</strong> Pembayaran bertahap dengan cicilan, dapat melacak jatuh tempo dan riwayat pembayaran</p>
-                  <p>• <strong className="font-semibold">Status:</strong> Booking (0) → Installment (2) → Paid Off (1)</p>
+                  <p>• <strong className="font-semibold">Status:</strong> Booking (0) → Paid Off (1) → Installment (2)</p>
                 </div>
               </div>
             </div>
