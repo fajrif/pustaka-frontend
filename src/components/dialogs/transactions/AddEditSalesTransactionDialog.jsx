@@ -18,7 +18,7 @@ import BookSelectionDialog from './BookSelectionDialog';
 import AddPaymentDialog from './AddPaymentDialog';
 import AddEditShippingDialog from './AddEditShippingDialog';
 
-const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, onFinish }) => {
+const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinish }) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [selectedBooks, setSelectedBooks] = useState([]);
@@ -37,54 +37,6 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
     status: 0,
   };
 
-  const { register, control, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm({
-    resolver: zodResolver(salesTransactionSchema),
-    defaultValues: editingTransaction || initialData
-  });
-
-  const paymentType = watch('payment_type');
-  const currentStatus = watch('status');
-
-  // Determine if items can be edited
-  const canEditItems = !editingTransaction || (editingTransaction && currentStatus === 0);
-
-  // Lock modifications if status is Paid Off (1)
-  // Prefer fresh transaction detail status if available, otherwise use editingTransaction status
-
-
-  // Sync form with editing data
-  useEffect(() => {
-    if (editingTransaction) {
-      const formattedData = {
-        ...editingTransaction,
-        transaction_date: editingTransaction.transaction_date ? format(parseISO(editingTransaction.transaction_date), 'yyyy-MM-dd') : '',
-        due_date: editingTransaction.due_date ? format(parseISO(editingTransaction.due_date), 'yyyy-MM-dd') : '',
-      };
-
-      reset(formattedData);
-
-      // Set selected books from items
-      if (editingTransaction.items && editingTransaction.items.length > 0) {
-        const books = editingTransaction.items.map(item => ({
-          book_id: item.book_id,
-          book: item.book,
-          quantity: item.quantity
-        }));
-        setSelectedBooks(books);
-      }
-    } else {
-      setSelectedBooks([]);
-      reset(initialData);
-    }
-  }, [editingTransaction, reset]);
-
-  useEffect(() => {
-    if (!isOpen) {
-      setSelectedBooks([]);
-      setEditingShipping(null);
-    }
-  }, [isOpen]);
-
   // Fetch sales associates
   const { data: salesAssociatesData = { sales_associates: [] } } = useQuery({
     queryKey: ['salesAssociates', 'all'],
@@ -96,46 +48,92 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
     staleTime: 5 * 60 * 1000,
   });
 
-  // Fetch fresh transaction details including payments and shippings
-  // This query is still useful for getting the latest sub-resource data
-  const { data: transactionDetail } = useQuery({
-    queryKey: ['salesTransaction', editingTransaction?.id],
+  // Fetch transaction details
+  const { data: transactionDetail, isLoading: isLoadingTransaction } = useQuery({
+    queryKey: ['salesTransaction', transactionId],
     queryFn: async () => {
-      const response = await api.get(`/sales-transactions/${editingTransaction.id}`);
-      return response.data.sales_transaction;
+      const response = await api.get(`/sales-transactions/${transactionId}`);
+      // Handle the API structure which returns { transaction: ... } or { sales_transaction: ... }
+      return response.data?.transaction || response.data?.sales_transaction || null;
     },
-    enabled: isOpen && !!editingTransaction,
+    enabled: isOpen && !!transactionId,
   });
 
   // Fetch shippings separately
   const { data: shippingsData } = useQuery({
-    queryKey: ['shippings', editingTransaction?.id],
+    queryKey: ['shippings', transactionId],
     queryFn: async () => {
-      const response = await api.get(`/sales-transactions/${editingTransaction.id}/shippings`);
+      const response = await api.get(`/sales-transactions/${transactionId}/shippings`);
       return response.data;
     },
-    enabled: isOpen && !!editingTransaction,
+    enabled: isOpen && !!transactionId,
   });
 
   // Fetch payments separately
   const { data: paymentsData } = useQuery({
-    queryKey: ['payments', editingTransaction?.id],
+    queryKey: ['payments', transactionId],
     queryFn: async () => {
-      const response = await api.get(`/sales-transactions/${editingTransaction.id}/payments`);
+      const response = await api.get(`/sales-transactions/${transactionId}/payments`);
       return response.data;
     },
-    enabled: isOpen && !!editingTransaction,
+    enabled: isOpen && !!transactionId,
   });
 
-  // Use fresh details if available
-  const currentShippings = shippingsData?.shippings || editingTransaction?.shippings || [];
-  const currentPayments = paymentsData?.payments || editingTransaction?.payments || [];
+  const { register, control, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm({
+    resolver: zodResolver(salesTransactionSchema),
+    defaultValues: initialData
+  });
+
+  const paymentType = watch('payment_type');
+  const currentStatus = watch('status');
+
+  // Determine if items can be edited
+  // If transactionId is present, we are editing. Check fetched status.
+  // If not editing, we can always edit items.
+  const isEditing = !!transactionId;
+  const canEditItems = !isEditing || (isEditing && currentStatus === 0);
 
   // Lock modifications if status is Paid Off (1)
-  // Prefer fresh transaction detail status if available, otherwise use editingTransaction status
-  const isTransactionLocked = editingTransaction && (
-    (transactionDetail?.status === 1) || (editingTransaction.status === 1)
-  );
+  const isTransactionLocked = isEditing && transactionDetail?.status === 1;
+
+  // Sync form with fetched data
+  useEffect(() => {
+    if (transactionId && transactionDetail) {
+      const formattedData = {
+        ...transactionDetail,
+        transaction_date: transactionDetail.transaction_date ? format(parseISO(transactionDetail.transaction_date), 'yyyy-MM-dd') : '',
+        due_date: transactionDetail.due_date ? format(parseISO(transactionDetail.due_date), 'yyyy-MM-dd') : '',
+      };
+
+      reset(formattedData);
+
+      // Set selected books from items
+      if (transactionDetail.items && transactionDetail.items.length > 0) {
+        const books = transactionDetail.items.map(item => ({
+          book_id: item.book_id,
+          book: item.book,
+          quantity: item.quantity
+        }));
+        setSelectedBooks(books);
+      }
+    } else if (!transactionId) {
+      // New transaction
+      setSelectedBooks([]);
+      reset(initialData);
+    }
+  }, [transactionId, transactionDetail, reset]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedBooks([]);
+      setEditingShipping(null);
+    }
+  }, [isOpen]);
+
+  // Use fresh details if available
+  const currentShippings = shippingsData?.shippings || transactionDetail?.shippings || [];
+  const currentPayments = paymentsData?.payments || transactionDetail?.payments || [];
+
   const createMutation = useMutation({
     mutationFn: async (data) => {
       const response = await api.post('/sales-transactions', data);
@@ -171,7 +169,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
         variant: "success",
       });
       queryClient.invalidateQueries(['salesTransactions']);
-      queryClient.invalidateQueries(['salesTransaction', editingTransaction.id]);
+      queryClient.invalidateQueries(['salesTransaction', transactionId]);
     },
     onError: (error) => {
       toast({
@@ -185,12 +183,12 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
   // Delete Shipping Mutation
   const deleteShippingMutation = useMutation({
     mutationFn: async (shippingId) => {
-      await api.delete(`/sales-transactions/${editingTransaction.id}/shippings/${shippingId}`);
+      await api.delete(`/sales-transactions/${transactionId}/shippings/${shippingId}`);
     },
     onSuccess: () => {
       toast({ title: "Success", description: "Pengiriman berhasil dihapus", variant: "success" });
-      queryClient.invalidateQueries(['salesTransaction', editingTransaction.id]);
-      queryClient.invalidateQueries(['shippings', editingTransaction.id]);
+      queryClient.invalidateQueries(['salesTransaction', transactionId]);
+      queryClient.invalidateQueries(['shippings', transactionId]);
     },
     onError: (error) => {
       toast({ title: "Error", description: error.response?.data?.error || "Gagal menghapus pengiriman", variant: "destructive" });
@@ -200,12 +198,12 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
   // Delete Payment Mutation
   const deletePaymentMutation = useMutation({
     mutationFn: async (paymentId) => {
-      await api.delete(`/sales-transactions/${editingTransaction.id}/payments/${paymentId}`);
+      await api.delete(`/sales-transactions/${transactionId}/payments/${paymentId}`);
     },
     onSuccess: () => {
       toast({ title: "Success", description: "Pembayaran berhasil dihapus", variant: "success" });
-      queryClient.invalidateQueries(['salesTransaction', editingTransaction.id]);
-      queryClient.invalidateQueries(['payments', editingTransaction.id]);
+      queryClient.invalidateQueries(['salesTransaction', transactionId]);
+      queryClient.invalidateQueries(['payments', transactionId]);
     },
     onError: (error) => {
       toast({ title: "Error", description: error.response?.data?.error || "Gagal menghapus pembayaran", variant: "destructive" });
@@ -298,8 +296,8 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
       }))
     };
 
-    if (editingTransaction) {
-      updateMutation.mutate({ id: editingTransaction.id, data: payload });
+    if (isEditing) {
+      updateMutation.mutate({ id: transactionId, data: payload });
     } else {
       createMutation.mutate(payload);
     }
@@ -309,7 +307,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
 
   // Calculate remaining balance
   const calculateRemainingBalance = () => {
-    if (!editingTransaction) return 0; // For new transactions, remaining balance is 0 initially
+    if (!isEditing) return 0; // For new transactions, remaining balance is 0 initially
     const totalPaid = currentPayments.reduce((sum, p) => sum + p.amount, 0);
     return totalAmount - totalPaid;
   };
@@ -322,7 +320,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingTransaction ? 'Edit Transaksi' : 'Tambah Transaksi Baru'}
+              {isEditing ? 'Edit Transaksi' : 'Tambah Transaksi Baru'}
             </DialogTitle>
           </DialogHeader>
 
@@ -407,7 +405,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
                   )}
 
                   {/* Status field - only in edit mode */}
-                  {editingTransaction && (
+                  {isEditing && (
                     <div className="space-y-2">
                       <Label className="text-slate-700">Status</Label>
                       <Controller
@@ -447,7 +445,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
                     </Button>
                   ) : (
                     <div className="flex items-center gap-2 text-amber-600 text-sm">
-                      <span>Items terkunci (status != Booking)</span>
+                      <span>Items terkunci (status sudah dibayar)</span>
                     </div>
                   )}
                 </div>
@@ -481,7 +479,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
                               <span className="font-medium text-sm">{item.book.name}</span>
                             </TableCell>
                             <TableCell>{item.book.publisher?.name || '-'}</TableCell>
-                            <TableCell>{item.book.jenis_buku?.name || '-'}</TableCell>
+                            <TableCell>{item.book.jenis_buku ? `[${item.book.jenis_buku.code}] ${item.book.jenis_buku.name}` : '-'}</TableCell>
                             <TableCell className="text-right">{formatRupiah(item.book.price)}</TableCell>
                             <TableCell className="text-center">
                               {!canEditItems ? (
@@ -542,7 +540,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
               </div>
 
               {/* Shippings Section - Only visible when editing existing transaction to allow management */}
-              {editingTransaction && (
+              {isEditing && (
                 <div className="space-y-4">
                   <div className="flex justify-between items-center pb-2">
                     <h3 className="font-semibold text-slate-900">Pengiriman (Shippings)</h3>
@@ -623,7 +621,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
               )}
 
               {/* Payments Section - Only visible when editing */}
-              {editingTransaction && (
+              {isEditing && (
                 <div className="space-y-4">
                   <div className="flex justify-between items-center pb-2">
                     <h3 className="font-semibold text-slate-900">Pembayaran (Payments)</h3>
@@ -692,7 +690,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
                       <div className="text-slate-600">Total Tagihan: <span className="font-semibold text-slate-900">{formatRupiah(totalAmount)}</span></div>
                       <div className="text-slate-600">Total Terbayar: <span className="font-semibold text-green-600">{formatRupiah(totalAmount - remainingBalance)}</span></div>
                     </div>
-                    <div className="text-lg">
+                    <div className="text-sm">
                       <span className="text-slate-600 mr-2">Sisa Tagihan:</span>
                       <span className={`font-bold ${remainingBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
                         {formatRupiah(remainingBalance)}
@@ -704,23 +702,23 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
 
               {/* Always show Transaction Summary */}
               <div className="space-y-3 bg-slate-50 p-4 rounded-lg border">
-                <h3 className="font-semibold text-slate-900">{editingTransaction ? 'Ringkasan Transaksi' : 'Ringkasan Awal'}</h3>
+                <h3 className="font-semibold text-slate-900">{isEditing ? 'Ringkasan Transaksi' : 'Ringkasan Awal'}</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-slate-600">Subtotal Buku:</span>
                     <span className="font-medium">{formatRupiah(booksSubtotal)}</span>
                   </div>
-                  {editingTransaction && (
+                  {isEditing && (
                     <div className="flex justify-between">
                       <span className="text-slate-600">Total Ongkir:</span>
                       <span className="font-medium">{formatRupiah(shippingsTotal)}</span>
                     </div>
                   )}
                   <div className="flex justify-between pt-2 border-t border-slate-300">
-                    <span className="font-bold text-slate-900 text-lg">TOTAL:</span>
-                    <span className="font-bold text-blue-600 text-lg">{formatRupiah(totalAmount)}</span>
+                    <span className="font-bold text-slate-900">TOTAL:</span>
+                    <span className="font-bold text-blue-600">{formatRupiah(totalAmount)}</span>
                   </div>
-                  {!editingTransaction && (
+                  {!isEditing && (
                     <p className="text-xs text-slate-500 mt-2">*Biaya pengiriman dapat ditambahkan setelah transaksi dibuat.</p>
                   )}
                 </div>
@@ -730,7 +728,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
 
             <DialogFooter className="gap-2">
               <Button type="button" variant="outline" onClick={onClosing}>
-                Batal
+                Tutup
               </Button>
               <Button
                 type="submit"
@@ -753,29 +751,29 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
       />
 
       {/* Add Payment Dialog */}
-      {editingTransaction && (
+      {isEditing && (
         <AddPaymentDialog
           isOpen={showPaymentDialog}
           onClose={() => setShowPaymentDialog(false)}
-          transactionId={editingTransaction.id}
+          transactionId={transactionId}
           remainingAmount={remainingBalance}
           onSuccess={() => {
-            queryClient.invalidateQueries(['salesTransaction', editingTransaction.id]);
-            queryClient.invalidateQueries(['payments', editingTransaction.id]);
+            queryClient.invalidateQueries(['salesTransaction', transactionId]);
+            queryClient.invalidateQueries(['payments', transactionId]);
           }}
         />
       )}
 
       {/* Add/Edit Shipping Dialog */}
-      {editingTransaction && (
+      {isEditing && (
         <AddEditShippingDialog
           isOpen={showShippingDialog}
           onClose={() => setShowShippingDialog(false)}
-          transactionId={editingTransaction.id}
+          transactionId={transactionId}
           editingShipping={editingShipping}
           onSuccess={() => {
-            queryClient.invalidateQueries(['salesTransaction', editingTransaction.id]);
-            queryClient.invalidateQueries(['shippings', editingTransaction.id]);
+            queryClient.invalidateQueries(['salesTransaction', transactionId]);
+            queryClient.invalidateQueries(['shippings', transactionId]);
           }}
         />
       )}

@@ -318,7 +318,7 @@ const SalesTransactions = () => {
       <AddEditSalesTransactionDialog
         isOpen={showDialog}
         onClose={() => finishSubmit(false)}
-        editingTransaction={editingTransaction}
+        transactionId={editingTransaction?.id}
         onFinish={finishSubmit}
       />
 

@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { useToast } from '@/components/ui/use-toast';
 import { formatRupiah } from '@/utils/formatters';
 
@@ -23,6 +24,7 @@ const AddPaymentDialog = ({ isOpen, onClose, transactionId, remainingAmount, onS
 
     const {
         register,
+        control,
         handleSubmit,
         reset,
         formState: { errors, isSubmitting },
@@ -114,12 +116,10 @@ const AddPaymentDialog = ({ isOpen, onClose, transactionId, remainingAmount, onS
 
                     <div className="space-y-2">
                         <Label htmlFor="amount">Jumlah Pembayaran</Label>
-                        <Input
-                            id="amount"
-                            type="number"
-                            min="1"
-                            max={remainingAmount}
-                            {...register('amount', { valueAsNumber: true })}
+                        <CurrencyInput
+                          name="amount"
+                          control={control}
+                          placeholder="Contoh: Rp.10,000"
                         />
                         {errors.amount && (
                             <p className="text-red-500 text-sm">{errors.amount.message}</p>

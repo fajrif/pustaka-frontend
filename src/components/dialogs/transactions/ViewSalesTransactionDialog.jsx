@@ -195,7 +195,7 @@ const ViewSalesTransactionDialog = ({ isOpen, onClose, transactionId, initialDat
                                                         <span className="font-medium text-sm">{item.book?.name || item.book_name || '-'}</span>
                                                     </TableCell>
                                                     <TableCell>{item.book?.publisher?.name || '-'}</TableCell>
-                                                    <TableCell>{item.book?.jenis_buku?.name || '-'}</TableCell>
+                                                    <TableCell>{item.book.jenis_buku ? `[${item.book.jenis_buku.code}] ${item.book.jenis_buku.name}` : '-'}</TableCell>
                                                     <TableCell className="text-right">{formatRupiah(item.book?.price || 0)}</TableCell>
                                                     <TableCell className="text-center"><span>{item.quantity}</span></TableCell>
                                                     <TableCell className="text-right font-medium">
@@ -282,7 +282,7 @@ const ViewSalesTransactionDialog = ({ isOpen, onClose, transactionId, initialDat
                                     <div className="text-slate-600">Total Tagihan: <span className="font-semibold text-slate-900">{formatRupiah(totalAmount)}</span></div>
                                     <div className="text-slate-600">Total Terbayar: <span className="font-semibold text-green-600">{formatRupiah(totalAmount - remainingBalance)}</span></div>
                                 </div>
-                                <div className="text-lg">
+                                <div className="text-sm">
                                     <span className="text-slate-600 mr-2">Sisa Tagihan:</span>
                                     <span className={`font-bold ${remainingBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
                                         {formatRupiah(remainingBalance)}
@@ -304,8 +304,8 @@ const ViewSalesTransactionDialog = ({ isOpen, onClose, transactionId, initialDat
                                     <span className="font-medium">{formatRupiah(shippingsTotal)}</span>
                                 </div>
                                 <div className="flex justify-between pt-2 border-t border-slate-300">
-                                    <span className="font-bold text-slate-900 text-lg">TOTAL:</span>
-                                    <span className="font-bold text-blue-600 text-lg">{formatRupiah(totalAmount)}</span>
+                                    <span className="font-bold text-slate-900">TOTAL:</span>
+                                    <span className="font-bold text-blue-600">{formatRupiah(totalAmount)}</span>
                                 </div>
                             </div>
                         </div>

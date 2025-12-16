@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { useToast } from '@/components/ui/use-toast';
 import Select from '@/components/ui/select';
 
@@ -24,6 +25,7 @@ const AddEditShippingDialog = ({ isOpen, onClose, transactionId, editingShipping
 
     const {
         register,
+        control,
         handleSubmit,
         reset,
         control,
@@ -176,11 +178,10 @@ const AddEditShippingDialog = ({ isOpen, onClose, transactionId, editingShipping
 
                     <div className="space-y-2">
                         <Label htmlFor="total_amount">Biaya Ongkir</Label>
-                        <Input
-                            id="total_amount"
-                            type="number"
-                            min="0"
-                            {...register('total_amount', { valueAsNumber: true })}
+                        <CurrencyInput
+                          name="total_amount"
+                          control={control}
+                          placeholder="Contoh: Rp.10,000"
                         />
                         {errors.total_amount && (
                             <p className="text-red-500 text-sm">{errors.total_amount.message}</p>
