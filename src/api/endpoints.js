@@ -72,14 +72,24 @@ export const salesAssociatesAPI = {
 };
 
 // Sales Transactions API
+// Sales Transactions API
 export const salesTransactionsAPI = {
   getAll: (params) => api.get('/sales-transactions', { params }),
   getById: (id) => api.get(`/sales-transactions/${id}`),
   create: (data) => api.post('/sales-transactions', data),
   update: (id, data) => api.put(`/sales-transactions/${id}`, data),
   delete: (id) => api.delete(`/sales-transactions/${id}`),
-  getInstallments: (transactionId) => api.get(`/sales-transactions/${transactionId}/installments`),
-  addInstallment: (transactionId, data) => api.post(`/sales-transactions/${transactionId}/installments`, data),
+  
+  // Payments (New)
+  getPayments: (transactionId) => api.get(`/sales-transactions/${transactionId}/payments`),
+  createPayment: (transactionId, data) => api.post(`/sales-transactions/${transactionId}/payments`, data),
+  deletePayment: (transactionId, paymentId) => api.delete(`/sales-transactions/${transactionId}/payments/${paymentId}`),
+
+  // Shippings (New)
+  getShippings: (transactionId) => api.get(`/sales-transactions/${transactionId}/shippings`),
+  createShipping: (transactionId, data) => api.post(`/sales-transactions/${transactionId}/shippings`, data),
+  updateShipping: (transactionId, shippingId, data) => api.put(`/sales-transactions/${transactionId}/shippings/${shippingId}`, data),
+  deleteShipping: (transactionId, shippingId) => api.delete(`/sales-transactions/${transactionId}/shippings/${shippingId}`),
 };
 
 // Billers API

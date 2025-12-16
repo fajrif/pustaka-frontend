@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Pencil, Search, Trash2, ShoppingCart, Eye } from 'lucide-react';
 import AddEditSalesTransactionDialog from '@/components/dialogs/transactions/AddEditSalesTransactionDialog';
+import ViewSalesTransactionDialog from '@/components/dialogs/transactions/ViewSalesTransactionDialog';
 import Pagination from '@/components/Pagination';
 import { formatDate, formatRupiah } from '@/utils/formatters';
 import { PAGINATION } from '@/utils/constants';
@@ -19,6 +20,10 @@ const SalesTransactions = () => {
   const { toast } = useToast();
   const [showDialog, setShowDialog] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
+
+  // View Dialog State
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [viewTransaction, setViewTransaction] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [paymentTypeFilter, setPaymentTypeFilter] = useState('');
@@ -44,6 +49,11 @@ const SalesTransactions = () => {
   });
 
   const handleView = (transaction) => {
+    setViewTransaction(transaction);
+    setShowViewDialog(true);
+  };
+
+  const handleEdit = (transaction) => {
     setEditingTransaction(transaction);
     setShowDialog(true);
   };
@@ -88,12 +98,7 @@ const SalesTransactions = () => {
   });
 
   const handleDelete = (transaction) => {
-    const hasInstallments = transaction.installments && transaction.installments.length > 0;
-    const confirmMessage = hasInstallments
-      ? `Transaksi ini memiliki ${transaction.installments.length} cicilan. Menghapus transaksi akan menghapus semua cicilan. Yakin ingin melanjutkan?`
-      : 'Yakin ingin menghapus transaksi ini?';
-
-    if (confirm(confirmMessage)) {
+    if (confirm('Yakin ingin menghapus transaksi ini? Stok akan dikembalikan otomatis.')) {
       deleteMutation.mutate(transaction.id);
     }
   };
@@ -237,7 +242,7 @@ const SalesTransactions = () => {
                           <span
                             className="uppercase cursor-pointer hover:underline hover:text-blue-600 font-medium"
                             onClick={() => handleView(transaction)}
-                            >
+                          >
                             {transaction.no_invoice || 'N/A'}
                           </span>
                         </TableCell>
@@ -266,9 +271,18 @@ const SalesTransactions = () => {
                               variant="outline"
                               size="icon"
                               onClick={() => handleView(transaction)}
-                              title="View/Edit Transaction"
+                              title="View Details"
                             >
                               <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleEdit(transaction)}
+                              className="text-blue-600 hover:text-blue-700"
+                              title="Edit Transaction"
+                            >
+                              <Pencil className="w-4 h-4" />
                             </Button>
                             <Button
                               variant="outline"
@@ -306,6 +320,13 @@ const SalesTransactions = () => {
         onClose={() => finishSubmit(false)}
         editingTransaction={editingTransaction}
         onFinish={finishSubmit}
+      />
+
+      <ViewSalesTransactionDialog
+        isOpen={showViewDialog}
+        onClose={() => setShowViewDialog(false)}
+        transactionId={viewTransaction?.id}
+        initialData={viewTransaction}
       />
     </div>
   );

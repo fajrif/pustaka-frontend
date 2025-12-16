@@ -6,34 +6,34 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { salesTransactionSchema } from '@/utils/validations/SalesTransaction';
-import { Edit, Plus, Trash2, Lock, Package } from 'lucide-react';
+import { Edit, Plus, Trash2, Package, Truck, CreditCard } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
-import { formatRupiah, formatDate } from '@/utils/formatters';
+import { formatRupiah } from '@/utils/formatters';
 import Select from '@/components/ui/select';
 import BookSelectionDialog from './BookSelectionDialog';
-import AddInstallmentDialog from './AddInstallmentDialog';
+import AddPaymentDialog from './AddPaymentDialog';
+import AddEditShippingDialog from './AddEditShippingDialog';
 
 const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, onFinish }) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [isEditMode, setIsEditMode] = useState(false);
   const [selectedBooks, setSelectedBooks] = useState([]);
   const [showBookDialog, setShowBookDialog] = useState(false);
-  const [showExpedition, setShowExpedition] = useState(false);
-  const [showInstallmentDialog, setShowInstallmentDialog] = useState(false);
+
+  // Dialog states for sub-resources
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [showShippingDialog, setShowShippingDialog] = useState(false);
+  const [editingShipping, setEditingShipping] = useState(null);
 
   const initialData = {
     sales_associate_id: '',
-    expedition_id: '',
     payment_type: 'T',
     transaction_date: new Date().toISOString().split('T')[0],
     due_date: '',
-    expedition_price: '0',
     status: 0,
   };
 
@@ -45,9 +45,12 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
   const paymentType = watch('payment_type');
   const currentStatus = watch('status');
 
-  // Determine if items/expedition can be edited
-  const isViewMode = editingTransaction && !isEditMode;
+  // Determine if items can be edited
   const canEditItems = !editingTransaction || (editingTransaction && currentStatus === 0);
+
+  // Lock modifications if status is Paid Off (1)
+  // Prefer fresh transaction detail status if available, otherwise use editingTransaction status
+
 
   // Sync form with editing data
   useEffect(() => {
@@ -56,7 +59,6 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
         ...editingTransaction,
         transaction_date: editingTransaction.transaction_date ? format(parseISO(editingTransaction.transaction_date), 'yyyy-MM-dd') : '',
         due_date: editingTransaction.due_date ? format(parseISO(editingTransaction.due_date), 'yyyy-MM-dd') : '',
-        expedition_price: editingTransaction.expedition_price?.toString() || '0',
       };
 
       reset(formattedData);
@@ -70,25 +72,16 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
         }));
         setSelectedBooks(books);
       }
-
-      // Set expedition visibility
-      if (editingTransaction.expedition_id) {
-        setShowExpedition(true);
-      }
-
-      setIsEditMode(false);
     } else {
-      setIsEditMode(true);
       setSelectedBooks([]);
-      setShowExpedition(false);
+      reset(initialData);
     }
   }, [editingTransaction, reset]);
 
   useEffect(() => {
     if (!isOpen) {
-      setIsEditMode(false);
       setSelectedBooks([]);
-      setShowExpedition(false);
+      setEditingShipping(null);
     }
   }, [isOpen]);
 
@@ -103,19 +96,9 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
     staleTime: 5 * 60 * 1000,
   });
 
-  // Fetch expeditions
-  const { data: expeditionsData = { expeditions: [] } } = useQuery({
-    queryKey: ['expeditions', 'all'],
-    queryFn: async () => {
-      const response = await api.get('/expeditions?all=true');
-      return response.data;
-    },
-    enabled: isOpen && showExpedition,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // Fetch transaction details with installments
-  const { data: transactionDetail, refetch: refetchTransaction } = useQuery({
+  // Fetch fresh transaction details including payments and shippings
+  // This query is still useful for getting the latest sub-resource data
+  const { data: transactionDetail } = useQuery({
     queryKey: ['salesTransaction', editingTransaction?.id],
     queryFn: async () => {
       const response = await api.get(`/sales-transactions/${editingTransaction.id}`);
@@ -124,10 +107,35 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
     enabled: isOpen && !!editingTransaction,
   });
 
-  // Use fresh transaction detail if available, otherwise use editingTransaction
-  const displayTransaction = transactionDetail || editingTransaction;
+  // Fetch shippings separately
+  const { data: shippingsData } = useQuery({
+    queryKey: ['shippings', editingTransaction?.id],
+    queryFn: async () => {
+      const response = await api.get(`/sales-transactions/${editingTransaction.id}/shippings`);
+      return response.data;
+    },
+    enabled: isOpen && !!editingTransaction,
+  });
 
-  // Create mutation
+  // Fetch payments separately
+  const { data: paymentsData } = useQuery({
+    queryKey: ['payments', editingTransaction?.id],
+    queryFn: async () => {
+      const response = await api.get(`/sales-transactions/${editingTransaction.id}/payments`);
+      return response.data;
+    },
+    enabled: isOpen && !!editingTransaction,
+  });
+
+  // Use fresh details if available
+  const currentShippings = shippingsData?.shippings || editingTransaction?.shippings || [];
+  const currentPayments = paymentsData?.payments || editingTransaction?.payments || [];
+
+  // Lock modifications if status is Paid Off (1)
+  // Prefer fresh transaction detail status if available, otherwise use editingTransaction status
+  const isTransactionLocked = editingTransaction && (
+    (transactionDetail?.status === 1) || (editingTransaction.status === 1)
+  );
   const createMutation = useMutation({
     mutationFn: async (data) => {
       const response = await api.post('/sales-transactions', data);
@@ -156,53 +164,14 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
       const response = await api.put(`/sales-transactions/${id}`, data);
       return response.data;
     },
-    onSuccess: async (_, variables) => {
+    onSuccess: () => {
       toast({
         title: "Success",
         description: "Transaksi berhasil diperbarui.",
         variant: "success",
       });
-
-      // Fetch fresh data directly from API (bypassing cache)
-      try {
-        const response = await api.get(`/sales-transactions/${variables.id}`);
-        const freshData = response.data.sales_transaction;
-
-        if (freshData) {
-          // Update form with fresh data
-          const formattedData = {
-            ...freshData,
-            transaction_date: freshData.transaction_date
-              ? format(parseISO(freshData.transaction_date), 'yyyy-MM-dd')
-              : '',
-            due_date: freshData.due_date
-              ? format(parseISO(freshData.due_date), 'yyyy-MM-dd')
-              : '',
-            expedition_price: freshData.expedition_price?.toString() || '0',
-          };
-          reset(formattedData);
-
-          // Update selected books from fresh items
-          if (freshData.items && freshData.items.length > 0) {
-            const books = freshData.items.map(item => ({
-              book_id: item.book_id,
-              book: item.book,
-              quantity: item.quantity
-            }));
-            setSelectedBooks(books);
-          }
-
-          // Update expedition visibility
-          setShowExpedition(!!freshData.expedition_id);
-        }
-      } catch (error) {
-        console.error('Failed to fetch fresh data:', error);
-      }
-
-      // Invalidate queries to refresh cached data
-      // queryClient.invalidateQueries(['salesTransaction', variables.id]);
       queryClient.invalidateQueries(['salesTransactions']);
-      setIsEditMode(false);
+      queryClient.invalidateQueries(['salesTransaction', editingTransaction.id]);
     },
     onError: (error) => {
       toast({
@@ -213,18 +182,45 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
     }
   });
 
+  // Delete Shipping Mutation
+  const deleteShippingMutation = useMutation({
+    mutationFn: async (shippingId) => {
+      await api.delete(`/sales-transactions/${editingTransaction.id}/shippings/${shippingId}`);
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Pengiriman berhasil dihapus", variant: "success" });
+      queryClient.invalidateQueries(['salesTransaction', editingTransaction.id]);
+      queryClient.invalidateQueries(['shippings', editingTransaction.id]);
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.response?.data?.error || "Gagal menghapus pengiriman", variant: "destructive" });
+    }
+  });
+
+  // Delete Payment Mutation
+  const deletePaymentMutation = useMutation({
+    mutationFn: async (paymentId) => {
+      await api.delete(`/sales-transactions/${editingTransaction.id}/payments/${paymentId}`);
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Pembayaran berhasil dihapus", variant: "success" });
+      queryClient.invalidateQueries(['salesTransaction', editingTransaction.id]);
+      queryClient.invalidateQueries(['payments', editingTransaction.id]);
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.response?.data?.error || "Gagal menghapus pembayaran", variant: "destructive" });
+    }
+  });
+
   const onFinishing = () => {
     reset(initialData);
     setSelectedBooks([]);
-    setShowExpedition(false);
     onFinish();
   };
 
   const onClosing = () => {
     reset(initialData);
     setSelectedBooks([]);
-    setShowExpedition(false);
-    setIsEditMode(false);
     onClose();
   };
 
@@ -252,10 +248,12 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
       return sum + (item.book.price * item.quantity);
     }, 0);
 
-    const expeditionPrice = parseFloat(watch('expedition_price')) || 0;
-    const totalAmount = booksSubtotal + expeditionPrice;
+    // Sum up shippings
+    const shippingsTotal = currentShippings.reduce((sum, s) => sum + s.total_amount, 0);
 
-    return { booksSubtotal, expeditionPrice, totalAmount };
+    const totalAmount = booksSubtotal + shippingsTotal;
+
+    return { booksSubtotal, shippingsTotal, totalAmount };
   };
 
   const onHandleSubmit = async (data) => {
@@ -293,9 +291,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
     // Prepare payload
     const payload = {
       ...data,
-      expedition_id: showExpedition && data.expedition_id ? data.expedition_id : null,
       due_date: data.payment_type === 'K' ? data.due_date : null,
-      expedition_price: showExpedition ? parseInt(data.expedition_price) : 0,
       items: selectedBooks.map(book => ({
         book_id: book.book_id,
         quantity: book.quantity
@@ -309,29 +305,16 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
     }
   };
 
-  const { booksSubtotal, expeditionPrice, totalAmount } = calculateSummary();
+  const { booksSubtotal, shippingsTotal, totalAmount } = calculateSummary();
 
-  // Calculate remaining balance for credit transactions
+  // Calculate remaining balance
   const calculateRemainingBalance = () => {
-    if (!transactionDetail || !transactionDetail.installments) return transactionDetail?.total_amount || 0;
-
-    const totalPaid = transactionDetail.installments.reduce((sum, inst) => sum + inst.amount, 0);
-    return transactionDetail.total_amount - totalPaid;
+    if (!editingTransaction) return 0; // For new transactions, remaining balance is 0 initially
+    const totalPaid = currentPayments.reduce((sum, p) => sum + p.amount, 0);
+    return totalAmount - totalPaid;
   };
 
-  const remainingBalance = transactionDetail ? calculateRemainingBalance() : 0;
-  const canAddInstallment = editingTransaction && currentStatus === 2 && paymentType === 'K';
-
-  // Status badge component
-  const StatusBadge = ({ status }) => {
-    const config = {
-      0: { label: 'Booking', className: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
-      1: { label: 'Paid Off', className: 'bg-green-50 text-green-700 border-green-200' },
-      2: { label: 'Installment', className: 'bg-blue-50 text-blue-700 border-blue-200' }
-    };
-    const { label, className } = config[status] || config[0];
-    return <Badge variant="outline" className={className}>{label}</Badge>;
-  };
+  const remainingBalance = calculateRemainingBalance();
 
   return (
     <>
@@ -339,168 +322,120 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingTransaction ? (isViewMode ? 'Detail Transaksi' : 'Edit Transaksi') : 'Tambah Transaksi Baru'}
+              {editingTransaction ? 'Edit Transaksi' : 'Tambah Transaksi Baru'}
             </DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleSubmit(onHandleSubmit)}>
-            <div className={`space-y-6 py-4 ${isViewMode ? 'bg-slate-50 p-4 rounded-lg' : ''}`}>
+            <div className="space-y-6 py-4">
               {/* Transaction Information */}
               <div className="space-y-4">
-                <h3 className={`font-semibold border-b pb-2 ${isViewMode ? 'text-slate-600' : 'text-slate-900'}`}>Informasi Transaksi</h3>
-
-                {isViewMode && displayTransaction?.no_invoice && (
-                  <div className="space-y-2">
-                    <Label className="text-slate-500">No Invoice</Label>
-                    <div className="px-3 py-2 uppercase text-blue-700 font-medium bg-white rounded-md shadow-sm border border-slate-200">
-                      {displayTransaction.no_invoice}
-                    </div>
-                  </div>
-                )}
+                <h3 className="font-semibold border-b pb-2 text-slate-900">Informasi Transaksi</h3>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className={`space-y-2 ${!isViewMode ? 'border-l-2 border-blue-400 pl-3' : ''}`}>
-                    <Label className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Sales Associate {!isViewMode && <span className="text-red-500">*</span>}</Label>
-                    {isViewMode ? (
-                      <div className="px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">
-                        <span className="text-sm text-slate-700">{displayTransaction?.sales_associate?.name || '-'}</span>
-                      </div>
-                    ) : (
-                      <>
-                        <Controller
-                          name="sales_associate_id"
-                          control={control}
-                          render={({ field: { onChange, value } }) => (
-                            <Select
-                              options={salesAssociatesData.sales_associates.map(sa => ({
-                                value: sa.id,
-                                label: `[${ sa.code }] ${ sa.name }`
-                              }))}
-                              value={value}
-                              onChange={onChange}
-                              placeholder="Pilih Sales Associate"
-                              searchable={true}
-                            />
-                          )}
+                  <div className="space-y-2 border-l-2 border-blue-400 pl-3">
+                    <Label className="text-slate-700">Sales Associate <span className="text-red-500">*</span></Label>
+                    <Controller
+                      name="sales_associate_id"
+                      control={control}
+                      render={({ field: { onChange, value } }) => (
+                        <Select
+                          options={salesAssociatesData.sales_associates.map(sa => ({
+                            value: sa.id,
+                            label: `[${sa.code}] ${sa.name}`
+                          }))}
+                          value={value}
+                          onChange={onChange}
+                          placeholder="Pilih Sales Associate"
+                          searchable={true}
                         />
-                        {errors.sales_associate_id && (
-                          <p className="text-red-500 text-sm">{errors.sales_associate_id.message}</p>
-                        )}
-                      </>
+                      )}
+                    />
+                    {errors.sales_associate_id && (
+                      <p className="text-red-500 text-sm">{errors.sales_associate_id.message}</p>
                     )}
                   </div>
 
-                  <div className={`space-y-2 ${!isViewMode ? 'border-l-2 border-blue-400 pl-3' : ''}`}>
-                    <Label className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Payment Type {!isViewMode && <span className="text-red-500">*</span>}</Label>
-                    {isViewMode ? (
-                      <div className="px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">
-                        <Badge variant="outline" className={displayTransaction?.payment_type === 'T' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}>
-                          {displayTransaction?.payment_type === 'T' ? 'Cash' : 'Credit'}
-                        </Badge>
-                      </div>
-                    ) : (
-                      <div className="flex gap-4 items-center pt-2">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            value="T"
-                            {...register('payment_type')}
-                            className="w-4 h-4 text-blue-600"
-                          />
-                          <span>Cash</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            value="K"
-                            {...register('payment_type')}
-                            className="w-4 h-4 text-blue-600"
-                          />
-                          <span>Credit</span>
-                        </label>
-                      </div>
-                    )}
+                  <div className="space-y-2 border-l-2 border-blue-400 pl-3">
+                    <Label className="text-slate-700">Payment Type <span className="text-red-500">*</span></Label>
+                    <div className="flex gap-4 items-center pt-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          value="T"
+                          {...register('payment_type')}
+                          className="w-4 h-4 text-blue-600"
+                        />
+                        <span>Cash</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          value="K"
+                          {...register('payment_type')}
+                          className="w-4 h-4 text-blue-600"
+                        />
+                        <span>Credit</span>
+                      </label>
+                    </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className={`space-y-2 ${!isViewMode ? 'border-l-2 border-blue-400 pl-3' : ''}`}>
-                    <Label className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Transaction Date {!isViewMode && <span className="text-red-500">*</span>}</Label>
-                    {isViewMode ? (
-                      <div className="px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">
-                        <span className="text-sm text-slate-700">{formatDate(displayTransaction?.transaction_date)}</span>
-                      </div>
-                    ) : (
-                      <>
-                        <Input
-                          type="date"
-                          {...register('transaction_date')}
-                        />
-                        {errors.transaction_date && (
-                          <p className="text-red-500 text-sm">{errors.transaction_date.message}</p>
-                        )}
-                      </>
+                  <div className="space-y-2 border-l-2 border-blue-400 pl-3">
+                    <Label className="text-slate-700">Transaction Date <span className="text-red-500">*</span></Label>
+                    <Input
+                      type="date"
+                      {...register('transaction_date')}
+                    />
+                    {errors.transaction_date && (
+                      <p className="text-red-500 text-sm">{errors.transaction_date.message}</p>
                     )}
                   </div>
 
                   {paymentType === 'K' && (
-                    <div className={`space-y-2 ${!isViewMode ? 'border-l-2 border-blue-400 pl-3' : ''}`}>
-                      <Label className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Due Date {!isViewMode && <span className="text-red-500">*</span>}</Label>
-                      {isViewMode ? (
-                        <div className="px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">
-                          <span className="text-sm text-slate-700">{displayTransaction?.due_date ? formatDate(displayTransaction.due_date) : '-'}</span>
-                        </div>
-                      ) : (
-                        <>
-                          <Input
-                            type="date"
-                            {...register('due_date')}
-                          />
-                          {errors.due_date && (
-                            <p className="text-red-500 text-sm">{errors.due_date.message}</p>
-                          )}
-                        </>
+                    <div className="space-y-2 border-l-2 border-blue-400 pl-3">
+                      <Label className="text-slate-700">Due Date <span className="text-red-500">*</span></Label>
+                      <Input
+                        type="date"
+                        {...register('due_date')}
+                      />
+                      {errors.due_date && (
+                        <p className="text-red-500 text-sm">{errors.due_date.message}</p>
                       )}
                     </div>
                   )}
 
-                  {/* Status field - only in view/edit mode */}
+                  {/* Status field - only in edit mode */}
                   {editingTransaction && (
                     <div className="space-y-2">
-                      <Label className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Status</Label>
-                      {isViewMode ? (
-                        <div className="px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">
-                          <StatusBadge status={displayTransaction.status} />
-                        </div>
-                      ) : (
-                        <Controller
-                          name="status"
-                          control={control}
-                          render={({ field: { onChange, value } }) => (
-                            <Select
-                              options={[
-                                { value: 0, label: 'Booking' },
-                                { value: 1, label: 'Paid Off' },
-                                { value: 2, label: 'Installment' }
-                              ]}
-                              value={value}
-                              onChange={onChange}
-                              placeholder="Pilih Status"
-                            />
-                          )}
-                        />
-                      )}
+                      <Label className="text-slate-700">Status</Label>
+                      <Controller
+                        name="status"
+                        control={control}
+                        render={({ field: { onChange, value } }) => (
+                          <Select
+                            options={[
+                              { value: 0, label: 'Booking' },
+                              { value: 1, label: 'Paid Off' },
+                              { value: 2, label: 'Installment' }
+                            ]}
+                            value={value}
+                            onChange={onChange} // We need to convert string to number if select returns string, but Select component usually handles this
+                            placeholder="Pilih Status"
+                          />
+                        )}
+                      />
                     </div>
                   )}
                 </div>
-
               </div>
 
               {/* Books Section */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center pb-2">
-                  <h3 className={`font-semibold ${isViewMode ? 'text-slate-600' : 'text-slate-900'}`}>Items</h3>
-                  {!isViewMode && canEditItems && (
+                  <h3 className="font-semibold text-slate-900">Items</h3>
+                  {canEditItems ? (
                     <Button
                       type="button"
                       onClick={() => setShowBookDialog(true)}
@@ -510,10 +445,8 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
                       <Plus className="w-4 h-4 mr-2" />
                       Pilih Buku
                     </Button>
-                  )}
-                  {!canEditItems && !isViewMode && (
+                  ) : (
                     <div className="flex items-center gap-2 text-amber-600 text-sm">
-                      <Lock className="w-4 h-4" />
                       <span>Items terkunci (status != Booking)</span>
                     </div>
                   )}
@@ -523,7 +456,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
                   <div className="text-center py-8 border rounded bg-slate-50">
                     <Package className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                     <p className="text-slate-500 text-sm">Belum ada buku dipilih</p>
-                    {!isViewMode && canEditItems && (
+                    {canEditItems && (
                       <p className="text-slate-400 text-xs mt-1">Klik "Pilih Buku" untuk menambah</p>
                     )}
                   </div>
@@ -538,7 +471,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
                           <TableHead className="text-right">Harga</TableHead>
                           <TableHead className="text-center">Qty</TableHead>
                           <TableHead className="text-right">Subtotal</TableHead>
-                          {!isViewMode && canEditItems && <TableHead className="w-[50px]"></TableHead>}
+                          {canEditItems && <TableHead className="w-[50px]"></TableHead>}
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -551,7 +484,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
                             <TableCell>{item.book.jenis_buku?.name || '-'}</TableCell>
                             <TableCell className="text-right">{formatRupiah(item.book.price)}</TableCell>
                             <TableCell className="text-center">
-                              {isViewMode || !canEditItems ? (
+                              {!canEditItems ? (
                                 <span>{item.quantity}</span>
                               ) : (
                                 <div className="flex items-center justify-center gap-1">
@@ -587,7 +520,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
                             <TableCell className="text-right font-medium">
                               {formatRupiah(item.book.price * item.quantity)}
                             </TableCell>
-                            {!isViewMode && canEditItems && (
+                            {canEditItems && (
                               <TableCell>
                                 <Button
                                   type="button"
@@ -608,119 +541,96 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
                 )}
               </div>
 
-              {/* Expedition Section */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className={`font-semibold ${isViewMode ? 'text-slate-600' : 'text-slate-900'}`}>Ekspedisi (Optional)</h3>
-                  {!isViewMode && canEditItems && (
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={showExpedition}
-                        onChange={(e) => {
-                          setShowExpedition(e.target.checked);
-                          if (!e.target.checked) {
-                            setValue('expedition_id', '');
-                            setValue('expedition_price', '0');
-                          }
-                        }}
-                        className="w-4 h-4 text-blue-600 rounded"
-                      />
-                      <span className="text-sm">Tambah Ekspedisi</span>
-                    </label>
-                  )}
-                  {!canEditItems && !isViewMode && (
-                    <div className="flex items-center gap-2 text-amber-600 text-sm">
-                      <Lock className="w-4 h-4" />
-                      <span>Terkunci</span>
-                    </div>
-                  )}
-                </div>
-
-                {(showExpedition || editingTransaction?.expedition_id) && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Ekspedisi</Label>
-                      {isViewMode ? (
-                        <div className="px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">
-                          <span className="text-sm text-slate-700">{displayTransaction?.expedition?.name || '-'}</span>
-                        </div>
-                      ) : canEditItems ? (
-                        <Controller
-                          name="expedition_id"
-                          control={control}
-                          render={({ field: { onChange, value } }) => (
-                            <Select
-                              options={expeditionsData.expeditions.map(exp => ({
-                                value: exp.id,
-                                label: exp.name
-                              }))}
-                              value={value}
-                              onChange={onChange}
-                              placeholder="Pilih Ekspedisi"
-                              searchable={true}
-                              clearable={true}
-                            />
-                          )}
-                        />
-                      ) : (
-                        <div className="p-2 border rounded bg-slate-100">
-                          <span className="text-sm text-slate-600">{displayTransaction?.expedition?.name || '-'}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Harga Ekspedisi</Label>
-                      {isViewMode ? (
-                        <div className="px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">
-                          <span className="text-sm text-slate-700">{formatRupiah(displayTransaction?.expedition_price || 0)}</span>
-                        </div>
-                      ) : canEditItems ? (
-                        <Input
-                          type="number"
-                          placeholder="0"
-                          min="0"
-                          {...register('expedition_price')}
-                        />
-                      ) : (
-                        <div className="p-2 border rounded bg-slate-100">
-                          <span className="text-sm text-slate-600">{formatRupiah(displayTransaction?.expedition_price || 0)}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Summary Section */}
-              <div className="space-y-3 bg-slate-50 p-4 rounded-lg border">
-                <h3 className="font-semibold text-slate-900">Ringkasan</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Subtotal Buku:</span>
-                    <span className="font-medium">{formatRupiah(booksSubtotal)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Ekspedisi:</span>
-                    <span className="font-medium">{formatRupiah(expeditionPrice)}</span>
-                  </div>
-                  <div className="flex justify-between pt-2 border-t border-slate-300">
-                    <span className="font-bold text-slate-900 text-lg">TOTAL:</span>
-                    <span className="font-bold text-blue-600 text-lg">{formatRupiah(totalAmount)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Installment History - Credit only, View/Edit mode only */}
-              {editingTransaction && paymentType === 'K' && transactionDetail && (
+              {/* Shippings Section - Only visible when editing existing transaction to allow management */}
+              {editingTransaction && (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b pb-2">
-                    <h3 className="font-semibold text-slate-900">Riwayat Cicilan</h3>
-                    {canAddInstallment && (
+                  <div className="flex justify-between items-center pb-2">
+                    <h3 className="font-semibold text-slate-900">Pengiriman (Shippings)</h3>
+                    {!isTransactionLocked && (
                       <Button
                         type="button"
-                        onClick={() => setShowInstallmentDialog(true)}
+                        onClick={() => {
+                          setEditingShipping(null);
+                          setShowShippingDialog(true);
+                        }}
+                        className="bg-purple-600 hover:bg-purple-700"
+                        size="sm"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Tambah Pengiriman
+                      </Button>
+                    )}
+                  </div>
+
+                  {!currentShippings.length ? (
+                    <div className="text-center py-6 border rounded bg-slate-50">
+                      <Truck className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                      <p className="text-slate-500 text-sm">Belum ada pengiriman</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto border rounded">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Ekspedisi</TableHead>
+                            <TableHead>No. Resi</TableHead>
+                            <TableHead className="text-right">Biaya</TableHead>
+                            {!isTransactionLocked && <TableHead className="text-center w-[80px]">Action</TableHead>}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {currentShippings.map((shipping) => (
+                            <TableRow key={shipping.id}>
+                              <TableCell>{shipping.expedition?.name || '-'}</TableCell>
+                              <TableCell><span className="font-mono text-sm">{shipping.no_resi}</span></TableCell>
+                              <TableCell className="text-right">{formatRupiah(shipping.total_amount)}</TableCell>
+                              {!isTransactionLocked && (
+                                <TableCell>
+                                  <div className="flex justify-center gap-1">
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => {
+                                        setEditingShipping(shipping);
+                                        setShowShippingDialog(true);
+                                      }}
+                                      className="h-7 w-7 text-blue-600"
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => {
+                                        if (confirm('Hapus pengiriman ini?')) deleteShippingMutation.mutate(shipping.id);
+                                      }}
+                                      className="h-7 w-7 text-red-500"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Payments Section - Only visible when editing */}
+              {editingTransaction && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center pb-2">
+                    <h3 className="font-semibold text-slate-900">Pembayaran (Payments)</h3>
+                    {(remainingBalance > 0 && !isTransactionLocked) && (
+                      <Button
+                        type="button"
+                        onClick={() => setShowPaymentDialog(true)}
                         className="bg-green-600 hover:bg-green-700"
                         size="sm"
                       >
@@ -730,104 +640,142 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, editingTransaction, on
                     )}
                   </div>
 
-                  {transactionDetail.installments && transactionDetail.installments.length > 0 ? (
-                    <>
-                      <div className="overflow-x-auto border rounded">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Tanggal</TableHead>
-                              <TableHead className="text-right">Jumlah</TableHead>
-                              <TableHead>Catatan</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {transactionDetail.installments.map((installment) => (
-                              <TableRow key={installment.id}>
-                                <TableCell>{formatDate(installment.installment_date)}</TableCell>
-                                <TableCell className="text-right font-medium">{formatRupiah(installment.amount)}</TableCell>
-                                <TableCell className="text-sm text-slate-600">{installment.note || '-'}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                      <div className="bg-blue-50 p-4 rounded border border-blue-200">
-                        <div className="flex justify-between text-sm mb-1">
-                          <span className="text-slate-700">Total Dibayar:</span>
-                          <span className="font-semibold text-blue-700">
-                            {formatRupiah(transactionDetail.installments.reduce((sum, inst) => sum + inst.amount, 0))} / {formatRupiah(transactionDetail.total_amount)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-slate-700">Sisa:</span>
-                          <span className="font-bold text-red-600">{formatRupiah(remainingBalance)}</span>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
+                  {!currentPayments.length ? (
                     <div className="text-center py-6 border rounded bg-slate-50">
-                      <p className="text-slate-500 text-sm">Belum ada pembayaran cicilan</p>
+                      <CreditCard className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                      <p className="text-slate-500 text-sm">Belum ada riwayat pembayaran</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto border rounded">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>No. Payment</TableHead>
+                            <TableHead>Tanggal</TableHead>
+                            <TableHead>Catatan</TableHead>
+                            <TableHead className="text-right">Jumlah</TableHead>
+                            {!isTransactionLocked && <TableHead className="w-[50px]"></TableHead>}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {currentPayments.map((payment) => (
+                            <TableRow key={payment.id}>
+                              <TableCell><span className="text-xs font-mono">{payment.no_payment}</span></TableCell>
+                              <TableCell>{format(parseISO(payment.payment_date), 'dd MMM yyyy')}</TableCell>
+                              <TableCell><span className="text-sm text-slate-600">{payment.note || '-'}</span></TableCell>
+                              <TableCell className="text-right font-medium">{formatRupiah(payment.amount)}</TableCell>
+                              {!isTransactionLocked && (
+                                <TableCell>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                      if (confirm('Hapus pembayaran ini?')) deletePaymentMutation.mutate(payment.id);
+                                    }}
+                                    className="h-7 w-7 text-red-500"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
                   )}
+
+                  {/* Balance Summary */}
+                  <div className="bg-slate-50 p-4 rounded border flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="text-sm space-y-1">
+                      <div className="text-slate-600">Total Tagihan: <span className="font-semibold text-slate-900">{formatRupiah(totalAmount)}</span></div>
+                      <div className="text-slate-600">Total Terbayar: <span className="font-semibold text-green-600">{formatRupiah(totalAmount - remainingBalance)}</span></div>
+                    </div>
+                    <div className="text-lg">
+                      <span className="text-slate-600 mr-2">Sisa Tagihan:</span>
+                      <span className={`font-bold ${remainingBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        {formatRupiah(remainingBalance)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               )}
+
+              {/* Always show Transaction Summary */}
+              <div className="space-y-3 bg-slate-50 p-4 rounded-lg border">
+                <h3 className="font-semibold text-slate-900">{editingTransaction ? 'Ringkasan Transaksi' : 'Ringkasan Awal'}</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Subtotal Buku:</span>
+                    <span className="font-medium">{formatRupiah(booksSubtotal)}</span>
+                  </div>
+                  {editingTransaction && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Total Ongkir:</span>
+                      <span className="font-medium">{formatRupiah(shippingsTotal)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between pt-2 border-t border-slate-300">
+                    <span className="font-bold text-slate-900 text-lg">TOTAL:</span>
+                    <span className="font-bold text-blue-600 text-lg">{formatRupiah(totalAmount)}</span>
+                  </div>
+                  {!editingTransaction && (
+                    <p className="text-xs text-slate-500 mt-2">*Biaya pengiriman dapat ditambahkan setelah transaksi dibuat.</p>
+                  )}
+                </div>
+              </div>
+
             </div>
 
             <DialogFooter className="gap-2">
-              {isViewMode ? (
-                <>
-                  <Button type="button" variant="outline" onClick={onClosing}>
-                    Tutup
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setIsEditMode(true);
-                    }}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button type="button" variant="outline" onClick={onClosing}>
-                    Batal
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={createMutation.isPending || updateMutation.isPending}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    {(createMutation.isPending || updateMutation.isPending) ? 'Menyimpan...' : 'Simpan'}
-                  </Button>
-                </>
-              )}
+              <Button type="button" variant="outline" onClick={onClosing}>
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                disabled={createMutation.isPending || updateMutation.isPending}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {createMutation.isPending || updateMutation.isPending ? 'Menyimpan...' : 'Simpan Transaksi'}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
+      {/* Book Selection Dialog */}
       <BookSelectionDialog
         isOpen={showBookDialog}
         onClose={() => setShowBookDialog(false)}
-        currentSelectedBooks={selectedBooks}
         onConfirm={handleBookConfirm}
+        currentSelectedBooks={selectedBooks}
       />
 
-      {transactionDetail && (
-        <AddInstallmentDialog
-          isOpen={showInstallmentDialog}
-          onClose={() => setShowInstallmentDialog(false)}
-          transactionId={editingTransaction?.id}
-          remainingBalance={remainingBalance}
-          onFinish={() => {
-            setShowInstallmentDialog(false);
-            refetchTransaction();
-            queryClient.invalidateQueries(['salesTransactions']);
+      {/* Add Payment Dialog */}
+      {editingTransaction && (
+        <AddPaymentDialog
+          isOpen={showPaymentDialog}
+          onClose={() => setShowPaymentDialog(false)}
+          transactionId={editingTransaction.id}
+          remainingAmount={remainingBalance}
+          onSuccess={() => {
+            queryClient.invalidateQueries(['salesTransaction', editingTransaction.id]);
+            queryClient.invalidateQueries(['payments', editingTransaction.id]);
+          }}
+        />
+      )}
+
+      {/* Add/Edit Shipping Dialog */}
+      {editingTransaction && (
+        <AddEditShippingDialog
+          isOpen={showShippingDialog}
+          onClose={() => setShowShippingDialog(false)}
+          transactionId={editingTransaction.id}
+          editingShipping={editingShipping}
+          onSuccess={() => {
+            queryClient.invalidateQueries(['salesTransaction', editingTransaction.id]);
+            queryClient.invalidateQueries(['shippings', editingTransaction.id]);
           }}
         />
       )}
