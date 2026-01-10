@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useEffect } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { api } from '@/api/axios';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,6 @@ import { merkBukuSchema } from "@/utils/validations/MerkBuku";
 import { useToast } from '@/components/ui/use-toast';
 
 const AddEditMerkBukuDialog = ({ isOpen, onClose, editingMerkBuku, onFinish }) => {
-  const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const initialData = {
@@ -22,7 +21,7 @@ const AddEditMerkBukuDialog = ({ isOpen, onClose, editingMerkBuku, onFinish }) =
   }
 
   // --- React Hook Form Setup ---
-  const { register, control, handleSubmit, formState: { errors }, reset } = useForm({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: zodResolver(merkBukuSchema),
     defaultValues: editingMerkBuku || initialData
   });

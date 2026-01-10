@@ -79,7 +79,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
           'Content-Type': 'multipart/form-data',
         },
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Warning",
         description: `Data berhasil disimpan, tetapi gagal mengupload ${field}.`,
@@ -529,10 +529,10 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
                             Tunai
                           </Badge>
                         ) : (
-                            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                              Kredit
-                            </Badge>
-                          )
+                          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                            Kredit
+                          </Badge>
+                        )
                         :
                         '-'}
                     </div>
@@ -547,7 +547,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
                           {...register("jenis_pembayaran")}
                           className="w-4 h-4 text-blue-600"
                         />
-                        <span>Cash</span>
+                        <span>Tunai</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -556,7 +556,7 @@ const AddEditSalesAssociateDialog = ({ isOpen, onClose, editingSalesAssociate, o
                           {...register("jenis_pembayaran")}
                           className="w-4 h-4 text-blue-600"
                         />
-                        <span>Credit</span>
+                        <span>Kredit</span>
                       </label>
                     </div>
                     {errors.jenis_pembayaran && <p className="text-red-500 text-sm">{errors.jenis_pembayaran.message}</p>}

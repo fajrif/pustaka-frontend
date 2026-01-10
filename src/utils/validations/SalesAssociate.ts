@@ -15,7 +15,7 @@ export const salesAssociateSchema = z.object({
   phone2: z.string().nullable().optional(),
   website: z.string().nullable().optional(),
   jenis_pembayaran: z.string().nullable().optional(),
-  join_date: z.preprocess((val) => toISOString(val as string), z.string().nullable().optional()),
-  end_join_date: z.preprocess((val) => toISOString(val as string), z.string().nullable().optional()),
+  join_date: z.preprocess((val) => toISOString(String(val || '')), z.string().nullable().optional()),
+  end_join_date: z.preprocess((val) => toISOString(String(val || '')), z.string().nullable().optional()),
   discount: z.preprocess(preprocessOptionalNumber, z.number().optional()),
 })

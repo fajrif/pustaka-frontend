@@ -116,9 +116,9 @@ const SalesTransactions = () => {
   // Status badge component
   const StatusBadge = ({ status }) => {
     const config = {
-      0: { label: 'Booking', className: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
-      1: { label: 'Paid Off', className: 'bg-green-50 text-green-700 border-green-200' },
-      2: { label: 'Installment', className: 'bg-blue-50 text-blue-700 border-blue-200' }
+      0: { label: 'Pesanan', className: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+      1: { label: 'Lunas', className: 'bg-green-50 text-green-700 border-green-200' },
+      2: { label: 'Angsuran', className: 'bg-blue-50 text-blue-700 border-blue-200' }
     };
     const { label, className } = config[status] || config[0];
     return <Badge variant="outline" className={className}>{label}</Badge>;
@@ -127,9 +127,9 @@ const SalesTransactions = () => {
   // Payment type badge component
   const PaymentTypeBadge = ({ paymentType }) => {
     if (paymentType === 'T') {
-      return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Cash</Badge>;
+      return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Tunai</Badge>;
     }
-    return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Credit</Badge>;
+    return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Kredit</Badge>;
   };
 
   return (
@@ -151,12 +151,12 @@ const SalesTransactions = () => {
               <div>
                 <h3 className="font-semibold text-slate-900 mb-2">Tentang Transaksi Penjualan</h3>
                 <p className="text-sm text-slate-700 mb-3">
-                  Sistem transaksi penjualan memungkinkan sales associate melakukan pembelian buku dengan metode pembayaran tunai (Cash) atau kredit (Credit).
+                  Sistem transaksi penjualan memungkinkan sales associate melakukan pembelian buku dengan metode pembayaran tunai (Tunai) atau kredit (Kredit).
                 </p>
                 <div className="space-y-1 text-sm text-slate-600">
-                  <p>• <strong className="font-semibold">Cash (Tunai):</strong> Pembayaran langsung, transaksi selesai saat dibuat</p>
-                  <p>• <strong className="font-semibold">Credit (Kredit):</strong> Pembayaran bertahap dengan cicilan, dapat melacak jatuh tempo dan riwayat pembayaran</p>
-                  <p>• <strong className="font-semibold">Status:</strong> Booking (0) → Paid Off (1) → Installment (2)</p>
+                  <p>• <strong className="font-semibold">Tunai:</strong> Pembayaran langsung, transaksi selesai saat dibuat</p>
+                  <p>• <strong className="font-semibold">Kredit:</strong> Pembayaran bertahap dengan cicilan, dapat melacak jatuh tempo dan riwayat pembayaran</p>
+                  <p>• <strong className="font-semibold">Status:</strong> Pesanan (0) → Lunas (1) → Angsuran (2)</p>
                 </div>
               </div>
             </div>
@@ -171,7 +171,7 @@ const SalesTransactions = () => {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                     <Input
-                      placeholder="Cari no invoice atau nama sales associate..."
+                      placeholder="Cari no faktur atau nama sales associate..."
                       value={searchTerm}
                       onChange={handleSearchChange}
                       className="pl-10"
@@ -195,9 +195,9 @@ const SalesTransactions = () => {
                   <Select
                     options={[
                       { value: '', label: 'Semua Status' },
-                      { value: '0', label: 'Booking' },
-                      { value: '1', label: 'Paid Off' },
-                      { value: '2', label: 'Installment' }
+                      { value: '0', label: 'Pesanan' },
+                      { value: '1', label: 'Lunas' },
+                      { value: '2', label: 'Angsuran' }
                     ]}
                     value={statusFilter}
                     onChange={setStatusFilter}
@@ -207,13 +207,13 @@ const SalesTransactions = () => {
                 <div className="w-48">
                   <Select
                     options={[
-                      { value: '', label: 'Semua Payment' },
-                      { value: 'T', label: 'Cash' },
-                      { value: 'K', label: 'Credit' }
+                      { value: '', label: 'Semua Pembayaran' },
+                      { value: 'T', label: 'Tunai' },
+                      { value: 'K', label: 'Kredit' }
                     ]}
                     value={paymentTypeFilter}
                     onChange={setPaymentTypeFilter}
-                    placeholder="Filter Payment"
+                    placeholder="Filter Pembayaran"
                   />
                 </div>
               </div>
@@ -236,10 +236,10 @@ const SalesTransactions = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[150px]">No Invoice</TableHead>
+                      <TableHead className="w-[150px]">No Faktur</TableHead>
                       <TableHead>Sales Associate</TableHead>
                       <TableHead>Tanggal</TableHead>
-                      <TableHead>Payment</TableHead>
+                      <TableHead>Pembayaran</TableHead>
                       <TableHead className="text-right">Total</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="w-[150px] text-center">Action</TableHead>
@@ -290,7 +290,7 @@ const SalesTransactions = () => {
                               size="icon"
                               onClick={() => handleInvoice(transaction)}
                               className="text-green-600 hover:text-green-700"
-                              title="View Invoice"
+                              title="Lihat Faktur"
                             >
                               <FileText className="w-4 h-4" />
                             </Button>

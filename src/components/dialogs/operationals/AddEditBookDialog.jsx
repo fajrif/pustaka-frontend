@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { api } from '@/api/axios';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,12 +11,11 @@ import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import Select from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { bookSchema } from "@/utils/validations/Book";
-import { Edit, FileText } from 'lucide-react';
+import { Edit } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { ENUM_PERIODE } from '@/utils/constants';
 
 const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
-  const queryClient = useQueryClient();
   const { toast } = useToast();
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -120,7 +119,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
       const response = await api.post('/books', formattedData);
       return response.data;
     },
-    onSuccess: async (responseData) => {
+    onSuccess: async () => {
       toast({
         title: "Success",
         description: "Buku berhasil ditambahkan.",
@@ -146,7 +145,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
       const response = await api.put(`/books/${id}`, formattedData);
       return response.data;
     },
-    onSuccess: async (responseData, variables) => {
+    onSuccess: async () => {
       toast({
         title: "Success",
         description: "Buku berhasil diperbarui.",
@@ -233,39 +232,6 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
                   {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
                 </>
               )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="isbn" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>ISBN</Label>
-                {isViewMode ? (
-                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingBook.isbn || '-'}</p>
-                ) : (
-                  <>
-                    <Input
-                      name="isbn"
-                      placeholder="Contoh: 978-3-16-148410-0"
-                      {...register("isbn")}
-                    />
-                    {errors.isbn && <p className="text-red-500 text-sm">{errors.isbn.message}</p>}
-                  </>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="author" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Penulis / Pengarang</Label>
-                {isViewMode ? (
-                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingBook.author || '-'}</p>
-                ) : (
-                  <>
-                    <Input
-                      name="author"
-                      placeholder="Contoh: John Doe"
-                      {...register("author")}
-                    />
-                    {errors.author && <p className="text-red-500 text-sm">{errors.author.message}</p>}
-                  </>
-                )}
-              </div>
             </div>
 
             <div className="grid grid-cols-4 gap-4">
@@ -367,7 +333,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className={`space-y-2 ${!isViewMode ? 'border-l-2 border-blue-400 pl-3' : ''}`}>
-                <Label htmlFor="publisher_id" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Publisher {!isViewMode && <span className="text-red-500">*</span>}</Label>
+                <Label htmlFor="publisher_id" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Penerbit {!isViewMode && <span className="text-red-500">*</span>}</Label>
                 {isViewMode ? (
                   <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{getPublisherName(editingBook)}</p>
                 ) : (
@@ -379,11 +345,11 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
                         <Select
                           options={publishersData.publishers.map((type) => ({
                             value: type.id,
-                            label: `[${ type.code }] ${ type.name }`
+                            label: `[${type.code}] ${type.name}`
                           }))}
                           value={value}
                           onChange={onChange}
-                          placeholder="Pilih publisher"
+                          placeholder="Pilih penerbit"
                           error={!!error}
                           searchable={true}
                           clearable={true}
@@ -407,7 +373,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
                         <Select
                           options={bookBrandsData.merk_buku.map((type) => ({
                             value: type.id,
-                            label: `[${ type.code }] ${ type.name }`
+                            label: `[${type.code}] ${type.name}`
                           }))}
                           value={value}
                           onChange={onChange}
@@ -437,7 +403,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
                         <Select
                           options={bookTypesData.jenis_buku.map((type) => ({
                             value: type.id,
-                            label: `[${ type.code }] ${ type.name }`
+                            label: `[${type.code}] ${type.name}`
                           }))}
                           value={value}
                           onChange={onChange}
@@ -465,7 +431,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
                         <Select
                           options={educationLevelsData.jenjang_studi.map((type) => ({
                             value: type.id,
-                            label: `[${ type.code }] ${ type.name }`
+                            label: `[${type.code}] ${type.name}`
                           }))}
                           value={value}
                           onChange={onChange}
@@ -495,7 +461,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
                         <Select
                           options={studyFieldsData.bidang_studi.map((type) => ({
                             value: type.id,
-                            label: `[${ type.code }] ${ type.name }`
+                            label: `[${type.code}] ${type.name}`
                           }))}
                           value={value}
                           onChange={onChange}
@@ -523,7 +489,7 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
                         <Select
                           options={classesData.kelas.map((type) => ({
                             value: type.id,
-                            label: `[${ type.code }] ${ type.name }`
+                            label: `[${type.code}] ${type.name}`
                           }))}
                           value={value}
                           onChange={onChange}

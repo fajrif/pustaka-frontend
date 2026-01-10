@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useEffect } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { api } from '@/api/axios';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,7 +13,6 @@ import { useToast } from '@/components/ui/use-toast';
 import { USER_ROLES } from '@/utils/constants';
 
 const AddEditUserDialog = ({ isOpen, onClose, editingUser, onFinish }) => {
-  const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const initialData = {
@@ -43,7 +42,7 @@ const AddEditUserDialog = ({ isOpen, onClose, editingUser, onFinish }) => {
       const response = await api.post('/users', data);
       return response.data;
     },
-    onSuccess: async (responseData) => {
+    onSuccess: async () => {
       toast({
         title: "Success",
         description: "User berhasil ditambahkan.",
@@ -65,7 +64,7 @@ const AddEditUserDialog = ({ isOpen, onClose, editingUser, onFinish }) => {
       const response = await api.put(`/users/${id}`, data);
       return response.data;
     },
-    onSuccess: async (responseData, variables) => {
+    onSuccess: async () => {
       toast({
         title: "Success",
         description: "User berhasil diperbarui.",

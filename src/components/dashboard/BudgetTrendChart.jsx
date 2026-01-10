@@ -1,12 +1,12 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { format, parseISO, startOfMonth, eachMonthOfInterval } from "date-fns";
+import { format, parseISO, eachMonthOfInterval } from "date-fns";
 import { id } from "date-fns/locale";
 import { formatRupiah } from "@/utils/formatters";
 import { randomPrice } from "@/utils/generators";
 
-export default function BudgetTrendChart({ sales }) {
+export default function BudgetTrendChart() {
 
   // Generate monthly data
   const generateMonthlyData = () => {
@@ -24,8 +24,6 @@ export default function BudgetTrendChart({ sales }) {
     });
 
     return months.map(month => {
-      const periodeBulan = format(month, 'yyyy-MM');
-
       // Get sales for this month
       const totalBudget = randomPrice(50000000, 120000000);
 

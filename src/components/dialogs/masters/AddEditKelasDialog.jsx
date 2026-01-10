@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useEffect } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { api } from '@/api/axios';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,6 @@ import { kelasSchema } from "@/utils/validations/Kelas";
 import { useToast } from '@/components/ui/use-toast';
 
 const AddEditKelasDialog = ({ isOpen, onClose, editingKelas, onFinish }) => {
-  const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const initialData = {
@@ -22,7 +21,7 @@ const AddEditKelasDialog = ({ isOpen, onClose, editingKelas, onFinish }) => {
   }
 
   // --- React Hook Form Setup ---
-  const { register, control, handleSubmit, formState: { errors }, reset } = useForm({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: zodResolver(kelasSchema),
     defaultValues: editingKelas || initialData
   });

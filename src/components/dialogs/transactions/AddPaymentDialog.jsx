@@ -28,7 +28,6 @@ const AddPaymentDialog = ({ isOpen, onClose, transactionId, remainingAmount, onS
         handleSubmit,
         reset,
         formState: { errors, isSubmitting },
-        setValue,
     } = useForm({
         resolver: zodResolver(paymentSchema),
         defaultValues: {

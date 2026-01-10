@@ -44,8 +44,8 @@ const MasterBook = () => {
     setShowDialog(true);
   };
 
-  const finishSubmit = (isQuery=true) => {
-    if(isQuery) {
+  const finishSubmit = (isQuery = true) => {
+    if (isQuery) {
       queryClient.invalidateQueries(['books']);
     }
     setShowDialog(false);
@@ -117,7 +117,7 @@ const MasterBook = () => {
                   Master data buku digunakan untuk data management buku perpustakaan.
                 </p>
                 <div className="space-y-1 text-sm text-slate-600">
-                  <p>• <strong className="font-semibold">Informasi Buku:</strong> Nama, penulis, ISBN, dan tahun terbit</p>
+                  <p>• <strong className="font-semibold">Informasi Buku:</strong> Nama dan tahun terbit</p>
                   <p>• <strong className="font-semibold">Klasifikasi:</strong> Jenis buku, jenjang studi, bidang studi, dan book</p>
                   <p>• <strong className="font-semibold">Manajemen Stok:</strong> Kelola stok dan harga buku</p>
                 </div>
@@ -165,7 +165,7 @@ const MasterBook = () => {
                     <TableRow>
                       <TableHead className="w-[150px]">Kode Jenis</TableHead>
                       <TableHead>Nama</TableHead>
-                      <TableHead>Publisher</TableHead>
+                      <TableHead>Penerbit</TableHead>
                       <TableHead>Kode Jenjang</TableHead>
                       <TableHead>Harga</TableHead>
                       <TableHead>Stock</TableHead>
@@ -185,19 +185,9 @@ const MasterBook = () => {
                           <span
                             className="font-medium text-sm inline-block cursor-pointer hover:underline hover:text-blue-600 mb-1"
                             onClick={() => handleEdit(book)}
-                            >
+                          >
                             {book.name}
                           </span>
-                          {book.author && (
-                            <span className="text-xs block">
-                              Pengarang: {book.author}
-                            </span>
-                          )}
-                          {book.isbn && (
-                            <span className="text-xs block">
-                              ISBN: {book.isbn}
-                            </span>
-                          )}
                           <span className="text-xs">
                             Periode: {getPeriodeLabel(book.periode, book.year)}
                           </span>
@@ -288,7 +278,7 @@ const MasterBook = () => {
         onClose={() => finishSubmit(false)}
         editingBook={editingBook}
         onFinish={finishSubmit}
-        />
+      />
     </div>
   );
 };

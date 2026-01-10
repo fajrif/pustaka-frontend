@@ -43,8 +43,8 @@ const MasterBiller = () => {
     setShowDialog(true);
   };
 
-  const finishSubmit = (isQuery=true) => {
-    if(isQuery) {
+  const finishSubmit = (isQuery = true) => {
+    if (isQuery) {
       queryClient.invalidateQueries(['billers']);
     }
     setShowDialog(false);
@@ -149,25 +149,26 @@ const MasterBiller = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {billersData.billers.map((biller) => (
                   <Card key={biller.id} className="border-2 border-blue-80 hover:border-blue-300 hover:shadow-md transition-all">
+                    {/* Logo displayed above */}
+                    {biller.logo_url && (
+                      <div className="flex justify-center pt-4">
+                        <img
+                          src={getAssetUrl(biller.logo_url)}
+                          alt="Biller Logo"
+                          className="h-20 w-auto object-contain"
+                          onError={(e) => {
+                            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjRTVFN0VCIi8+CjxwYXRoIGQ9Ik0zMiAzMkMzNS4zMTM3IDMyIDM4IDI5LjMxMzcgMzggMjZDMzggMjIuNjg2MyAzNS4zMTM3IDIwIDMyIDIwQzI4LjY4NjMgMjAgMjYgMjIuNjg2MyAyNiAyNkMyNiAyOS4zMTM3IDI4LjY4NjMgMzIgMzIgMzJaIiBmaWxsPSIjOUM5Qzk3Ii8+CjxwYXRoIGQ9Ik0yMCA0NFYzOEMyMCAzNS43OTA5IDIxLjc5MDkgMzQgMjQgMzRINDBDNDIuMjA5MSAzNCA0NCAzNS43OTA5IDQ0IDM4VjQ0IiBmaWxsPSIjOUM5Qzk3Ii8+Cjwvc3ZnPgo=';
+                          }}
+                        />
+                      </div>
+                    )}
                     <CardHeader className="pb-3">
                       <div className="flex justify-between items-start gap-2">
-                        <div className="flex justify-center items-center gap-4">
-                          {biller.logo_url && (
-                            <img
-                              src={getAssetUrl(biller.logo_url)}
-                              alt="Biller Logo"
-                              className="w-10 h-10 object-cover border rounded"
-                              onError={(e) => {
-                                e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjRTVFN0VCIi8+CjxwYXRoIGQ9Ik0zMiAzMkMzNS4zMTM3IDMyIDM4IDI5LjMxMzcgMzggMjZDMzggMjIuNjg2MyAzNS4zMTM3IDIwIDMyIDIwQzI4LjY4NjMgMjAgMjYgMjIuNjg2MyAyNiAyNkMyNiAyOS4zMTM3IDI4LjY4NjMgMzIgMzIgMzJaIiBmaWxsPSIjOUM5Qzk3Ii8+CjxwYXRoIGQ9Ik0yMCA0NFYzOEMyMCAzNS43OTA5IDIxLjc5MDkgMzQgMjQgMzRINDBDNDIuMjA5MSAzNCA0NCAzNS43OTA5IDQ0IDM4VjQ0IiBmaWxsPSIjOUM5Qzk3Ii8+Cjwvc3ZnPgo=';
-                              }}
-                            />
-                          )}
-                          <div className="flex-1">
-                            <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">{biller.code}</Badge>
-                            <CardTitle className="text-lg">
-                              {biller.name}
-                            </CardTitle>
-                          </div>
+                        <div className="flex-1">
+                          <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">{biller.code}</Badge>
+                          <CardTitle className="text-lg">
+                            {biller.name}
+                          </CardTitle>
                         </div>
                         <div className="flex gap-1">
                           <Button
@@ -194,9 +195,9 @@ const MasterBiller = () => {
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm text-slate-600">
-                        NPWP: {biller.npwp || '-'}<br/>
-                        Email: {biller.email || '-'}<br/>
-                        Phone: {biller.phone1 || biller.phone2 || '-'}<br/>
+                        NPWP: {biller.npwp || '-'}<br />
+                        Email: {biller.email || '-'}<br />
+                        Phone: {biller.phone1 || biller.phone2 || '-'}<br />
                         Dibuat pada: {formatDate(biller.created_at)}
                       </p>
                     </CardContent>
@@ -224,7 +225,7 @@ const MasterBiller = () => {
         onClose={() => finishSubmit(false)}
         editingBiller={editingBiller}
         onFinish={finishSubmit}
-        />
+      />
     </div>
   );
 };

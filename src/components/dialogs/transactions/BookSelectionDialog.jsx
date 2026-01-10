@@ -200,7 +200,7 @@ const BookSelectionDialog = ({ isOpen, onClose, currentSelectedBooks = [], onCon
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
               <Input
-                placeholder="Cari buku berdasarkan nama, ISBN..."
+                placeholder="Cari buku berdasarkan nama..."
                 value={searchTerm}
                 onChange={handleSearchChange}
                 className="pl-10"
@@ -286,9 +286,6 @@ const BookSelectionDialog = ({ isOpen, onClose, currentSelectedBooks = [], onCon
                         <TableCell>
                           <div>
                             <span className="font-medium text-sm block">{book.name}</span>
-                            {book.isbn && (
-                              <span className="text-xs text-slate-500">ISBN: {book.isbn}</span>
-                            )}
                           </div>
                         </TableCell>
                         <TableCell>

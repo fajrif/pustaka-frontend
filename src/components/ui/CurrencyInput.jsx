@@ -2,7 +2,7 @@ import React from 'react';
 import { Controller } from 'react-hook-form';
 import { Input } from './input';
 
-const CurrencyInput = ({ control, name, errors, ...props }) => {
+const CurrencyInput = ({ control, name, ...props }) => {
 
   const formatCurrency = (value) => {
     if (!value && value !== 0) return '';

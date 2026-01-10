@@ -75,9 +75,9 @@ const ViewSalesTransactionDialog = ({ isOpen, onClose, transactionId, initialDat
 
     const StatusBadge = ({ status }) => {
         const config = {
-            0: { label: 'Booking', className: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
-            1: { label: 'Paid Off', className: 'bg-green-50 text-green-700 border-green-200' },
-            2: { label: 'Installment', className: 'bg-blue-50 text-blue-700 border-blue-200' }
+            0: { label: 'Pesanan', className: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+            1: { label: 'Lunas', className: 'bg-green-50 text-green-700 border-green-200' },
+            2: { label: 'Angsuran', className: 'bg-blue-50 text-blue-700 border-blue-200' }
         };
         const { label, className } = config[status] || config[0];
         return <Badge variant="outline" className={className}>{label}</Badge>;
@@ -115,7 +115,7 @@ const ViewSalesTransactionDialog = ({ isOpen, onClose, transactionId, initialDat
 
                             {displayTransaction.no_invoice && (
                                 <div className="space-y-2">
-                                    <Label className="text-slate-500">No Invoice</Label>
+                                    <Label className="text-slate-500">No Faktur</Label>
                                     <div className="px-3 py-2 uppercase text-blue-700 font-medium bg-white rounded-md shadow-sm border border-slate-200">
                                         {displayTransaction.no_invoice}
                                     </div>
@@ -131,10 +131,10 @@ const ViewSalesTransactionDialog = ({ isOpen, onClose, transactionId, initialDat
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label className="text-slate-500">Payment Type</Label>
+                                    <Label className="text-slate-500">Jenis Pembayaran</Label>
                                     <div className="px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">
                                         <Badge variant="outline" className={displayTransaction.payment_type === 'T' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}>
-                                            {displayTransaction.payment_type === 'T' ? 'Cash' : 'Credit'}
+                                            {displayTransaction.payment_type === 'T' ? 'Tunai' : 'Kredit'}
                                         </Badge>
                                     </div>
                                 </div>
@@ -211,7 +211,7 @@ const ViewSalesTransactionDialog = ({ isOpen, onClose, transactionId, initialDat
 
                         {/* Shippings Section */}
                         <div className="space-y-4">
-                            <h3 className="font-semibold text-slate-600">Pengiriman (Shippings)</h3>
+                            <h3 className="font-semibold text-slate-600">Pengiriman</h3>
 
                             {!currentShippings || currentShippings.length === 0 ? (
                                 <div className="text-center py-6 border rounded bg-slate-50">
@@ -244,7 +244,7 @@ const ViewSalesTransactionDialog = ({ isOpen, onClose, transactionId, initialDat
 
                         {/* Payments Section */}
                         <div className="space-y-4">
-                            <h3 className="font-semibold text-slate-600">Pembayaran (Payments)</h3>
+                            <h3 className="font-semibold text-slate-600">Pembayaran</h3>
 
                             {!currentPayments || currentPayments.length === 0 ? (
                                 <div className="text-center py-6 border rounded bg-slate-50">
@@ -256,7 +256,7 @@ const ViewSalesTransactionDialog = ({ isOpen, onClose, transactionId, initialDat
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
-                                                <TableHead>No. Payment</TableHead>
+                                                <TableHead>No. Pembayaran</TableHead>
                                                 <TableHead>Tanggal</TableHead>
                                                 <TableHead>Catatan</TableHead>
                                                 <TableHead className="text-right">Jumlah</TableHead>

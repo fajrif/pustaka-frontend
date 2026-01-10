@@ -2,10 +2,39 @@ import React, { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/axios';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { formatRupiah, formatDate } from '@/utils/formatters';
+import { getAssetUrl } from '@/helpers/AssetHelper';
 import { Download, Loader2 } from 'lucide-react';
+
+// Helper function to spell out numbers in Indonesian
+const spellOutNumber = (num) => {
+    const ones = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
+
+    if (num < 0) return 'Minus ' + spellOutNumber(Math.abs(num));
+    if (num < 12) return ones[num];
+    if (num < 20) return spellOutNumber(num - 10) + ' Belas';
+    if (num < 100) return spellOutNumber(Math.floor(num / 10)) + ' Puluh' + (num % 10 !== 0 ? ' ' + spellOutNumber(num % 10) : '');
+    if (num < 200) return 'Seratus' + (num % 100 !== 0 ? ' ' + spellOutNumber(num % 100) : '');
+    if (num < 1000) return spellOutNumber(Math.floor(num / 100)) + ' Ratus' + (num % 100 !== 0 ? ' ' + spellOutNumber(num % 100) : '');
+    if (num < 2000) return 'Seribu' + (num % 1000 !== 0 ? ' ' + spellOutNumber(num % 1000) : '');
+    if (num < 1000000) return spellOutNumber(Math.floor(num / 1000)) + ' Ribu' + (num % 1000 !== 0 ? ' ' + spellOutNumber(num % 1000) : '');
+    if (num < 1000000000) return spellOutNumber(Math.floor(num / 1000000)) + ' Juta' + (num % 1000000 !== 0 ? ' ' + spellOutNumber(num % 1000000) : '');
+    if (num < 1000000000000) return spellOutNumber(Math.floor(num / 1000000000)) + ' Miliar' + (num % 1000000000 !== 0 ? ' ' + spellOutNumber(num % 1000000000) : '');
+    return spellOutNumber(Math.floor(num / 1000000000000)) + ' Triliun' + (num % 1000000000000 !== 0 ? ' ' + spellOutNumber(num % 1000000000000) : '');
+};
+
+// Helper function to format periode
+const getPeriodeLabel = (periode, year) => {
+    if (!year) return '-';
+    const nextYear = parseInt(year) + 1;
+    if (periode == 1) {
+        return `Semester Ganjil ${year}/${nextYear}`;
+    } else if (periode == 2) {
+        return `Semester Genap ${year}/${nextYear}`;
+    }
+    return `${year}/${nextYear}`;
+};
 
 const InvoiceDialog = ({ isOpen, onClose, transactionId }) => {
     const invoiceRef = useRef(null);
@@ -21,47 +50,30 @@ const InvoiceDialog = ({ isOpen, onClose, transactionId }) => {
         enabled: isOpen && !!transactionId,
     });
 
-    // Fetch shippings
-    const { data: shippingsData } = useQuery({
-        queryKey: ['shippings', transactionId],
-        queryFn: async () => {
-            const response = await api.get(`/sales-transactions/${transactionId}/shippings`);
-            return response.data ?? null;
-        },
-        enabled: isOpen && !!transactionId,
-    });
-
-    // Fetch payments
-    const { data: paymentsData } = useQuery({
-        queryKey: ['payments', transactionId],
-        queryFn: async () => {
-            const response = await api.get(`/sales-transactions/${transactionId}/payments`);
-            return response.data ?? null;
-        },
-        enabled: isOpen && !!transactionId,
-    });
-
     const transaction = transactionDetail;
-    const shippings = shippingsData?.shippings || transaction?.shippings || [];
-    const payments = paymentsData?.payments || transaction?.payments || [];
 
     // Calculate totals
     const calculateSummary = () => {
-        if (!transaction) return { booksSubtotal: 0, shippingsTotal: 0, totalAmount: 0, totalPaid: 0, remaining: 0 };
+        if (!transaction) return { totalQuantity: 0, totalAmount: 0 };
 
-        const booksSubtotal = transaction.items?.reduce((sum, item) => {
+        const totalQuantity = transaction.items?.reduce((sum, item) => {
+            return sum + (item.quantity || 0);
+        }, 0) || 0;
+
+        const totalAmount = transaction.items?.reduce((sum, item) => {
             return sum + ((item.book?.price || 0) * item.quantity);
         }, 0) || 0;
 
-        const shippingsTotal = shippings.reduce((sum, s) => sum + (s.total_amount || 0), 0);
-        const totalAmount = booksSubtotal + shippingsTotal;
-        const totalPaid = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
-        const remaining = totalAmount - totalPaid;
-
-        return { booksSubtotal, shippingsTotal, totalAmount, totalPaid, remaining };
+        return { totalQuantity, totalAmount };
     };
 
-    const { booksSubtotal, shippingsTotal, totalAmount, totalPaid, remaining } = calculateSummary();
+    const { totalQuantity, totalAmount } = calculateSummary();
+
+    // Get first item's jenis_buku info (as per requirement, all items have same jenis_buku)
+    const firstItem = transaction?.items?.[0];
+    const jenisBuku = firstItem?.book?.jenis_buku;
+    const bookYear = firstItem?.book?.year;
+    const bookPeriode = firstItem?.book?.periode;
 
     // Export to PDF
     const handleExportPDF = async () => {
@@ -73,7 +85,7 @@ const InvoiceDialog = ({ isOpen, onClose, transactionId }) => {
             const element = invoiceRef.current;
             const opt = {
                 margin: 10,
-                filename: `Invoice-${transaction?.no_invoice || 'unknown'}.pdf`,
+                filename: `Faktur-${transaction?.no_invoice || 'unknown'}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -86,25 +98,11 @@ const InvoiceDialog = ({ isOpen, onClose, transactionId }) => {
         }
     };
 
-    // Status badge styles
-    const getStatusLabel = (status) => {
-        const config = {
-            0: 'Booking',
-            1: 'Paid Off',
-            2: 'Installment'
-        };
-        return config[status] || 'Unknown';
-    };
-
     if (!isOpen) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>Invoice Preview</DialogTitle>
-                </DialogHeader>
-
                 {isLoading ? (
                     <div className="flex justify-center items-center py-12">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -115,73 +113,101 @@ const InvoiceDialog = ({ isOpen, onClose, transactionId }) => {
                     </div>
                 ) : (
                     <div ref={invoiceRef} className="bg-white p-6" style={{ fontFamily: 'Arial, sans-serif' }}>
-                        {/* Invoice Header */}
+                        {/* Invoice Header with Biller Logo */}
                         <div className="border-b-2 border-slate-800 pb-4 mb-6">
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <h1 className="text-3xl font-bold text-slate-800">INVOICE</h1>
-                                    <p className="text-slate-600 mt-1">No: <span className="font-semibold uppercase">{transaction.no_invoice}</span></p>
+                                    {/* Biller Logo and Info */}
+                                    <div className="flex items-start gap-4">
+                                        {transaction.biller?.logo_url && (
+                                            <img
+                                                src={getAssetUrl(transaction.biller.logo_url)}
+                                                alt={transaction.biller?.name || 'Biller Logo'}
+                                                className="h-16 w-auto object-contain"
+                                                crossOrigin="anonymous"
+                                            />
+                                        )}
+                                        <div>
+                                            <h2 className="text-lg font-bold text-slate-800">{transaction.biller?.name || '-'}</h2>
+                                            {transaction.biller?.address && (
+                                                <p className="text-sm text-slate-600">{transaction.biller.address}</p>
+                                            )}
+                                            {transaction.biller?.phone && (
+                                                <p className="text-sm text-slate-600">Telp: {transaction.biller.phone}</p>
+                                            )}
+                                            {transaction.biller?.email && (
+                                                <p className="text-sm text-slate-600">{transaction.biller.email}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    {/* Sales Associate Info */}
+                                    <div className="mb-6">
+                                        <h3 className="text-sm  text-slate-500 uppercase mb-2">Kepada Yth.</h3>
+                                        <div className="bg-slate-50 p-4 rounded-lg">
+                                            <p className=" text-slate-800">{transaction.sales_associate?.name || '-'}</p>
+                                            {transaction.sales_associate?.address && (
+                                                <p className="text-sm text-slate-600 mt-1">{transaction.sales_associate.address}</p>
+                                            )}
+                                            {transaction.sales_associate?.phone && (
+                                                <p className="text-sm text-slate-600">Telp: {transaction.sales_associate.phone}</p>
+                                            )}
+                                            {transaction.sales_associate?.email && (
+                                                <p className="text-sm text-slate-600">{transaction.sales_associate.email}</p>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-slate-600">Tanggal Transaksi:</p>
-                                    <p className="font-semibold">{formatDate(transaction.transaction_date)}</p>
-                                    {transaction.payment_type === 'K' && transaction.due_date && (
-                                        <>
-                                            <p className="text-slate-600 mt-2">Jatuh Tempo:</p>
-                                            <p className="font-semibold text-red-600">{formatDate(transaction.due_date)}</p>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
 
-                        {/* Biller & Sales Associate Info */}
-                        <div className="grid grid-cols-2 gap-6 mb-6">
-                            <div className="bg-slate-50 p-4 rounded-lg">
-                                <h3 className="text-sm font-semibold text-slate-500 uppercase mb-2">Biller / Perusahaan</h3>
-                                <p className="font-semibold text-slate-800">{transaction.biller?.name || '-'}</p>
-                                {transaction.biller?.address && (
-                                    <p className="text-sm text-slate-600 mt-1">{transaction.biller.address}</p>
-                                )}
-                                {transaction.biller?.phone && (
-                                    <p className="text-sm text-slate-600">Telp: {transaction.biller.phone}</p>
-                                )}
-                                {transaction.biller?.email && (
-                                    <p className="text-sm text-slate-600">{transaction.biller.email}</p>
-                                )}
-                            </div>
-                            <div className="bg-slate-50 p-4 rounded-lg">
-                                <h3 className="text-sm font-semibold text-slate-500 uppercase mb-2">Sales Associate</h3>
-                                <p className="font-semibold text-slate-800">{transaction.sales_associate?.name || '-'}</p>
-                                {transaction.sales_associate?.phone && (
-                                    <p className="text-sm text-slate-600">Telp: {transaction.sales_associate.phone}</p>
-                                )}
-                                {transaction.sales_associate?.email && (
-                                    <p className="text-sm text-slate-600">{transaction.sales_associate.email}</p>
-                                )}
+
+                                {/* Invoice Info */}
+                                <div className="">
+                                    <h1 className="text-2xl font-bold text-slate-800 mb-2">FAKTUR PENJUALAN</h1>
+                                    <table className="ml-auto text-sm">
+                                        <tbody>
+                                            <tr>
+                                                <td className="text-slate-600 pr-2">No.Faktur:</td>
+                                                <td className=" text-left uppercase">{transaction.no_invoice}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="text-slate-600 pr-2">Tanggal:</td>
+                                                <td className=" text-left">{formatDate(transaction.transaction_date)}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="text-slate-600 pr-2">Jenis Buku:</td>
+                                                <td className=" text-left">{jenisBuku?.name || '-'}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="text-slate-600 pr-2">Periode:</td>
+                                                <td className=" text-left">{getPeriodeLabel(bookPeriode, bookYear)}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
 
                         {/* Items Table */}
                         <div className="mb-6">
-                            <h3 className="text-sm font-semibold text-slate-500 uppercase mb-3">Detail Pembelian</h3>
+                            <h3 className="text-sm  text-slate-500 uppercase mb-3">Detail Pembelian</h3>
                             <table className="w-full border-collapse">
                                 <thead>
                                     <tr className="bg-slate-800 text-white">
-                                        <th className="border border-slate-300 px-3 py-2 text-left text-sm">No</th>
+                                        <th className="border border-slate-300 px-3 py-2 text-center text-sm w-12">No</th>
+                                        <th className="border border-slate-300 px-3 py-2 text-left text-sm">Merk Buku</th>
                                         <th className="border border-slate-300 px-3 py-2 text-left text-sm">Nama Buku</th>
-                                        <th className="border border-slate-300 px-3 py-2 text-left text-sm">Penerbit</th>
-                                        <th className="border border-slate-300 px-3 py-2 text-center text-sm">Qty</th>
-                                        <th className="border border-slate-300 px-3 py-2 text-right text-sm">Harga</th>
-                                        <th className="border border-slate-300 px-3 py-2 text-right text-sm">Subtotal</th>
+                                        <th className="border border-slate-300 px-3 py-2 text-center text-sm w-16">Qty</th>
+                                        <th className="border border-slate-300 px-3 py-2 text-right text-sm w-28">Harga</th>
+                                        <th className="border border-slate-300 px-3 py-2 text-right text-sm w-32">Subtotal</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {transaction.items?.map((item, index) => (
                                         <tr key={item.id || index} className="hover:bg-slate-50">
-                                            <td className="border border-slate-300 px-3 py-2 text-sm">{index + 1}</td>
+                                            <td className="border border-slate-300 px-3 py-2 text-center text-sm">{index + 1}</td>
+                                            <td className="border border-slate-300 px-3 py-2 text-sm">
+                                                {item.book?.merk_buku ? `[${item.book.merk_buku.code}] ${item.book.merk_buku.name}` : '-'}
+                                            </td>
                                             <td className="border border-slate-300 px-3 py-2 text-sm font-medium">{item.book?.name || '-'}</td>
-                                            <td className="border border-slate-300 px-3 py-2 text-sm">{item.book?.publisher?.name || '-'}</td>
                                             <td className="border border-slate-300 px-3 py-2 text-center text-sm">{item.quantity}</td>
                                             <td className="border border-slate-300 px-3 py-2 text-right text-sm">{formatRupiah(item.book?.price || 0)}</td>
                                             <td className="border border-slate-300 px-3 py-2 text-right text-sm font-medium">
@@ -197,143 +223,61 @@ const InvoiceDialog = ({ isOpen, onClose, transactionId }) => {
                                         </tr>
                                     )}
                                 </tbody>
-                                <tfoot>
-                                    <tr className="bg-slate-100">
-                                        <td colSpan={5} className="border border-slate-300 px-3 py-2 text-right font-semibold">Subtotal Buku:</td>
-                                        <td className="border border-slate-300 px-3 py-2 text-right font-semibold">{formatRupiah(booksSubtotal)}</td>
-                                    </tr>
-                                </tfoot>
                             </table>
                         </div>
 
-                        {/* Shippings Table */}
-                        {shippings.length > 0 && (
-                            <div className="mb-6">
-                                <h3 className="text-sm font-semibold text-slate-500 uppercase mb-3">Pengiriman</h3>
-                                <table className="w-full border-collapse">
-                                    <thead>
-                                        <tr className="bg-slate-700 text-white">
-                                            <th className="border border-slate-300 px-3 py-2 text-left text-sm">No</th>
-                                            <th className="border border-slate-300 px-3 py-2 text-left text-sm">Ekspedisi</th>
-                                            <th className="border border-slate-300 px-3 py-2 text-left text-sm">No. Resi</th>
-                                            <th className="border border-slate-300 px-3 py-2 text-right text-sm">Biaya</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {shippings.map((shipping, index) => (
-                                            <tr key={shipping.id || index} className="hover:bg-slate-50">
-                                                <td className="border border-slate-300 px-3 py-2 text-sm">{index + 1}</td>
-                                                <td className="border border-slate-300 px-3 py-2 text-sm">{shipping.expedition?.name || '-'}</td>
-                                                <td className="border border-slate-300 px-3 py-2 text-sm font-mono">{shipping.no_resi || '-'}</td>
-                                                <td className="border border-slate-300 px-3 py-2 text-right text-sm">{formatRupiah(shipping.total_amount || 0)}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                    <tfoot>
-                                        <tr className="bg-slate-100">
-                                            <td colSpan={3} className="border border-slate-300 px-3 py-2 text-right font-semibold">Total Ongkir:</td>
-                                            <td className="border border-slate-300 px-3 py-2 text-right font-semibold">{formatRupiah(shippingsTotal)}</td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        )}
-
-                        {/* Payments Table */}
-                        {payments.length > 0 && (
-                            <div className="mb-6">
-                                <h3 className="text-sm font-semibold text-slate-500 uppercase mb-3">Riwayat Pembayaran</h3>
-                                <table className="w-full border-collapse">
-                                    <thead>
-                                        <tr className="bg-slate-700 text-white">
-                                            <th className="border border-slate-300 px-3 py-2 text-left text-sm">No</th>
-                                            <th className="border border-slate-300 px-3 py-2 text-left text-sm">No. Payment</th>
-                                            <th className="border border-slate-300 px-3 py-2 text-left text-sm">Tanggal</th>
-                                            <th className="border border-slate-300 px-3 py-2 text-left text-sm">Catatan</th>
-                                            <th className="border border-slate-300 px-3 py-2 text-right text-sm">Jumlah</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {payments.map((payment, index) => (
-                                            <tr key={payment.id || index} className="hover:bg-slate-50">
-                                                <td className="border border-slate-300 px-3 py-2 text-sm">{index + 1}</td>
-                                                <td className="border border-slate-300 px-3 py-2 text-sm font-mono text-xs">{payment.no_payment || '-'}</td>
-                                                <td className="border border-slate-300 px-3 py-2 text-sm">{formatDate(payment.payment_date)}</td>
-                                                <td className="border border-slate-300 px-3 py-2 text-sm text-slate-600">{payment.note || '-'}</td>
-                                                <td className="border border-slate-300 px-3 py-2 text-right text-sm font-medium">{formatRupiah(payment.amount || 0)}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                    <tfoot>
-                                        <tr className="bg-slate-100">
-                                            <td colSpan={4} className="border border-slate-300 px-3 py-2 text-right font-semibold">Total Dibayar:</td>
-                                            <td className="border border-slate-300 px-3 py-2 text-right font-semibold text-green-600">{formatRupiah(totalPaid)}</td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        )}
-
-                        {/* Summary */}
-                        <div className="border-t-2 border-slate-800 pt-4">
+                        {/* Summary Section */}
+                        <div className="border-t-2 border-slate-800 pt-4 mb-6">
                             <div className="flex justify-between items-start">
-                                <div className="flex gap-4">
-                                    <div>
-                                        <span className="text-sm text-slate-500">Status:</span>
-                                        <Badge variant="outline" className={`ml-2 ${
-                                            transaction.status === 1 ? 'bg-green-50 text-green-700 border-green-200' :
-                                            transaction.status === 2 ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                            'bg-yellow-50 text-yellow-700 border-yellow-200'
-                                        }`}>
-                                            {getStatusLabel(transaction.status)}
-                                        </Badge>
-                                    </div>
-                                    <div>
-                                        <span className="text-sm text-slate-500">Pembayaran:</span>
-                                        <Badge variant="outline" className={`ml-2 ${
-                                            transaction.payment_type === 'T'
-                                                ? 'bg-green-50 text-green-700 border-green-200'
-                                                : 'bg-orange-50 text-orange-700 border-orange-200'
-                                        }`}>
-                                            {transaction.payment_type === 'T' ? 'Cash' : 'Credit'}
-                                        </Badge>
-                                    </div>
+                                {/* Spelled Out Amount */}
+                                <div className="flex-1 pr-8">
+                                    <p className="text-sm text-slate-600 mb-1">Terbilang:</p>
+                                    <p className=" text-slate-800 italic border border-slate-300 p-2 rounded bg-slate-50">
+                                        # {spellOutNumber(totalAmount)} Rupiah #
+                                    </p>
                                 </div>
 
-                                <div className="text-right space-y-1">
-                                    <div className="flex justify-between gap-8">
-                                        <span className="text-slate-600">Subtotal Buku:</span>
-                                        <span className="font-medium">{formatRupiah(booksSubtotal)}</span>
+                                {/* Totals */}
+                                <div className="text-right space-y-2 min-w-[250px]">
+                                    <div className="flex justify-between gap-4">
+                                        <span className="text-slate-600">Total Quantity:</span>
+                                        <span className="">{totalQuantity} item</span>
                                     </div>
-                                    <div className="flex justify-between gap-8">
-                                        <span className="text-slate-600">Total Ongkir:</span>
-                                        <span className="font-medium">{formatRupiah(shippingsTotal)}</span>
-                                    </div>
-                                    <div className="flex justify-between gap-8 border-t pt-1">
-                                        <span className="font-bold text-lg">TOTAL:</span>
+                                    <div className="flex justify-between gap-4 border-t pt-2">
+                                        <span className="font-bold text-lg">Total Harga:</span>
                                         <span className="font-bold text-lg text-blue-600">{formatRupiah(totalAmount)}</span>
                                     </div>
-                                    {payments.length > 0 && (
-                                        <>
-                                            <div className="flex justify-between gap-8">
-                                                <span className="text-slate-600">Total Dibayar:</span>
-                                                <span className="font-medium text-green-600">{formatRupiah(totalPaid)}</span>
-                                            </div>
-                                            <div className="flex justify-between gap-8">
-                                                <span className="text-slate-600">Sisa Tagihan:</span>
-                                                <span className={`font-bold ${remaining > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                                    {formatRupiah(remaining)}
-                                                </span>
-                                            </div>
-                                        </>
-                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Signature Placeholders */}
+                        <div className="mt-8 pt-4">
+                            <div className="grid grid-cols-3 gap-4 text-center">
+                                <div className="border border-slate-300 p-4 rounded">
+                                    <p className="text-sm text-slate-600 mb-16">Dibuat Oleh</p>
+                                    <div className="border-t border-slate-400 pt-2">
+                                        <p className="text-sm text-slate-500">(............................)</p>
+                                    </div>
+                                </div>
+                                <div className="border border-slate-300 p-4 rounded">
+                                    <p className="text-sm text-slate-600 mb-16">Diterima Oleh</p>
+                                    <div className="border-t border-slate-400 pt-2">
+                                        <p className="text-sm text-slate-500">(............................)</p>
+                                    </div>
+                                </div>
+                                <div className="border border-slate-300 p-4 rounded">
+                                    <p className="text-sm text-slate-600 mb-16">Disetujui Oleh</p>
+                                    <div className="border-t border-slate-400 pt-2">
+                                        <p className="text-sm text-slate-500">(............................)</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Footer */}
                         <div className="mt-8 pt-4 border-t border-slate-200 text-center text-xs text-slate-400">
-                            <p>Invoice ini dicetak secara otomatis oleh sistem PustakaDB</p>
+                            <p>Faktur ini dicetak secara otomatis oleh sistem ATMA MITRA PRESTASI</p>
                             <p>Tanggal cetak: {formatDate(new Date())}</p>
                         </div>
                     </div>

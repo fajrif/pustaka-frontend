@@ -5,7 +5,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
-import logoGatra from '@/assets/logo-pustaka-icon.png';
+import logoGatra from '@/assets/logo-atma.png';
 import { useToast } from '@/components/ui/use-toast';
 
 const Login = () => {
@@ -41,11 +41,8 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg">
-            <img src={logoGatra} className="w-10 h-10" />
-          </div>
+          <img src={logoGatra} className="mx-auto h-[7.5rem]" alt="ATMA MITRA PRESTASI" />
           <div>
-            <CardTitle className="text-3xl font-bold">PustakaDB</CardTitle>
             <CardDescription className="text-base mt-2">
               Sistem Management Buku &amp; Penerbit
             </CardDescription>

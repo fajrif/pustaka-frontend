@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // Fungsi helper untuk mengubah string tanggal sederhana (YYYY-MM-DD) menjadi timestamp lengkap (ISO 8601)
-export const toISOString = (dateString: string) => {
+export const toISOString = (dateString) => {
   if (dateString === null || dateString === undefined || dateString === "") {
     return undefined;
   }
@@ -18,7 +18,7 @@ export const toISOString = (dateString: string) => {
 };
 
 // Helper function untuk Preprocessing Angka Opsional
-export const preprocessOptionalNumber = (val: any) => {
+export const preprocessOptionalNumber = (val) => {
   // Jika nilai null, undefined, atau string kosong (""), kembalikan undefined
   if (val === null || val === undefined || val === "") {
     return undefined;
@@ -31,7 +31,7 @@ export const preprocessOptionalNumber = (val: any) => {
 
 // Helper function untuk Preprocessing String Opsional
 // Returns empty string instead of undefined to ensure field is always sent in JSON payload
-export const preProcessOptionalString = (val: any) => {
+export const preProcessOptionalString = (val) => {
   if (val === null || val === undefined || (typeof val === "string" && val.trim() === "")) {
     return "";
   }

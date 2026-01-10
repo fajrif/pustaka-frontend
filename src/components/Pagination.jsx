@@ -73,7 +73,7 @@ const Pagination = ({
         </Button>
 
         <div className="flex items-center gap-1">
-          {pageNumbers.map((page, index) => {
+          {pageNumbers.map((page) => {
             if (typeof page === 'string' && page.startsWith('ellipsis')) {
               return (
                 <span

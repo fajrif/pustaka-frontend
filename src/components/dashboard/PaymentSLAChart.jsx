@@ -2,11 +2,11 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { CheckCircle2, Clock, AlertTriangle } from "lucide-react";
-import { calculateSLAStatus, getSLALabel } from "@/utils/helpers/TransactionHelper";
+import { calculateSLAStatus } from "@/utils/helpers/TransactionHelper";
 import { useRange } from "@/hooks/useRange";
 import { randomPastDate, randomSLADate } from "@/utils/generators";
 
-export default function PaymentSLAChart({ sales }) {
+export default function PaymentSLAChart() {
 
   // Generate transactions data
   const transactions = useRange(10).map((i) => {

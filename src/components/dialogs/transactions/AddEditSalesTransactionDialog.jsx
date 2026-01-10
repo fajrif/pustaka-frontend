@@ -49,7 +49,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
   });
 
   // Fetch transaction details
-  const { data: transactionDetail, isLoading: isLoadingTransaction } = useQuery({
+  const { data: transactionDetail } = useQuery({
     queryKey: ['salesTransaction', transactionId],
     queryFn: async () => {
       const response = await api.get(`/sales-transactions/${transactionId}`);
@@ -79,7 +79,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
     enabled: isOpen && !!transactionId,
   });
 
-  const { register, control, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm({
+  const { register, control, handleSubmit, formState: { errors }, reset, watch } = useForm({
     resolver: zodResolver(salesTransactionSchema),
     defaultValues: initialData
   });
@@ -93,7 +93,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
   const isEditing = !!transactionId;
   const canEditItems = !isEditing || (isEditing && currentStatus === 0);
 
-  // Lock modifications if status is Paid Off (1)
+  // Lock modifications if status is Lunas (1)
   const isTransactionLocked = isEditing && transactionDetail?.status === 1;
 
   // Sync form with fetched data
@@ -355,7 +355,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
                   </div>
 
                   <div className="space-y-2 border-l-2 border-blue-400 pl-3">
-                    <Label className="text-slate-700">Payment Type <span className="text-red-500">*</span></Label>
+                    <Label className="text-slate-700">Jenis Pembayaran <span className="text-red-500">*</span></Label>
                     <div className="flex gap-4 items-center pt-2">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -364,7 +364,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
                           {...register('payment_type')}
                           className="w-4 h-4 text-blue-600"
                         />
-                        <span>Cash</span>
+                        <span>Tunai</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -373,7 +373,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
                           {...register('payment_type')}
                           className="w-4 h-4 text-blue-600"
                         />
-                        <span>Credit</span>
+                        <span>Kredit</span>
                       </label>
                     </div>
                   </div>
@@ -414,9 +414,9 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
                         render={({ field: { onChange, value } }) => (
                           <Select
                             options={[
-                              { value: 0, label: 'Booking' },
-                              { value: 1, label: 'Paid Off' },
-                              { value: 2, label: 'Installment' }
+                              { value: 0, label: 'Pesanan' },
+                              { value: 1, label: 'Lunas' },
+                              { value: 2, label: 'Angsuran' }
                             ]}
                             value={value}
                             onChange={onChange} // We need to convert string to number if select returns string, but Select component usually handles this
@@ -543,7 +543,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
               {isEditing && (
                 <div className="space-y-4">
                   <div className="flex justify-between items-center pb-2">
-                    <h3 className="font-semibold text-slate-900">Pengiriman (Shippings)</h3>
+                    <h3 className="font-semibold text-slate-900">Pengiriman</h3>
                     {!isTransactionLocked && (
                       <Button
                         type="button"
@@ -624,7 +624,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
               {isEditing && (
                 <div className="space-y-4">
                   <div className="flex justify-between items-center pb-2">
-                    <h3 className="font-semibold text-slate-900">Pembayaran (Payments)</h3>
+                    <h3 className="font-semibold text-slate-900">Pembayaran</h3>
                     {(remainingBalance > 0 && !isTransactionLocked) && (
                       <Button
                         type="button"
@@ -648,7 +648,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>No. Payment</TableHead>
+                            <TableHead>No. Pembayaran</TableHead>
                             <TableHead>Tanggal</TableHead>
                             <TableHead>Catatan</TableHead>
                             <TableHead className="text-right">Jumlah</TableHead>

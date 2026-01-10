@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { api } from '@/api/axios';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,7 +14,6 @@ import { formatRupiah } from '@/utils/formatters';
 import { DollarSign, TrendingDown } from 'lucide-react';
 
 const AddInstallmentDialog = ({ isOpen, onClose, transactionId, remainingBalance, onFinish }) => {
-  const queryClient = useQueryClient();
   const { toast } = useToast();
   const [typedAmount, setTypedAmount] = useState(0);
 

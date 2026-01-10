@@ -34,7 +34,7 @@ const EditProfileDialog = ({ isOpen, onClose, user, onFinish }) => {
     if (user) {
       reset(initialData);
     }
-  }, [user, reset]);
+  }, [user, reset, initialData]);
 
   const updateMutation = useMutation({
     mutationFn: async (data) => {

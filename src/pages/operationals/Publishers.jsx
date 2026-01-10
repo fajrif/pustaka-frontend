@@ -44,8 +44,8 @@ const MasterPublisher = () => {
     setShowDialog(true);
   };
 
-  const finishSubmit = (isQuery=true) => {
-    if(isQuery) {
+  const finishSubmit = (isQuery = true) => {
+    if (isQuery) {
       queryClient.invalidateQueries(['publishers']);
     }
     setShowDialog(false);
@@ -70,14 +70,14 @@ const MasterPublisher = () => {
       queryClient.invalidateQueries(['publishers']);
       toast({
         title: "Success",
-        description: "Publisher berhasil dihapus.",
+        description: "Penerbit berhasil dihapus.",
         variant: "success",
       });
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: error.response?.data?.error || "Gagal menghapus publisher.",
+        description: error.response?.data?.error || "Gagal menghapus penerbit.",
         variant: "destructive",
       });
     }
@@ -88,8 +88,8 @@ const MasterPublisher = () => {
       <div className="max-w-7xl mx-auto space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Master Data Publisher</h1>
-            <p className="text-slate-500 font-normal mt-1">Kelola data publisher anda</p>
+            <h1 className="text-2xl font-semibold text-slate-900">Master Data Penerbit</h1>
+            <p className="text-slate-500 font-normal mt-1">Kelola data penerbit anda</p>
           </div>
         </div>
 
@@ -100,13 +100,13 @@ const MasterPublisher = () => {
                 <Landmark className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900 mb-2">Tentang Master Data Publisher</h3>
+                <h3 className="font-semibold text-slate-900 mb-2">Tentang Master Data Penerbit</h3>
                 <p className="text-sm text-slate-700 mb-3">
-                  Master data publisher digunakan untuk data management buku.
+                  Master data penerbit digunakan untuk data management buku.
                 </p>
                 <div className="space-y-1 text-sm text-slate-600">
-                  <p>• <strong className="font-semibold">Nama Publisher:</strong> Nama Publisher</p>
-                  <p>• <strong className="font-semibold">Contact Info:</strong> Contact atau informasi lengkap dari Publisher tsb.</p>
+                  <p>• <strong className="font-semibold">Nama Penerbit:</strong> Nama Penerbit</p>
+                  <p>• <strong className="font-semibold">Contact Info:</strong> Contact atau informasi lengkap dari Penerbit tsb.</p>
                 </div>
               </div>
             </div>
@@ -134,7 +134,7 @@ const MasterPublisher = () => {
                 className="bg-blue-900 hover:bg-blue-800"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Tambah Publisher
+                Tambah Penerbit
               </Button>
             </div>
           </CardHeader>
@@ -143,7 +143,7 @@ const MasterPublisher = () => {
               <div className="text-center py-8">Loading...</div>
             ) : publishersData.publishers.length === 0 ? (
               <div className="text-center py-8 text-slate-500">
-                Belum ada publisher. Tambahkan publisher pertama anda.
+                Belum ada penerbit. Tambahkan penerbit pertama anda.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -155,7 +155,7 @@ const MasterPublisher = () => {
                           {publisher.logo_url && (
                             <img
                               src={getAssetUrl(publisher.logo_url)}
-                              alt="Publisher Logo"
+                              alt="Logo Penerbit"
                               className="w-10 h-10 object-cover border rounded"
                               onError={(e) => {
                                 e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjRTVFN0VCIi8+CjxwYXRoIGQ9Ik0zMiAzMkMzNS4zMTM3IDMyIDM4IDI5LjMxMzcgMzggMjZDMzggMjIuNjg2MyAzNS4zMTM3IDIwIDMyIDIwQzI4LjY4NjMgMjAgMjYgMjIuNjg2MyAyNiAyNkMyNiAyOS4zMTM3IDI4LjY4NjMgMzIgMzIgMzJaIiBmaWxsPSIjOUM5Qzk3Ii8+CjxwYXRoIGQ9Ik0yMCA0NFYzOEMyMCAzNS43OTA5IDIxLjc5MDkgMzQgMjQgMzRINDBDNDIuMjA5MSAzNCA0NCAzNS43OTA5IDQ0IDM4VjQ0IiBmaWxsPSIjOUM5Qzk3Ii8+Cjwvc3ZnPgo=';
@@ -181,7 +181,7 @@ const MasterPublisher = () => {
                             variant="ghost"
                             size="icon"
                             onClick={() => {
-                              if (confirm('Yakin ingin menghapus publisher ini?')) {
+                              if (confirm('Yakin ingin menghapus penerbit ini?')) {
                                 deleteMutation.mutate(publisher.id);
                               }
                             }}
@@ -194,9 +194,9 @@ const MasterPublisher = () => {
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm text-slate-600">
-                        Email: {publisher.email || '-'}<br/>
-                        Phone: {publisher.phone1 || publisher.phone2 || '-'}<br/>
-                        Area: {publisher.area || '-'}<br/>
+                        Email: {publisher.email || '-'}<br />
+                        Phone: {publisher.phone1 || publisher.phone2 || '-'}<br />
+                        Area: {publisher.area || '-'}<br />
                         Dibuat pada: {formatDate(publisher.created_at)}
                       </p>
                     </CardContent>
@@ -224,7 +224,7 @@ const MasterPublisher = () => {
         onClose={() => finishSubmit(false)}
         editingPublisher={editingPublisher}
         onFinish={finishSubmit}
-        />
+      />
     </div>
   );
 };

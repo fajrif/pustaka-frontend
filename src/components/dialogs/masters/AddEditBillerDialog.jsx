@@ -70,7 +70,7 @@ const AddEditBillerDialog = ({ isOpen, onClose, editingBiller, onFinish }) => {
           'Content-Type': 'multipart/form-data',
         },
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Warning",
         description: `Data berhasil disimpan, tetapi gagal mengupload ${field}.`,

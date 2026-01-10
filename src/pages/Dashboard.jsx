@@ -1,12 +1,11 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Plus, Wallet, TrendingUp, AlertCircle, FolderKanban } from 'lucide-react';
+import { Wallet, TrendingUp, AlertCircle, FolderKanban } from 'lucide-react';
 import BudgetTrendChart from "@/components/dashboard/BudgetTrendChart";
 import PaymentSLAChart from "@/components/dashboard/PaymentSLAChart";
-import { formatRupiah, formatShortRupiah } from '@/utils/formatters';
+import { formatShortRupiah } from '@/utils/formatters';
 
 const Dashboard = () => {
 

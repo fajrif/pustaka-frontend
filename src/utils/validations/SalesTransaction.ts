@@ -5,8 +5,8 @@ export const salesTransactionSchema = z.object({
   id: z.string().optional(),
   sales_associate_id: z.string().uuid("Sales Associate ID format").min(1, "Sales Associate ID harus diisi"),
   payment_type: z.string().nullable().optional(),
-  transaction_date: z.preprocess((val) => toISOString(val as string), z.string()),
-  due_date: z.preprocess((val) => toISOString(val as string), z.string().nullable().optional()),
+  transaction_date: z.preprocess((val) => toISOString(String(val || '')), z.string()),
+  due_date: z.preprocess((val) => toISOString(String(val || '')), z.string().nullable().optional()),
   status: z.number().optional(), // Added status for updates
 })
 
@@ -20,7 +20,7 @@ export const salesTransactionItemSchema = z.object({
 export const paymentSchema = z.object({
   id: z.string().optional(),
   transaction_id: z.string().uuid("Invalid Transaction ID format").min(1, "Transaction ID harus diisi"),
-  payment_date: z.preprocess((val) => toISOString(val as string), z.string()),
+  payment_date: z.preprocess((val) => toISOString(String(val || '')), z.string()),
   amount: z.number().min(1, "Amount harus diisi").nonnegative("Amount tidak boleh negatif"),
   note: z.string().nullable().optional(),
 })

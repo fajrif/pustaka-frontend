@@ -1,5 +1,5 @@
 import React from 'react';
-import logoGatra from '@/assets/logo-pustaka-icon.png';
+import logoGatra from '@/assets/logo-atma.png';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import {
@@ -149,15 +149,7 @@ export default function Layout({ children }) {
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="border-b border-slate-200 p-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                <img src={logoGatra} className="w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="font-bold text-slate-900 text-lg">PustakaDB</h2>
-                <p className="text-xs text-slate-500">Manajemen Buku</p>
-              </div>
-            </div>
+            <img src={logoGatra} className="w-[70%] mx-auto" alt="ATMA MITRA PRESTASI" />
           </div>
 
           {/* Navigation */}
@@ -206,9 +198,8 @@ export default function Layout({ children }) {
                     <Database className="w-5 h-5" />
                     <span className="flex-1 text-left">{navigationMastersGroup.title}</span>
                     <ChevronDown
-                      className={`w-4 h-4 transition-transform duration-200 ${
-                        isMenuOpen('dataMasters') ? 'rotate-180' : ''
-                      }`}
+                      className={`w-4 h-4 transition-transform duration-200 ${isMenuOpen('dataMasters') ? 'rotate-180' : ''
+                        }`}
                     />
                   </button>
                 </CollapsibleTrigger>
@@ -314,7 +305,7 @@ export default function Layout({ children }) {
             >
               <Menu className="w-5 h-5" />
             </button>
-            <h1 className="text-lg font-semibold text-slate-900">PustakaDB</h1>
+            <h1 className="text-lg font-semibold text-slate-900">ATMA MITRA PRESTASI</h1>
           </div>
         </header>
 
