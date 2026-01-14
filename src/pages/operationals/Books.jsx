@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Pencil, Search, Filter, Trash2, BookOpen } from 'lucide-react';
+import { Plus, Pencil, Search, Filter, Trash2, BookOpen, X } from 'lucide-react';
 import AddEditBookDialog from '@/components/dialogs/operationals/AddEditBookDialog';
+import BookFilterDialog from '@/components/dialogs/operationals/BookFilterDialog';
 import Pagination from '@/components/Pagination';
 import { formatDate, formatRupiah } from '@/utils/formatters';
 import { PAGINATION } from '@/utils/constants';
@@ -18,19 +19,26 @@ const MasterBook = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [showDialog, setShowDialog] = useState(false);
+  const [showFilterDialog, setShowFilterDialog] = useState(false);
   const [editingBook, setEditingBook] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState({});
   const [currentPage, setCurrentPage] = useState(PAGINATION.DEFAULT_PAGE);
   const limit = PAGINATION.DEFAULT_LIMIT;
 
+  const getActiveFilterCount = () => {
+    return Object.values(filters).filter(v => v !== '' && v !== null && v !== undefined).length;
+  };
+
   const { data: booksData = { books: [], pagination: { total: 0, page: 1, limit: PAGINATION.DEFAULT_LIMIT, total_pages: 0 } }, isLoading } = useQuery({
-    queryKey: ['books', searchTerm, currentPage, limit],
+    queryKey: ['books', searchTerm, currentPage, limit, filters],
     queryFn: async () => {
       const response = await api.get('/books', {
         params: {
           search: searchTerm,
           page: currentPage,
           limit: limit,
+          ...filters,
         },
       });
       return response.data;
@@ -60,6 +68,17 @@ const MasterBook = () => {
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
     setCurrentPage(PAGINATION.DEFAULT_PAGE); // Reset to first page on search
+  };
+
+  const handleApplyFilters = (newFilters) => {
+    setFilters(newFilters);
+    setCurrentPage(PAGINATION.DEFAULT_PAGE); // Reset to first page on filter change
+    setShowFilterDialog(false);
+  };
+
+  const handleClearFilters = () => {
+    setFilters({});
+    setCurrentPage(PAGINATION.DEFAULT_PAGE);
   };
 
   const deleteMutation = useMutation({
@@ -128,27 +147,100 @@ const MasterBook = () => {
 
         <Card className="border-none shadow-lg">
           <CardHeader className="border-b border-slate-100">
-            <div className="flex justify-between items-center">
-              <div className="w-full max-w-md">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-                  <Input
-                    placeholder="Filter pencarian ..."
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                    className="pl-10"
-                  />
+            <div className="flex flex-col gap-3">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2 w-full max-w-lg">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                    <Input
+                      placeholder="Cari nama buku ..."
+                      value={searchTerm}
+                      onChange={handleSearchChange}
+                      className="pl-10"
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowFilterDialog(true)}
+                    className="gap-2 relative"
+                  >
+                    <Filter className="w-4 h-4" />
+                    Filter
+                    {getActiveFilterCount() > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center font-semibold">
+                        {getActiveFilterCount()}
+                      </span>
+                    )}
+                  </Button>
                 </div>
+                <Button
+                  onClick={() => {
+                    setShowDialog(true);
+                  }}
+                  className="bg-blue-900 hover:bg-blue-800"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Tambah Buku
+                </Button>
               </div>
-              <Button
-                onClick={() => {
-                  setShowDialog(true);
-                }}
-                className="bg-blue-900 hover:bg-blue-800"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Tambah Buku
-              </Button>
+              {/* Active Filters Display */}
+              {getActiveFilterCount() > 0 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm text-slate-500">Filter aktif:</span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {filters.bidang_studi_id && (
+                      <Badge variant="secondary" className="gap-1">
+                        Bidang Studi
+                        <X className="w-3 h-3 cursor-pointer" onClick={() => setFilters(prev => ({ ...prev, bidang_studi_id: '' }))} />
+                      </Badge>
+                    )}
+                    {filters.jenis_buku_id && (
+                      <Badge variant="secondary" className="gap-1">
+                        Jenis Buku
+                        <X className="w-3 h-3 cursor-pointer" onClick={() => setFilters(prev => ({ ...prev, jenis_buku_id: '' }))} />
+                      </Badge>
+                    )}
+                    {filters.jenjang_studi_id && (
+                      <Badge variant="secondary" className="gap-1">
+                        Jenjang Studi
+                        <X className="w-3 h-3 cursor-pointer" onClick={() => setFilters(prev => ({ ...prev, jenjang_studi_id: '' }))} />
+                      </Badge>
+                    )}
+                    {filters.curriculum_id && (
+                      <Badge variant="secondary" className="gap-1">
+                        Kurikulum
+                        <X className="w-3 h-3 cursor-pointer" onClick={() => setFilters(prev => ({ ...prev, curriculum_id: '' }))} />
+                      </Badge>
+                    )}
+                    {filters.periode && (
+                      <Badge variant="secondary" className="gap-1">
+                        Semester: {filters.periode == 1 ? 'Ganjil' : 'Genap'}
+                        <X className="w-3 h-3 cursor-pointer" onClick={() => setFilters(prev => ({ ...prev, periode: '' }))} />
+                      </Badge>
+                    )}
+                    {filters.year && (
+                      <Badge variant="secondary" className="gap-1">
+                        Tahun: {filters.year}
+                        <X className="w-3 h-3 cursor-pointer" onClick={() => setFilters(prev => ({ ...prev, year: '' }))} />
+                      </Badge>
+                    )}
+                    {(filters.price_min || filters.price_max) && (
+                      <Badge variant="secondary" className="gap-1">
+                        Harga: {filters.price_min ? `Rp${Number(filters.price_min).toLocaleString('id-ID')}` : '0'} - {filters.price_max ? `Rp${Number(filters.price_max).toLocaleString('id-ID')}` : '~'}
+                        <X className="w-3 h-3 cursor-pointer" onClick={() => setFilters(prev => ({ ...prev, price_min: '', price_max: '' }))} />
+                      </Badge>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleClearFilters}
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50 h-7 px-2"
+                  >
+                    Hapus Semua
+                  </Button>
+                </div>
+              )}
             </div>
           </CardHeader>
           <CardContent className="pt-6">
@@ -278,6 +370,14 @@ const MasterBook = () => {
         onClose={() => finishSubmit(false)}
         editingBook={editingBook}
         onFinish={finishSubmit}
+      />
+
+      {/* Filter Dialog */}
+      <BookFilterDialog
+        isOpen={showFilterDialog}
+        onClose={() => setShowFilterDialog(false)}
+        currentFilters={filters}
+        onApplyFilters={handleApplyFilters}
       />
     </div>
   );

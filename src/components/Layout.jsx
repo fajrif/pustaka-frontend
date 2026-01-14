@@ -18,6 +18,11 @@ import {
   ShoppingCart,
   ChevronDown,
   Database,
+  FileBarChart,
+  Package,
+  CreditCard,
+  ShoppingBag,
+  TrendingUp,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from './ui/collapsible';
@@ -65,6 +70,12 @@ const navigationItems = [
     title: "Transaksi Penjualan",
     url: "/sales-transactions",
     icon: ShoppingCart,
+    roles: ['admin', 'user']
+  },
+  {
+    title: "Transaksi Pembelian",
+    url: "/purchase-transactions",
+    icon: ShoppingBag,
     roles: ['admin', 'user']
   },
 ];
@@ -117,6 +128,45 @@ const navigationMastersGroup = {
       icon: Settings,
       roles: ['admin']
     },
+    {
+      title: "Master Kurikulum",
+      url: "/master-kurikulum",
+      icon: Settings,
+      roles: ['admin']
+    },
+  ]
+};
+
+const navigationReportsGroup = {
+  title: "Laporan",
+  icon: FileBarChart,
+  key: "laporan",
+  roles: ['admin', 'user'],
+  children: [
+    {
+      title: "Laporan Stok Buku",
+      url: "/reports/books-stock",
+      icon: Package,
+      roles: ['admin', 'user']
+    },
+    {
+      title: "Laporan Piutang",
+      url: "/reports/credits",
+      icon: CreditCard,
+      roles: ['admin', 'user']
+    },
+    {
+      title: "Laporan Pembelian",
+      url: "/reports/purchases",
+      icon: ShoppingBag,
+      roles: ['admin', 'user']
+    },
+    {
+      title: "Laporan Penjualan",
+      url: "/reports/sales",
+      icon: TrendingUp,
+      roles: ['admin', 'user']
+    },
   ]
 };
 
@@ -125,7 +175,7 @@ export default function Layout({ children }) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
-  const { isMenuOpen, toggleMenu } = useSidebarMenuState({ dataMasters: true });
+  const { isMenuOpen, toggleMenu } = useSidebarMenuState({ dataMasters: true, laporan: true });
 
   const filteredNavItems = navigationItems.filter(item =>
     !item.roles || item.roles.includes(user?.role)
@@ -137,6 +187,13 @@ export default function Layout({ children }) {
 
   const canSeeMastersGroup = navigationMastersGroup.roles.includes(user?.role)
     && filteredMasterChildren.length > 0;
+
+  const filteredReportChildren = navigationReportsGroup.children.filter(item =>
+    !item.roles || item.roles.includes(user?.role)
+  );
+
+  const canSeeReportsGroup = navigationReportsGroup.roles.includes(user?.role)
+    && filteredReportChildren.length > 0;
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-slate-50 to-slate-100">
@@ -207,6 +264,59 @@ export default function Layout({ children }) {
                 <CollapsibleContent>
                   <div className="ml-4 pl-4 border-l border-slate-200 space-y-1 mt-1">
                     {filteredMasterChildren.map((item) => {
+                      const isActive = location.pathname === item.url;
+                      return (
+                        <Link
+                          key={item.title}
+                          to={item.url}
+                          onClick={() => setSidebarOpen(false)}
+                          className={`
+                            flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-200
+                            ${isActive
+                              ? 'bg-blue-50 text-blue-900 font-medium'
+                              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                            }
+                          `}
+                        >
+                          <item.icon className="w-4 h-4" />
+                          <span>{item.title}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+
+            {/* Collapsible Reports Group */}
+            {canSeeReportsGroup && (
+              <Collapsible
+                open={isMenuOpen('laporan')}
+                onOpenChange={() => toggleMenu('laporan')}
+              >
+                <CollapsibleTrigger asChild>
+                  <button
+                    className={`
+                      flex w-full items-center gap-3 px-3 py-2.5 text-sm rounded-lg
+                      transition-all duration-200 hover:bg-slate-100
+                      ${filteredReportChildren.some(item => location.pathname === item.url)
+                        ? 'text-blue-900 font-medium'
+                        : 'text-slate-700'
+                      }
+                    `}
+                  >
+                    <FileBarChart className="w-5 h-5" />
+                    <span className="flex-1 text-left">{navigationReportsGroup.title}</span>
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform duration-200 ${isMenuOpen('laporan') ? 'rotate-180' : ''
+                        }`}
+                    />
+                  </button>
+                </CollapsibleTrigger>
+
+                <CollapsibleContent>
+                  <div className="ml-4 pl-4 border-l border-slate-200 space-y-1 mt-1">
+                    {filteredReportChildren.map((item) => {
                       const isActive = location.pathname === item.url;
                       return (
                         <Link

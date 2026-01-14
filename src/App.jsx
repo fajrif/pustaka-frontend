@@ -14,6 +14,7 @@ import Expeditions from './pages/operationals/Expeditions';
 import Books from './pages/operationals/Books';
 import SalesAssociates from './pages/operationals/SalesAssociates';
 import SalesTransactions from './pages/transactions/SalesTransactions';
+import PurchaseTransactions from './pages/transactions/PurchaseTransactions';
 
 import MasterJenisBuku from './pages/masters/MasterJenisBuku';
 import MasterJenjangStudi from './pages/masters/MasterJenjangStudi';
@@ -22,6 +23,13 @@ import MasterKelas from './pages/masters/MasterKelas';
 import MasterCities from './pages/masters/MasterCities';
 import MasterBillers from './pages/masters/MasterBillers';
 import MasterMerkBuku from './pages/masters/MasterMerkBuku';
+import MasterKurikulum from './pages/masters/MasterKurikulum';
+
+// Reports
+import ReportBooksStock from './pages/reports/ReportBooksStock';
+import ReportCredits from './pages/reports/ReportCredits';
+import ReportPurchases from './pages/reports/ReportPurchases';
+import ReportSales from './pages/reports/ReportSales';
 
 // Layout
 import Layout from './components/Layout';
@@ -109,6 +117,14 @@ function App() {
               </ProtectedRoute>
             } />
 
+            <Route path="/purchase-transactions" element={
+              <ProtectedRoute>
+                <Layout>
+                  <PurchaseTransactions />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
             <Route path="/profile" element={
               <ProtectedRoute>
                 <Layout>
@@ -169,6 +185,47 @@ function App() {
               <ProtectedRoute adminOnly>
                 <Layout>
                   <MasterMerkBuku />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/master-kurikulum" element={
+              <ProtectedRoute adminOnly>
+                <Layout>
+                  <MasterKurikulum />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            {/* Reports */}
+            <Route path="/reports/books-stock" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ReportBooksStock />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/reports/credits" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ReportCredits />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/reports/purchases" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ReportPurchases />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/reports/sales" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ReportSales />
                 </Layout>
               </ProtectedRoute>
             } />

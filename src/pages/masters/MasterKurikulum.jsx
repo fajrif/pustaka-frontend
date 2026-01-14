@@ -8,25 +8,25 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip } from '@/components/ui/tooltip';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Pencil, Search, Filter, Trash2, GraduationCap } from 'lucide-react';
-import AddEditJenjangStudiDialog from '@/components/dialogs/masters/AddEditJenjangStudiDialog';
+import { Plus, Pencil, Search, Filter, Trash2, BookOpen } from 'lucide-react';
+import AddEditKurikulumDialog from '@/components/dialogs/masters/AddEditKurikulumDialog';
 import Pagination from '@/components/Pagination';
 import { PAGINATION } from '@/utils/constants';
 import { useToast } from '@/components/ui/use-toast';
 
-const MasterJenjangStudi = () => {
+const MasterKurikulum = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [showDialog, setShowDialog] = useState(false);
-  const [editingJenjangStudi, setEditingJenjangStudi] = useState(null);
+  const [editingKurikulum, setEditingKurikulum] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(PAGINATION.DEFAULT_PAGE);
   const limit = PAGINATION.DEFAULT_LIMIT;
 
-  const { data: jenjangStudiData = { jenjang_studi: [], pagination: { total: 0, page: 1, limit: PAGINATION.DEFAULT_LIMIT, total_pages: 0 } }, isLoading } = useQuery({
-    queryKey: ['jenjangStudi', searchTerm, currentPage, limit],
+  const { data: kurikulumData = { curriculums: [], pagination: { total: 0, page: 1, limit: PAGINATION.DEFAULT_LIMIT, total_pages: 0 } }, isLoading } = useQuery({
+    queryKey: ['kurikulum', searchTerm, currentPage, limit],
     queryFn: async () => {
-      const response = await api.get('/jenjang-studi', {
+      const response = await api.get('/curriculums', {
         params: {
           search: searchTerm,
           page: currentPage,
@@ -39,17 +39,17 @@ const MasterJenjangStudi = () => {
     placeholderData: keepPreviousData,
   });
 
-  const handleEdit = (jenjangStudi) => {
-    setEditingJenjangStudi(jenjangStudi);
+  const handleEdit = (kurikulum) => {
+    setEditingKurikulum(kurikulum);
     setShowDialog(true);
   };
 
   const finishSubmit = (isQuery=true) => {
     if(isQuery) {
-      queryClient.invalidateQueries(['jenjangStudi']);
+      queryClient.invalidateQueries(['kurikulum']);
     }
     setShowDialog(false);
-    setEditingJenjangStudi(null);
+    setEditingKurikulum(null);
   };
 
   const handlePageChange = (newPage) => {
@@ -59,25 +59,25 @@ const MasterJenjangStudi = () => {
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(PAGINATION.DEFAULT_PAGE);
+    setCurrentPage(PAGINATION.DEFAULT_PAGE); // Reset to first page on search
   };
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      await api.delete(`/jenjang-studi/${id}`);
+      await api.delete(`/curriculums/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['jenjangStudi']);
+      queryClient.invalidateQueries(['kurikulum']);
       toast({
         title: "Success",
-        description: "Jenjang studi berhasil dihapus.",
+        description: "Kurikulum berhasil dihapus.",
         variant: "success",
       });
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: error.response?.data?.error || "Gagal menghapus jenjang studi.",
+        description: error.response?.data?.error || "Gagal menghapus kurikulum.",
         variant: "destructive",
       });
     }
@@ -88,8 +88,8 @@ const MasterJenjangStudi = () => {
       <div className="max-w-7xl mx-auto space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Master Jenjang Studi</h1>
-            <p className="text-slate-500 font-normal mt-1">Kelola jenjang studi</p>
+            <h1 className="text-2xl font-semibold text-slate-900">Master Kurikulum</h1>
+            <p className="text-slate-500 font-normal mt-1">Kelola kurikulum</p>
           </div>
         </div>
 
@@ -97,17 +97,17 @@ const MasterJenjangStudi = () => {
           <CardContent className="pt-6">
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <GraduationCap className="w-5 h-5 text-white" />
+                <BookOpen className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900 mb-2">Tentang Master Jenjang Studi</h3>
+                <h3 className="font-semibold text-slate-900 mb-2">Tentang Master Kurikulum</h3>
                 <p className="text-sm text-slate-700 mb-3">
-                  Master Jenjang Studi digunakan untuk mengkategorikan tingkat pendidikan dalam sistem.
+                  Master Kurikulum digunakan untuk mengkategorikan kurikulum pendidikan dalam sistem.
                 </p>
                 <div className="space-y-1 text-sm text-slate-600">
-                  <p>• <strong className="font-semibold">Kode:</strong> Kode unik untuk jenjang studi</p>
-                  <p>• <strong className="font-semibold">Nama:</strong> Nama jenjang studi</p>
-                  <p>• <strong className="font-semibold">Deskripsi:</strong> Deskripsi atau keterangan jenjang studi</p>
+                  <p>• <strong className="font-semibold">Kode:</strong> Kode unik untuk kurikulum</p>
+                  <p>• <strong className="font-semibold">Nama:</strong> Nama kurikulum</p>
+                  <p>• <strong className="font-semibold">Deskripsi:</strong> Deskripsi atau keterangan kurikulum tsb.</p>
                 </div>
               </div>
             </div>
@@ -135,16 +135,16 @@ const MasterJenjangStudi = () => {
                 className="bg-blue-900 hover:bg-blue-800"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Tambah Jenjang Studi
+                Tambah Kurikulum
               </Button>
             </div>
           </CardHeader>
           <CardContent className="pt-6">
             {isLoading ? (
               <div className="text-center py-8">Loading...</div>
-            ) : jenjangStudiData.jenjang_studi.length === 0 ? (
+            ) : kurikulumData.curriculums.length === 0 ? (
               <div className="text-center py-8 text-slate-500">
-                Belum ada jenjang studi. Tambahkan jenjang studi pertama.
+                Belum ada kurikulum. Tambahkan kurikulum pertama.
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -158,28 +158,28 @@ const MasterJenjangStudi = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {jenjangStudiData.jenjang_studi.map((jenjangStudi) => (
-                      <TableRow key={jenjangStudi.id}>
+                    {kurikulumData.curriculums.map((kurikulum) => (
+                      <TableRow key={kurikulum.id}>
                         <TableCell>
                           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                            {jenjangStudi.code || 'N/A'}
+                            {kurikulum.code || 'N/A'}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <span className="font-medium text-sm">
-                            {jenjangStudi.name}
+                            {kurikulum.name}
                           </span>
                         </TableCell>
                         <TableCell>
-                          {jenjangStudi.description && jenjangStudi.description.length > 50 ? (
-                            <Tooltip className="text-left" content={jenjangStudi.description}>
+                          {kurikulum.description && kurikulum.description.length > 50 ? (
+                            <Tooltip className="text-left" content={kurikulum.description}>
                               <p className="text-sm text-slate-600 max-w-xs truncate">
-                                {jenjangStudi.description}
+                                {kurikulum.description}
                               </p>
                             </Tooltip>
                           ) : (
                             <p className="text-sm text-slate-600">
-                              {jenjangStudi.description || 'Tidak ada deskripsi'}
+                              {kurikulum.description || 'Tidak ada deskripsi'}
                             </p>
                           )}
                         </TableCell>
@@ -188,7 +188,7 @@ const MasterJenjangStudi = () => {
                             <Button
                               variant="outline"
                               size="icon"
-                              onClick={() => handleEdit(jenjangStudi)}
+                              onClick={() => handleEdit(kurikulum)}
                             >
                               <Pencil className="w-4 h-4" />
                             </Button>
@@ -196,8 +196,8 @@ const MasterJenjangStudi = () => {
                               variant="outline"
                               size="icon"
                               onClick={() => {
-                                if (confirm('Yakin ingin menghapus jenjang studi ini?')) {
-                                  deleteMutation.mutate(jenjangStudi.id);
+                                if (confirm('Yakin ingin menghapus kurikulum ini?')) {
+                                  deleteMutation.mutate(kurikulum.id);
                                 }
                               }}
                               className="text-red-500 hover:text-red-700"
@@ -214,12 +214,12 @@ const MasterJenjangStudi = () => {
             )}
 
             {/* Pagination */}
-            {!isLoading && jenjangStudiData.jenjang_studi.length > 0 && jenjangStudiData.pagination && (
+            {!isLoading && kurikulumData.curriculums.length > 0 && kurikulumData.pagination && (
               <Pagination
                 currentPage={currentPage}
-                totalPages={jenjangStudiData.pagination.total_pages}
-                total={jenjangStudiData.pagination.total}
-                limit={jenjangStudiData.pagination.limit}
+                totalPages={kurikulumData.pagination.total_pages}
+                total={kurikulumData.pagination.total}
+                limit={kurikulumData.pagination.limit}
                 onPageChange={handlePageChange}
               />
             )}
@@ -227,14 +227,14 @@ const MasterJenjangStudi = () => {
         </Card>
       </div>
       {/* Form Dialog */}
-      <AddEditJenjangStudiDialog
+      <AddEditKurikulumDialog
         isOpen={showDialog}
         onClose={() => finishSubmit(false)}
-        editingJenjangStudi={editingJenjangStudi}
+        editingKurikulum={editingKurikulum}
         onFinish={finishSubmit}
         />
     </div>
   );
 };
 
-export default MasterJenjangStudi;
+export default MasterKurikulum;

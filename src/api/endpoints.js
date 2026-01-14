@@ -100,3 +100,32 @@ export const billersAPI = {
   update: (id, data) => api.put(`/billers/${id}`, data),
   delete: (id) => api.delete(`/billers/${id}`),
 };
+
+// Curriculums API
+export const curriculumsAPI = {
+  getAll: (params) => api.get('/curriculums', { params }),
+  getById: (id) => api.get(`/curriculums/${id}`),
+  create: (data) => api.post('/curriculums', data),
+  update: (id, data) => api.put(`/curriculums/${id}`, data),
+  delete: (id) => api.delete(`/curriculums/${id}`),
+};
+
+// Purchase Transactions API
+export const purchaseTransactionsAPI = {
+  getAll: (params) => api.get('/purchase-transactions', { params }),
+  getById: (id) => api.get(`/purchase-transactions/${id}`),
+  create: (data) => api.post('/purchase-transactions', data),
+  update: (id, data) => api.put(`/purchase-transactions/${id}`, data),
+  delete: (id) => api.delete(`/purchase-transactions/${id}`),
+  complete: (id) => api.post(`/purchase-transactions/${id}/complete`),
+  cancel: (id) => api.post(`/purchase-transactions/${id}/cancel`),
+  uploadReceipt: (id, data) => api.put(`/purchase-transactions/${id}/receipt`, data),
+};
+
+// Reports API
+export const reportsAPI = {
+  getBooksStock: (params) => api.get('/reports/books-stock', { params }),
+  getCredits: (params) => api.get('/reports/credits', { params }),
+  getPurchases: (params) => api.get('/reports/purchases', { params }),
+  getSales: (params) => api.get('/reports/sales', { params }),
+};

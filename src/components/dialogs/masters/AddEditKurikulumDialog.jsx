@@ -8,10 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { jenjangStudiSchema } from "@/utils/validations/JenjangStudi";
+import { kurikulumSchema } from "@/utils/validations/Kurikulum";
 import { useToast } from '@/components/ui/use-toast';
 
-const AddEditJenjangStudiDialog = ({ isOpen, onClose, editingJenjangStudi, onFinish }) => {
+const AddEditKurikulumDialog = ({ isOpen, onClose, editingKurikulum, onFinish }) => {
   const { toast } = useToast();
 
   const initialData = {
@@ -22,29 +22,29 @@ const AddEditJenjangStudiDialog = ({ isOpen, onClose, editingJenjangStudi, onFin
 
   // --- React Hook Form Setup ---
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
-    resolver: zodResolver(jenjangStudiSchema),
-    defaultValues: editingJenjangStudi || initialData
+    resolver: zodResolver(kurikulumSchema),
+    defaultValues: editingKurikulum || initialData
   });
 
   useEffect(() => {
-    if (editingJenjangStudi) {
+    if (editingKurikulum) {
       const formattedData = {
-        ...editingJenjangStudi,
+        ...editingKurikulum,
       };
 
       reset(formattedData);
     }
-  }, [editingJenjangStudi, reset]);
+  }, [editingKurikulum, reset]);
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
-      const response = await api.post('/jenjang-studi', data);
+      const response = await api.post('/curriculums', data);
       return response.data;
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Jenjang studi berhasil ditambahkan.",
+        description: "Kurikulum berhasil ditambahkan.",
         variant: "success",
       });
       onFinishing();
@@ -52,7 +52,7 @@ const AddEditJenjangStudiDialog = ({ isOpen, onClose, editingJenjangStudi, onFin
     onError: (error) => {
       toast({
         title: "Error",
-        description: error.response?.data?.error || "Gagal menambahkan jenjang studi.",
+        description: error.response?.data?.error || "Gagal menambahkan kurikulum.",
         variant: "destructive",
       });
     }
@@ -60,13 +60,13 @@ const AddEditJenjangStudiDialog = ({ isOpen, onClose, editingJenjangStudi, onFin
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }) => {
-      const response = await api.put(`/jenjang-studi/${id}`, data);
+      const response = await api.put(`/curriculums/${id}`, data);
       return response.data;
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Jenjang studi berhasil diperbarui.",
+        description: "Kurikulum berhasil diperbarui.",
         variant: "success",
       });
       onFinishing();
@@ -74,7 +74,7 @@ const AddEditJenjangStudiDialog = ({ isOpen, onClose, editingJenjangStudi, onFin
     onError: (error) => {
       toast({
         title: "Error",
-        description: error.response?.data?.error || "Gagal memperbarui jenjang studi.",
+        description: error.response?.data?.error || "Gagal memperbarui kurikulum.",
         variant: "destructive",
       });
     }
@@ -91,8 +91,8 @@ const AddEditJenjangStudiDialog = ({ isOpen, onClose, editingJenjangStudi, onFin
   };
 
   const onHandleSubmit = async (data) => {
-    if (editingJenjangStudi) {
-      updateMutation.mutate({ id: editingJenjangStudi.id, data });
+    if (editingKurikulum) {
+      updateMutation.mutate({ id: editingKurikulum.id, data });
     } else {
       createMutation.mutate(data);
     }
@@ -103,7 +103,7 @@ const AddEditJenjangStudiDialog = ({ isOpen, onClose, editingJenjangStudi, onFin
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>
-            {editingJenjangStudi ? 'Edit Jenjang Studi' : 'Tambah Jenjang Studi Baru'}
+            {editingKurikulum ? 'Edit Kurikulum' : 'Tambah Kurikulum Baru'}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onHandleSubmit)}>
@@ -112,7 +112,7 @@ const AddEditJenjangStudiDialog = ({ isOpen, onClose, editingJenjangStudi, onFin
               <Label htmlFor="code">Kode *</Label>
               <Input
                 name="code"
-                placeholder="Contoh: SD"
+                placeholder="Contoh: K13"
                 {...register("code")}
               />
               {errors.code && <p className="text-red-500 text-sm">{errors.code.message}</p>}
@@ -121,7 +121,7 @@ const AddEditJenjangStudiDialog = ({ isOpen, onClose, editingJenjangStudi, onFin
               <Label htmlFor="name">Nama *</Label>
               <Input
                 name="name"
-                placeholder="Contoh: Sekolah Dasar"
+                placeholder="Contoh: Kurikulum 2013"
                 {...register("name")}
               />
               {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
@@ -154,4 +154,4 @@ const AddEditJenjangStudiDialog = ({ isOpen, onClose, editingJenjangStudi, onFin
   );
 };
 
-export default AddEditJenjangStudiDialog;
+export default AddEditKurikulumDialog;

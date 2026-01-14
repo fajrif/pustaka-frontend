@@ -30,10 +30,12 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
     jenis_buku_id: '',
     jenjang_studi_id: '',
     bidang_studi_id: '',
-    kelas_id: '',
+    kelas: '',
+    curriculum_id: '',
     publisher_id: '',
     periode: 1,
     price: 0,
+    no_pages: 0,
   }
 
   // --- React Hook Form Setup ---
@@ -98,6 +100,14 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
     queryKey: ['classes'],
     queryFn: async () => {
       const response = await api.get('/kelas?all=true');
+      return response.data;
+    }
+  });
+
+  const { data: curriculumsData = { curriculums: [] } } = useQuery({
+    queryKey: ['curriculums'],
+    queryFn: async () => {
+      const response = await api.get('/curriculums?all=true');
       return response.data;
     }
   });
@@ -198,8 +208,8 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
     return item.bidang_studi ? `[${item.bidang_studi.code}] ${item.bidang_studi.name}` : '-';
   };
 
-  const getClassName = (item) => {
-    return item.kelas ? `[${item.kelas.code}] ${item.kelas.name}` : '-';
+  const getCurriculumName = (item) => {
+    return item.curriculum ? `[${item.curriculum.code}] ${item.curriculum.name}` : '-';
   };
 
   const getPublisherName = (item) => {
@@ -476,19 +486,19 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
                   </>
                 )}
               </div>
-              <div className={`space-y-2 ${!isViewMode ? 'border-l-2 border-blue-400 pl-3' : ''}`}>
-                <Label htmlFor="kelas_id" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Kelas {!isViewMode && <span className="text-red-500">*</span>}</Label>
+              <div className="space-y-2">
+                <Label htmlFor="kelas" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Kelas</Label>
                 {isViewMode ? (
-                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{getClassName(editingBook)}</p>
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingBook.kelas || '-'}</p>
                 ) : (
                   <>
                     <Controller
-                      name="kelas_id"
+                      name="kelas"
                       control={control}
                       render={({ field: { onChange, value }, fieldState: { error } }) => (
                         <Select
                           options={classesData.kelas.map((type) => ({
-                            value: type.id,
+                            value: type.code,
                             label: `[${type.code}] ${type.name}`
                           }))}
                           value={value}
@@ -500,7 +510,53 @@ const AddEditBookDialog = ({ isOpen, onClose, editingBook, onFinish }) => {
                         />
                       )}
                     />
-                    {errors.kelas_id && <p className="text-red-500 text-sm">{errors.kelas_id.message}</p>}
+                    {errors.kelas && <p className="text-red-500 text-sm">{errors.kelas.message}</p>}
+                  </>
+                )}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className={`space-y-2 ${!isViewMode ? 'border-l-2 border-blue-400 pl-3' : ''}`}>
+                <Label htmlFor="curriculum_id" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Kurikulum {!isViewMode && <span className="text-red-500">*</span>}</Label>
+                {isViewMode ? (
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{getCurriculumName(editingBook)}</p>
+                ) : (
+                  <>
+                    <Controller
+                      name="curriculum_id"
+                      control={control}
+                      render={({ field: { onChange, value }, fieldState: { error } }) => (
+                        <Select
+                          options={curriculumsData.curriculums.map((type) => ({
+                            value: type.id,
+                            label: `[${type.code}] ${type.name}`
+                          }))}
+                          value={value}
+                          onChange={onChange}
+                          placeholder="Pilih kurikulum"
+                          error={!!error}
+                          searchable={true}
+                          clearable={true}
+                        />
+                      )}
+                    />
+                    {errors.curriculum_id && <p className="text-red-500 text-sm">{errors.curriculum_id.message}</p>}
+                  </>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="no_pages" className={isViewMode ? 'text-slate-500' : 'text-slate-700'}>Halaman</Label>
+                {isViewMode ? (
+                  <p className="text-sm text-slate-700 px-3 py-2 bg-white rounded-md shadow-sm border border-slate-200">{editingBook.no_pages || 0}</p>
+                ) : (
+                  <>
+                    <Input
+                      name="no_pages"
+                      type="number"
+                      placeholder="0"
+                      {...register("no_pages", { valueAsNumber: true })}
+                    />
+                    {errors.no_pages && <p className="text-red-500 text-sm">{errors.no_pages.message}</p>}
                   </>
                 )}
               </div>
