@@ -77,7 +77,7 @@ const ReportBooksStock = () => {
     }
   };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (!reportData?.books?.length) return;
     setIsExportingExcel(true);
     try {
@@ -90,7 +90,7 @@ const ReportBooksStock = () => {
         { key: 'stock', header: 'Stok', width: 10 },
         { key: 'price', header: 'Harga', width: 15, accessor: (item) => formatRupiah(item.price) },
       ];
-      exportToExcel(reportData.books, columns, generateReportFilename('StokBuku', 'xlsx'), 'Stok Buku');
+      await exportToExcel(reportData.books, columns, generateReportFilename('StokBuku', 'xlsx'), 'Stok Buku');
       toast({ title: "Success", description: "Excel berhasil diexport", variant: "success" });
     } catch (error) {
       toast({ title: "Error", description: "Gagal export Excel", variant: "destructive" });

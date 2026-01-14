@@ -84,7 +84,7 @@ const ReportPurchases = () => {
     }
   };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (!reportData?.purchases?.length) return;
     setIsExportingExcel(true);
     try {
@@ -96,7 +96,7 @@ const ReportPurchases = () => {
         { key: 'total_amount', header: 'Total Nilai', width: 18, accessor: (item) => formatRupiah(item.total_amount) },
         { key: 'status', header: 'Status', width: 12, accessor: (item) => statusConfig[item.status]?.label || '-' },
       ];
-      exportToExcel(reportData.purchases, columns, generateReportFilename('Pembelian', 'xlsx'), 'Pembelian');
+      await exportToExcel(reportData.purchases, columns, generateReportFilename('Pembelian', 'xlsx'), 'Pembelian');
       toast({ title: "Success", description: "Excel berhasil diexport", variant: "success" });
     } catch (error) {
       toast({ title: "Error", description: "Gagal export Excel", variant: "destructive" });

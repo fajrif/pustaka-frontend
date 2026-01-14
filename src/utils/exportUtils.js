@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 /**
  * Generate filename for report exports
@@ -37,44 +38,50 @@ export const exportToPDF = async (elementRef, filename) => {
 };
 
 /**
- * Export data to Excel using xlsx
+ * Export data to Excel using ExcelJS
  * @param {Array} data - Array of objects to export
- * @param {Array} columns - Column definitions { key: string, header: string }
+ * @param {Array} columns - Column definitions { key: string, header: string, width?: number, accessor?: function }
  * @param {string} filename - Filename for the Excel file
  * @param {string} sheetName - Name of the worksheet
  */
-export const exportToExcel = (data, columns, filename, sheetName = 'Data') => {
+export const exportToExcel = async (data, columns, filename, sheetName = 'Data') => {
   if (!data || data.length === 0) {
     throw new Error('No data to export');
   }
 
-  // Create header row
-  const headers = columns.map(col => col.header);
+  // Create workbook and worksheet
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet(sheetName);
 
-  // Create data rows
-  const rows = data.map(item => {
-    return columns.map(col => {
+  // Define columns with headers and widths
+  worksheet.columns = columns.map(col => ({
+    header: col.header,
+    key: col.key,
+    width: col.width || 15
+  }));
+
+  // Style the header row
+  worksheet.getRow(1).font = { bold: true };
+  worksheet.getRow(1).fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFE0E0E0' }
+  };
+
+  // Add data rows
+  data.forEach(item => {
+    const rowData = {};
+    columns.forEach(col => {
       const value = col.accessor ? col.accessor(item) : item[col.key];
-      return value ?? '';
+      rowData[col.key] = value ?? '';
     });
+    worksheet.addRow(rowData);
   });
 
-  // Combine headers and data
-  const worksheetData = [headers, ...rows];
-
-  // Create worksheet
-  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-
-  // Set column widths
-  const colWidths = columns.map(col => ({ wch: col.width || 15 }));
-  worksheet['!cols'] = colWidths;
-
-  // Create workbook
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-
-  // Save file
-  XLSX.writeFile(workbook, filename);
+  // Generate buffer and save file
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  saveAs(blob, filename);
 };
 
 /**

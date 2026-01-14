@@ -77,7 +77,7 @@ const ReportCredits = () => {
     }
   };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (!reportData?.credits?.length) return;
     setIsExportingExcel(true);
     try {
@@ -90,7 +90,7 @@ const ReportCredits = () => {
         { key: 'due_date', header: 'Jatuh Tempo', width: 15, accessor: (item) => formatDate(item.due_date) },
         { key: 'status', header: 'Status', width: 12, accessor: (item) => statusConfig[item.status]?.label || '-' },
       ];
-      exportToExcel(reportData.credits, columns, generateReportFilename('Piutang', 'xlsx'), 'Piutang');
+      await exportToExcel(reportData.credits, columns, generateReportFilename('Piutang', 'xlsx'), 'Piutang');
       toast({ title: "Success", description: "Excel berhasil diexport", variant: "success" });
     } catch (error) {
       toast({ title: "Error", description: "Gagal export Excel", variant: "destructive" });
