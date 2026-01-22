@@ -1,0 +1,76 @@
+/* 
+ * AG Grid v35 Custom Overrides using Theming API
+ * These styles work with the themeBalham imported via JavaScript
+ */
+
+/* Dense padding and smaller text - using AG Grid CSS custom properties */
+.ag-root-wrapper {
+  --ag-font-size: 12px;
+  --ag-row-height: 32px;
+  --ag-header-height: 36px;
+  --ag-cell-horizontal-padding: 8px;
+  --ag-grid-size: 4px;
+  --ag-row-hover-color: #f1f5f9;
+  --ag-selected-row-background-color: #e0e7ff;
+  --ag-header-background-color: #f8fafc;
+  --ag-border-color: #e2e8f0;
+}
+
+/* Header cell text styling */
+.ag-header-cell-text {
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+/* Cell styling */
+.ag-cell {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* Header cell styling */
+.ag-header-cell {
+  font-size: 11px;
+}
+
+/* Floating filter input styling */
+.ag-floating-filter-input input {
+  font-size: 11px;
+  padding: 2px 6px;
+}
+
+/* Cell borders */
+.ag-cell {
+  border-right: 1px solid #e2e8f0;
+}
+
+/* Pinned column styling */
+.ag-pinned-right-header,
+.ag-pinned-right-cols-container {
+  border-left: 2px solid #cbd5e1;
+}
+
+/* Loading overlay */
+.ag-overlay-loading-center {
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* No rows overlay */
+.ag-overlay-no-rows-center {
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* Tooltip styling - dark background with white text */
+.ag-tooltip {
+  background-color: #1e293b;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}

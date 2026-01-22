@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { api } from '@/api/axios';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip } from '@/components/ui/tooltip';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Pencil, Search, Filter, Trash2, Bookmark } from 'lucide-react';
+import { Plus, Pencil, Search, Trash2, Bookmark } from 'lucide-react';
 import AddEditMerkBukuDialog from '@/components/dialogs/masters/AddEditMerkBukuDialog';
 import Pagination from '@/components/Pagination';
 import { PAGINATION } from '@/utils/constants';
@@ -166,7 +165,7 @@ const MasterMerkBuku = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <span className="font-medium text-sm">
+                          <span className="font-medium text-sm uppercase">
                             {merkBuku.name}
                           </span>
                         </TableCell>

@@ -1,56 +1,86 @@
-import React, { useState } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import { AgGridReact } from 'ag-grid-react';
+import { ModuleRegistry, AllCommunityModule, themeBalham } from 'ag-grid-community';
 import { api } from '@/api/axios';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Pencil, Search, Filter, Trash2, BookOpen, X } from 'lucide-react';
+import { Plus, BookOpen } from 'lucide-react';
 import AddEditBookDialog from '@/components/dialogs/operationals/AddEditBookDialog';
-import BookFilterDialog from '@/components/dialogs/operationals/BookFilterDialog';
-import Pagination from '@/components/Pagination';
-import { formatDate, formatRupiah } from '@/utils/formatters';
-import { PAGINATION } from '@/utils/constants';
 import { useToast } from '@/components/ui/use-toast';
+import { createBooksColumnDefs, defaultColDef } from '@/config/booksGridColumns';
+import '@/styles/ag-grid-overrides.css';
+
+// Register AG Grid Community modules
+ModuleRegistry.registerModules([AllCommunityModule]);
+
+// Map AG Grid column fields to API sort fields
+const SORT_FIELD_MAP = {
+  'jenis_buku.code': 'jenis_buku_code',
+  'bidang_studi': 'bidang_studi_name',
+  'jenjang_studi.code': 'jenjang_studi_code',
+  'curriculum.name': 'curriculum_name',
+  'kelas': 'kelas',
+  'periode': 'periode',
+  'year': 'year',
+  'merk_buku': 'merk_buku_name',
+  'publisher': 'publisher_name',
+  'no_pages': 'no_pages',
+  'price': 'price',
+  'stock': 'stock',
+};
+
+// Map AG Grid column fields to API filter fields
+const FILTER_FIELD_MAP = {
+  'jenis_buku.code': 'jenis_buku_code',
+  'bidang_studi': 'bidang_studi_name',
+  'jenjang_studi.code': 'jenjang_studi_code',
+  'curriculum.name': 'curriculum_name',
+  'kelas': 'kelas',
+  'periode': 'periode',
+  'year': 'year',
+  'merk_buku': 'merk_buku_name',
+  'publisher': 'publisher_name',
+  'no_pages': 'no_pages',
+  'price': 'price',
+  'stock': 'stock',
+};
 
 const MasterBook = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const gridRef = useRef(null);
   const [showDialog, setShowDialog] = useState(false);
-  const [showFilterDialog, setShowFilterDialog] = useState(false);
   const [editingBook, setEditingBook] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState({});
-  const [currentPage, setCurrentPage] = useState(PAGINATION.DEFAULT_PAGE);
-  const limit = PAGINATION.DEFAULT_LIMIT;
+  const [sortModel, setSortModel] = useState({ sort_by: '', sort_order: '' });
+  const [columnFilters, setColumnFilters] = useState({});
 
-  const getActiveFilterCount = () => {
-    return Object.values(filters).filter(v => v !== '' && v !== null && v !== undefined).length;
-  };
-
-  const { data: booksData = { books: [], pagination: { total: 0, page: 1, limit: PAGINATION.DEFAULT_LIMIT, total_pages: 0 } }, isLoading } = useQuery({
-    queryKey: ['books', searchTerm, currentPage, limit, filters],
+  const { data: booksData = { books: [], pagination: { total: 0, page: 1, limit: 1000, total_pages: 0 } }, isLoading } = useQuery({
+    queryKey: ['books', sortModel, columnFilters],
     queryFn: async () => {
-      const response = await api.get('/books', {
-        params: {
-          search: searchTerm,
-          page: currentPage,
-          limit: limit,
-          ...filters,
-        },
-      });
+      const params = {
+        page: 1,
+        limit: 1000, // Fetch all data, let AG Grid handle pagination
+        ...columnFilters,
+      };
+
+      // Add sorting params if set
+      if (sortModel.sort_by) {
+        params.sort_by = sortModel.sort_by;
+        params.sort_order = sortModel.sort_order || 'asc';
+      }
+
+      const response = await api.get('/books', { params });
       return response.data;
     },
-    enabled: searchTerm.length === 0 || searchTerm.length >= 3,
     placeholderData: keepPreviousData,
   });
 
-  const handleEdit = (book) => {
+  const handleEdit = useCallback((book) => {
     setEditingBook(book);
     setShowDialog(true);
-  };
+  }, []);
 
   const finishSubmit = (isQuery = true) => {
     if (isQuery) {
@@ -58,27 +88,6 @@ const MasterBook = () => {
     }
     setShowDialog(false);
     setEditingBook(null);
-  };
-
-  const handlePageChange = (newPage) => {
-    setCurrentPage(newPage);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(PAGINATION.DEFAULT_PAGE); // Reset to first page on search
-  };
-
-  const handleApplyFilters = (newFilters) => {
-    setFilters(newFilters);
-    setCurrentPage(PAGINATION.DEFAULT_PAGE); // Reset to first page on filter change
-    setShowFilterDialog(false);
-  };
-
-  const handleClearFilters = () => {
-    setFilters({});
-    setCurrentPage(PAGINATION.DEFAULT_PAGE);
   };
 
   const deleteMutation = useMutation({
@@ -102,21 +111,64 @@ const MasterBook = () => {
     }
   });
 
-  const getPeriodeLabel = (periode, year) => {
-    let _year = ""
-    if (year != undefined || year != null) {
-      _year = year
+  const handleDelete = useCallback((id) => {
+    deleteMutation.mutate(id);
+  }, [deleteMutation]);
+
+  // Handle AG Grid sort change
+  const onSortChanged = useCallback((params) => {
+    const sortState = params.api.getColumnState().find(col => col.sort);
+
+    if (sortState) {
+      const apiField = SORT_FIELD_MAP[sortState.colId] || sortState.colId;
+      setSortModel({
+        sort_by: apiField,
+        sort_order: sortState.sort,
+      });
+    } else {
+      setSortModel({ sort_by: '', sort_order: '' });
     }
-    if (periode == 1) {
-      return `Semester Ganjil ${_year}`;
-    } else if (periode == 2) {
-      return `Semester Genap ${_year}`;
-    }
-  };
+  }, []);
+
+  // Handle AG Grid filter change
+  const onFilterChanged = useCallback((params) => {
+    const filterModel = params.api.getFilterModel();
+    const apiFilters = {};
+
+    Object.entries(filterModel).forEach(([field, filterData]) => {
+      const apiField = FILTER_FIELD_MAP[field] || field;
+
+      // Handle different filter types
+      if (filterData.filterType === 'text') {
+        apiFilters[apiField] = filterData.filter;
+      } else if (filterData.filterType === 'number') {
+        if (filterData.type === 'equals') {
+          apiFilters[apiField] = filterData.filter;
+        } else if (filterData.type === 'greaterThan') {
+          apiFilters[`${apiField}_min`] = filterData.filter;
+        } else if (filterData.type === 'lessThan') {
+          apiFilters[`${apiField}_max`] = filterData.filter;
+        } else if (filterData.type === 'inRange') {
+          apiFilters[`${apiField}_min`] = filterData.filter;
+          apiFilters[`${apiField}_max`] = filterData.filterTo;
+        }
+      }
+    });
+
+    setColumnFilters(apiFilters);
+  }, []);
+
+  const columnDefs = useMemo(
+    () => createBooksColumnDefs({
+      onEdit: handleEdit,
+      onDelete: handleDelete,
+    }),
+    [handleEdit, handleDelete]
+  );
 
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
-      <div className="max-w-7xl mx-auto space-y-4">
+      <div className="max-w-full mx-auto space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-2xl font-semibold text-slate-900">Master Data Buku</h1>
@@ -147,220 +199,44 @@ const MasterBook = () => {
 
         <Card className="border-none shadow-lg">
           <CardHeader className="border-b border-slate-100">
-            <div className="flex flex-col gap-3">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2 w-full max-w-lg">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-                    <Input
-                      placeholder="Cari nama buku ..."
-                      value={searchTerm}
-                      onChange={handleSearchChange}
-                      className="pl-10"
-                    />
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowFilterDialog(true)}
-                    className="gap-2 relative"
-                  >
-                    <Filter className="w-4 h-4" />
-                    Filter
-                    {getActiveFilterCount() > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center font-semibold">
-                        {getActiveFilterCount()}
-                      </span>
-                    )}
-                  </Button>
-                </div>
-                <Button
-                  onClick={() => {
-                    setShowDialog(true);
-                  }}
-                  className="bg-blue-900 hover:bg-blue-800"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Tambah Buku
-                </Button>
-              </div>
-              {/* Active Filters Display */}
-              {getActiveFilterCount() > 0 && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm text-slate-500">Filter aktif:</span>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {filters.bidang_studi_id && (
-                      <Badge variant="secondary" className="gap-1">
-                        Bidang Studi
-                        <X className="w-3 h-3 cursor-pointer" onClick={() => setFilters(prev => ({ ...prev, bidang_studi_id: '' }))} />
-                      </Badge>
-                    )}
-                    {filters.jenis_buku_id && (
-                      <Badge variant="secondary" className="gap-1">
-                        Jenis Buku
-                        <X className="w-3 h-3 cursor-pointer" onClick={() => setFilters(prev => ({ ...prev, jenis_buku_id: '' }))} />
-                      </Badge>
-                    )}
-                    {filters.jenjang_studi_id && (
-                      <Badge variant="secondary" className="gap-1">
-                        Jenjang Studi
-                        <X className="w-3 h-3 cursor-pointer" onClick={() => setFilters(prev => ({ ...prev, jenjang_studi_id: '' }))} />
-                      </Badge>
-                    )}
-                    {filters.curriculum_id && (
-                      <Badge variant="secondary" className="gap-1">
-                        Kurikulum
-                        <X className="w-3 h-3 cursor-pointer" onClick={() => setFilters(prev => ({ ...prev, curriculum_id: '' }))} />
-                      </Badge>
-                    )}
-                    {filters.periode && (
-                      <Badge variant="secondary" className="gap-1">
-                        Semester: {filters.periode == 1 ? 'Ganjil' : 'Genap'}
-                        <X className="w-3 h-3 cursor-pointer" onClick={() => setFilters(prev => ({ ...prev, periode: '' }))} />
-                      </Badge>
-                    )}
-                    {filters.year && (
-                      <Badge variant="secondary" className="gap-1">
-                        Tahun: {filters.year}
-                        <X className="w-3 h-3 cursor-pointer" onClick={() => setFilters(prev => ({ ...prev, year: '' }))} />
-                      </Badge>
-                    )}
-                    {(filters.price_min || filters.price_max) && (
-                      <Badge variant="secondary" className="gap-1">
-                        Harga: {filters.price_min ? `Rp${Number(filters.price_min).toLocaleString('id-ID')}` : '0'} - {filters.price_max ? `Rp${Number(filters.price_max).toLocaleString('id-ID')}` : '~'}
-                        <X className="w-3 h-3 cursor-pointer" onClick={() => setFilters(prev => ({ ...prev, price_min: '', price_max: '' }))} />
-                      </Badge>
-                    )}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleClearFilters}
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50 h-7 px-2"
-                  >
-                    Hapus Semua
-                  </Button>
-                </div>
-              )}
+            <div className="flex justify-end">
+              <Button
+                onClick={() => {
+                  setShowDialog(true);
+                }}
+                className="bg-blue-900 hover:bg-blue-800"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Tambah Buku
+              </Button>
             </div>
           </CardHeader>
           <CardContent className="pt-6">
-            {isLoading ? (
-              <div className="text-center py-8">Loading...</div>
-            ) : booksData.books.length === 0 ? (
-              <div className="text-center py-8 text-slate-500">
-                Belum ada buku. Tambahkan buku pertama anda.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[150px]">Kode Jenis</TableHead>
-                      <TableHead>Nama</TableHead>
-                      <TableHead>Penerbit</TableHead>
-                      <TableHead>Kode Jenjang</TableHead>
-                      <TableHead>Harga</TableHead>
-                      <TableHead>Stock</TableHead>
-                      <TableHead>Dibuat</TableHead>
-                      <TableHead className="w-[150px] text-center">Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {booksData.books.map((book) => (
-                      <TableRow key={book.id}>
-                        <TableCell>
-                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                            {book.jenis_buku?.code || 'N/A'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <span
-                            className="font-medium text-sm inline-block cursor-pointer hover:underline hover:text-blue-600 mb-1"
-                            onClick={() => handleEdit(book)}
-                          >
-                            {book.name}
-                          </span>
-                          <span className="text-xs">
-                            Periode: {getPeriodeLabel(book.periode, book.year)}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {book.publisher ? (
-                            <span className="text-sm">
-                              {book.publisher.name}
-                            </span>
-                          ) : (
-                            <span className="text-sm text-slate-500">N/A</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {book.jenjang_studi ? (
-                            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                              {book.jenjang_studi?.code}
-                            </Badge>
-                          ) : (
-                            <span className="text-sm text-slate-500">N/A</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {book.price !== undefined ? (
-                            <span className="font-medium text-sm">
-                              {formatRupiah(book.price)}
-                            </span>
-                          ) : (
-                            <span className="text-sm text-slate-500">Rp.0</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className="text-sm">
-                            {book.stock !== undefined ? book.stock : '0'}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm text-slate-500">
-                            {formatDate(book.created_at)}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex justify-center gap-1">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => handleEdit(book)}
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => {
-                                if (confirm('Yakin ingin menghapus book ini?')) {
-                                  deleteMutation.mutate(book.id);
-                                }
-                              }}
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-
-            {/* Pagination */}
-            {!isLoading && booksData.books.length > 0 && booksData.pagination && (
-              <Pagination
-                currentPage={currentPage}
-                totalPages={booksData.pagination.total_pages}
-                total={booksData.pagination.total}
-                limit={booksData.pagination.limit}
-                onPageChange={handlePageChange}
+            <div
+              style={{ height: 600, width: '100%' }}
+            >
+              <AgGridReact
+                ref={gridRef}
+                theme={themeBalham}
+                rowData={booksData?.books || []}
+                columnDefs={columnDefs}
+                defaultColDef={defaultColDef}
+                animateRows={true}
+                suppressRowClickSelection={true}
+                pagination={true}
+                paginationPageSize={50}
+                paginationPageSizeSelector={[25, 50, 100, 200]}
+                domLayout="normal"
+                tooltipShowDelay={200}
+                tooltipHideDelay={2000}
+                overlayLoadingTemplate={'<span class="ag-overlay-loading-center">Loading...</span>'}
+                overlayNoRowsTemplate={'<span>Belum ada buku. Tambahkan buku pertama anda.</span>'}
+                loading={isLoading}
+                getRowId={(params) => params.data.id}
+                onSortChanged={onSortChanged}
+                onFilterChanged={onFilterChanged}
               />
-            )}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -370,14 +246,6 @@ const MasterBook = () => {
         onClose={() => finishSubmit(false)}
         editingBook={editingBook}
         onFinish={finishSubmit}
-      />
-
-      {/* Filter Dialog */}
-      <BookFilterDialog
-        isOpen={showFilterDialog}
-        onClose={() => setShowFilterDialog(false)}
-        currentFilters={filters}
-        onApplyFilters={handleApplyFilters}
       />
     </div>
   );

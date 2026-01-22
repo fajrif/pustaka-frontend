@@ -70,7 +70,7 @@ const MasterPublisher = () => {
       queryClient.invalidateQueries(['publishers']);
       toast({
         title: "Success",
-        description: "Penerbit berhasil dihapus.",
+        description: "Penerbit / Supplier berhasil dihapus.",
         variant: "success",
       });
     },
@@ -88,8 +88,8 @@ const MasterPublisher = () => {
       <div className="max-w-7xl mx-auto space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Master Data Penerbit</h1>
-            <p className="text-slate-500 font-normal mt-1">Kelola data penerbit anda</p>
+            <h1 className="text-2xl font-semibold text-slate-900">Master Data Penerbit / Supplier</h1>
+            <p className="text-slate-500 font-normal mt-1">Kelola data penerbit atau supplier anda</p>
           </div>
         </div>
 
@@ -100,13 +100,13 @@ const MasterPublisher = () => {
                 <Landmark className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900 mb-2">Tentang Master Data Penerbit</h3>
+                <h3 className="font-semibold text-slate-900 mb-2">Tentang Master Data Penerbit / Supplier</h3>
                 <p className="text-sm text-slate-700 mb-3">
                   Master data penerbit digunakan untuk data management buku.
                 </p>
                 <div className="space-y-1 text-sm text-slate-600">
-                  <p>• <strong className="font-semibold">Nama Penerbit:</strong> Nama Penerbit</p>
-                  <p>• <strong className="font-semibold">Contact Info:</strong> Contact atau informasi lengkap dari Penerbit tsb.</p>
+                  <p>• <strong className="font-semibold">Nama:</strong> Nama Penerbit / Supplier</p>
+                  <p>• <strong className="font-semibold">Contact Info:</strong> Contact atau informasi lengkap dari Penerbit / Supplier tsb.</p>
                 </div>
               </div>
             </div>
@@ -134,7 +134,7 @@ const MasterPublisher = () => {
                 className="bg-blue-900 hover:bg-blue-800"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Tambah Penerbit
+                Tambah Data
               </Button>
             </div>
           </CardHeader>

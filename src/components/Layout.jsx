@@ -37,34 +37,10 @@ const navigationItems = [
     roles: ['admin', 'user']
   },
   {
-    title: "Data User",
-    url: "/users",
-    icon: UserCog,
-    roles: ['admin']
-  },
-  {
     title: "Daftar Buku",
     url: "/books",
     icon: BookText,
     roles: ['admin']
-  },
-  {
-    title: "Sales Buku",
-    url: "/sales-associates",
-    icon: UserStar,
-    roles: ['admin']
-  },
-  {
-    title: "Penerbit",
-    url: "/publishers",
-    icon: Landmark,
-    roles: ['admin', 'user']
-  },
-  {
-    title: "Ekspedisi",
-    url: "/expeditions",
-    icon: Truck,
-    roles: ['admin', 'user']
   },
   {
     title: "Transaksi Penjualan",
@@ -76,6 +52,30 @@ const navigationItems = [
     title: "Transaksi Pembelian",
     url: "/purchase-transactions",
     icon: ShoppingBag,
+    roles: ['admin', 'user']
+  },
+  {
+    title: "Data User",
+    url: "/users",
+    icon: UserCog,
+    roles: ['admin']
+  },
+  {
+    title: "Sales Buku",
+    url: "/sales-associates",
+    icon: UserStar,
+    roles: ['admin']
+  },
+  {
+    title: "Penerbit / Supplier",
+    url: "/publishers",
+    icon: Landmark,
+    roles: ['admin', 'user']
+  },
+  {
+    title: "Ekspedisi",
+    url: "/expeditions",
+    icon: Truck,
     roles: ['admin', 'user']
   },
 ];
@@ -211,8 +211,84 @@ export default function Layout({ children }) {
 
           {/* Navigation */}
           <nav className="flex-1 p-3 overflow-y-auto">
+            {/* Dashboard Link */}
+            {filteredNavItems.filter(item => item.url === '/dashboard').map((item) => {
+              const isActive = location.pathname === item.url;
+              return (
+                <Link
+                  key={item.title}
+                  to={item.url}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`
+                    flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-all duration-200
+                    ${isActive
+                      ? 'bg-blue-50 text-blue-900 font-medium shadow-sm'
+                      : 'hover:bg-blue-50 hover:text-blue-700'
+                    }
+                  `}
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span>{item.title}</span>
+                </Link>
+              );
+            })}
+
+            {/* Collapsible Reports Group - Right below Dashboard */}
+            {canSeeReportsGroup && (
+              <Collapsible
+                open={isMenuOpen('laporan')}
+                onOpenChange={() => toggleMenu('laporan')}
+              >
+                <CollapsibleTrigger asChild>
+                  <button
+                    className={`
+                      flex w-full items-center gap-3 px-3 py-2.5 text-sm rounded-lg
+                      transition-all duration-200 hover:bg-slate-100
+                      ${filteredReportChildren.some(item => location.pathname === item.url)
+                        ? 'text-blue-900 font-medium'
+                        : 'text-slate-700'
+                      }
+                    `}
+                  >
+                    <FileBarChart className="w-5 h-5" />
+                    <span className="flex-1 text-left">{navigationReportsGroup.title}</span>
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform duration-200 ${isMenuOpen('laporan') ? 'rotate-180' : ''
+                        }`}
+                    />
+                  </button>
+                </CollapsibleTrigger>
+
+                <CollapsibleContent>
+                  <div className="ml-4 pl-4 border-l border-slate-200 space-y-1 mt-1">
+                    {filteredReportChildren.map((item) => {
+                      const isActive = location.pathname === item.url;
+                      return (
+                        <Link
+                          key={item.title}
+                          to={item.url}
+                          onClick={() => setSidebarOpen(false)}
+                          className={`
+                            flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-200
+                            ${isActive
+                              ? 'bg-blue-50 text-blue-900 font-medium'
+                              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                            }
+                          `}
+                        >
+                          <item.icon className="w-4 h-4" />
+                          <span>{item.title}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+
+            {/* Other Navigation Items (excluding Dashboard) */}
             <div className="space-y-1">
-              {filteredNavItems.map((item) => {
+              {filteredNavItems.filter(item => item.url !== '/dashboard').map((item) => {
                 const isActive = location.pathname === item.url;
                 return (
                   <Link
@@ -264,59 +340,6 @@ export default function Layout({ children }) {
                 <CollapsibleContent>
                   <div className="ml-4 pl-4 border-l border-slate-200 space-y-1 mt-1">
                     {filteredMasterChildren.map((item) => {
-                      const isActive = location.pathname === item.url;
-                      return (
-                        <Link
-                          key={item.title}
-                          to={item.url}
-                          onClick={() => setSidebarOpen(false)}
-                          className={`
-                            flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-200
-                            ${isActive
-                              ? 'bg-blue-50 text-blue-900 font-medium'
-                              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                            }
-                          `}
-                        >
-                          <item.icon className="w-4 h-4" />
-                          <span>{item.title}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            )}
-
-            {/* Collapsible Reports Group */}
-            {canSeeReportsGroup && (
-              <Collapsible
-                open={isMenuOpen('laporan')}
-                onOpenChange={() => toggleMenu('laporan')}
-              >
-                <CollapsibleTrigger asChild>
-                  <button
-                    className={`
-                      flex w-full items-center gap-3 px-3 py-2.5 text-sm rounded-lg
-                      transition-all duration-200 hover:bg-slate-100
-                      ${filteredReportChildren.some(item => location.pathname === item.url)
-                        ? 'text-blue-900 font-medium'
-                        : 'text-slate-700'
-                      }
-                    `}
-                  >
-                    <FileBarChart className="w-5 h-5" />
-                    <span className="flex-1 text-left">{navigationReportsGroup.title}</span>
-                    <ChevronDown
-                      className={`w-4 h-4 transition-transform duration-200 ${isMenuOpen('laporan') ? 'rotate-180' : ''
-                        }`}
-                    />
-                  </button>
-                </CollapsibleTrigger>
-
-                <CollapsibleContent>
-                  <div className="ml-4 pl-4 border-l border-slate-200 space-y-1 mt-1">
-                    {filteredReportChildren.map((item) => {
                       const isActive = location.pathname === item.url;
                       return (
                         <Link
