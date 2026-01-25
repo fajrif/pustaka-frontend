@@ -47,7 +47,7 @@ const FILTER_FIELD_MAP = {
 };
 
 const BookSelectionDialog = ({ isOpen, onClose, currentSelectedBooks = [], onConfirm }) => {
-  const { toast } = useToast();
+  const { toast } = useToast(); // updated for refresh
   const gridRef = useRef(null);
   const [selectedBooks, setSelectedBooks] = useState({});
   const [sortModel, setSortModel] = useState({ sort_by: '', sort_order: '' });

@@ -96,7 +96,6 @@ export const createSalesBooksColumnDefs = ({ selectedBooks, onCheckboxChange, on
         },
         cellRenderer: (params) => {
             const code = params.value;
-            if (!code) return null;
             const colorClasses = getJenisBukuColor(code);
             return <BadgeCellRenderer value={code} colorClasses={colorClasses} />;
         },
@@ -134,7 +133,7 @@ export const createSalesBooksColumnDefs = ({ selectedBooks, onCheckboxChange, on
     {
         headerName: 'Jenjang',
         field: 'jenjang_studi.code',
-        width: 90,
+        width: 100,
         sortable: true,
         filter: 'agTextColumnFilter',
         floatingFilter: true,
@@ -151,7 +150,6 @@ export const createSalesBooksColumnDefs = ({ selectedBooks, onCheckboxChange, on
         },
         cellRenderer: (params) => {
             const code = params.value;
-            if (!code) return null;
             const colorClasses = getJenjangStudiColor(code);
             return <BadgeCellRenderer value={code} colorClasses={colorClasses} />;
         },
@@ -165,7 +163,7 @@ export const createSalesBooksColumnDefs = ({ selectedBooks, onCheckboxChange, on
     {
         headerName: 'Kurikulum',
         field: 'curriculum.name',
-        width: 110,
+        width: 120,
         sortable: true,
         filter: 'agTextColumnFilter',
         floatingFilter: true,
@@ -177,38 +175,40 @@ export const createSalesBooksColumnDefs = ({ selectedBooks, onCheckboxChange, on
             apiEndpoint: '/curriculums',
             dataKey: 'curriculums',
             valueKey: 'name',
-            labelFormatter: (item) => item.name,
+            labelFormatter: (item) => item.name.toUpperCase(),
             placeholder: 'Semua',
         },
-        filterValueGetter: (params) => {
-            const data = params.data?.curriculum;
-            if (!data) return '';
-            return data.name;
-        },
+        valueFormatter: (params) => (params.value ? params.value.toUpperCase() : '-'),
     },
     // Kelas
     {
         headerName: 'Kelas',
         field: 'kelas',
-        width: 70,
-        sortable: true,
-        filter: 'agTextColumnFilter',
-        floatingFilter: true,
-        suppressHeaderFilterButton: true,
-        suppressHeaderMenuButton: true,
-        suppressFloatingFilterButton: true,
-    },
-    // Periode
-    {
-        headerName: 'Periode',
-        field: 'periode',
         width: 80,
         sortable: true,
-        filter: 'agTextColumnFilter',
-        floatingFilter: true,
-        suppressHeaderFilterButton: true,
-        suppressHeaderMenuButton: true,
-        suppressFloatingFilterButton: true,
+        filter: true,
+        cellStyle: { textAlign: 'center' },
+        valueGetter: (params) => {
+            const kelas = params.data?.kelas;
+            if (!kelas) return '-';
+            if (typeof kelas === 'object') {
+                return kelas.name || kelas.code || '-';
+            }
+            return kelas;
+        },
+    },
+    // Semester
+    {
+        headerName: 'Semester',
+        field: 'periode',
+        width: 140,
+        sortable: true,
+        filter: true,
+        valueFormatter: (params) => {
+            if (params.value == 1) return 'Semester Ganjil';
+            if (params.value == 2) return 'Semester Genap';
+            return '-';
+        },
     },
     // Tahun
     {
@@ -216,11 +216,8 @@ export const createSalesBooksColumnDefs = ({ selectedBooks, onCheckboxChange, on
         field: 'year',
         width: 80,
         sortable: true,
-        filter: 'agNumberColumnFilter',
-        floatingFilter: true,
-        suppressHeaderFilterButton: true,
-        suppressHeaderMenuButton: true,
-        suppressFloatingFilterButton: true,
+        filter: true,
+        cellStyle: { textAlign: 'center' },
     },
     // Merk Buku
     {
@@ -288,22 +285,6 @@ export const createSalesBooksColumnDefs = ({ selectedBooks, onCheckboxChange, on
             textAlign: 'center',
         },
     },
-    // Harga - pinned right (second in pinned group)
-    {
-        headerName: 'Harga',
-        field: 'price',
-        width: 120,
-        pinned: 'right',
-        sortable: true,
-        filter: 'agNumberColumnFilter',
-        floatingFilter: true,
-        suppressHeaderFilterButton: true,
-        suppressHeaderMenuButton: true,
-        suppressFloatingFilterButton: true,
-        cellRenderer: (params) => {
-            return <CurrencyCellRenderer value={params.value} />;
-        },
-    },
     // Stock - pinned right (first in pinned group)
     {
         headerName: 'Stock',
@@ -336,7 +317,18 @@ export const createSalesBooksColumnDefs = ({ selectedBooks, onCheckboxChange, on
             };
         },
     },
-    // Quantity - pinned right (last in pinned group)
+    // Harga - pinned right
+    {
+        headerName: 'Harga',
+        field: 'price',
+        width: 130,
+        pinned: 'right',
+        sortable: true,
+        filter: 'agNumberColumnFilter',
+        cellRenderer: CurrencyCellRenderer,
+        cellStyle: { fontWeight: '500' },
+    },
+    // Quantity column - pinned right (with stock validation)
     {
         headerName: 'Qty',
         field: 'quantity',
@@ -347,20 +339,36 @@ export const createSalesBooksColumnDefs = ({ selectedBooks, onCheckboxChange, on
         resizable: false,
         cellRenderer: (params) => {
             const isSelected = !!selectedBooks[params.data.id];
-            const stock = params.data.stock || 0;
-
             if (!isSelected) return null;
+
+            const quantity = selectedBooks[params.data.id].quantity;
+            const maxStock = params.data.stock || 999999; // Use current stock as max
+
+            const handleInput = (e) => {
+                const value = parseInt(e.target.value);
+                // Check if user is trying to enter a value greater than max
+                if (!isNaN(value) && value > maxStock) {
+                    // Call onQuantityChange with the invalid value to trigger toast
+                    onQuantityChange(params.data.id, value.toString(), maxStock);
+                    // Prevent the invalid value from being set
+                    e.preventDefault();
+                    // Reset to max stock
+                    e.target.value = maxStock;
+                }
+            };
 
             return (
                 <div className="flex items-center justify-center">
                     <input
                         type="number"
                         min="1"
-                        max={stock}
-                        value={selectedBooks[params.data.id]?.quantity || 1}
-                        onChange={(e) => onQuantityChange(params.data.id, e.target.value, stock)}
-                        className="w-16 px-2 py-1 text-center border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        max={maxStock}
+                        value={quantity}
+                        onInput={handleInput}
+                        onChange={(e) => onQuantityChange(params.data.id, e.target.value, maxStock)}
+                        className="w-20 px-2 py-1 text-center border border-slate-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         onClick={(e) => e.stopPropagation()}
+                        title={`Max: ${maxStock}`}
                     />
                 </div>
             );
@@ -392,10 +400,18 @@ export const createSalesBooksColumnDefs = ({ selectedBooks, onCheckboxChange, on
     },
 ];
 
-// Default column definition
+/**
+ * Default column settings for AG Grid
+ */
 export const defaultColDef = {
     resizable: true,
-    sortable: false,
-    filter: false,
-    floatingFilter: false,
+    sortable: true,
+    filter: true,
+    floatingFilter: true,
+    minWidth: 60,
+    flex: 0,
+    cellStyle: {
+        display: 'flex',
+        alignItems: 'center',
+    },
 };
