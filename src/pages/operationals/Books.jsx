@@ -188,8 +188,7 @@ const MasterBook = () => {
                   Master data buku digunakan untuk data management buku perpustakaan.
                 </p>
                 <div className="space-y-1 text-sm text-slate-600">
-                  <p>• <strong className="font-semibold">Informasi Buku:</strong> Nama dan tahun terbit</p>
-                  <p>• <strong className="font-semibold">Klasifikasi:</strong> Jenis buku, jenjang studi, bidang studi, dan book</p>
+                  <p>• <strong className="font-semibold">Informasi Buku:</strong> Jenis buku, jenjang studi, bidang studi, dan kurikulum</p>
                   <p>• <strong className="font-semibold">Manajemen Stok:</strong> Kelola stok dan harga buku</p>
                 </div>
               </div>
@@ -235,6 +234,13 @@ const MasterBook = () => {
                 getRowId={(params) => params.data.id}
                 onSortChanged={onSortChanged}
                 onFilterChanged={onFilterChanged}
+                getRowStyle={(params) => {
+                  const stock = params.data.stock || 0;
+                  if (stock === 0) {
+                    return { backgroundColor: '#f1f5f9' }; // slate-100
+                  }
+                  return null;
+                }}
               />
             </div>
           </CardContent>

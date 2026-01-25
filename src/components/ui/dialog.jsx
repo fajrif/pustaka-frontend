@@ -23,7 +23,6 @@ const Dialog = ({ children, open, onOpenChange }) => {
       <div className="fixed inset-0 z-50 flex items-center justify-center">
         <div
           className="fixed inset-0 bg-black/50"
-          onClick={() => onOpenChange(false)}
         />
         {children}
       </div>

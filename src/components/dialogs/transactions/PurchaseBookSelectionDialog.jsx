@@ -1,27 +1,57 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { AgGridReact } from 'ag-grid-react';
+import { ModuleRegistry, AllCommunityModule, themeBalham } from 'ag-grid-community';
 import { api } from '@/api/axios';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Package } from 'lucide-react';
+import { Package } from 'lucide-react';
 import { formatRupiah } from '@/utils/formatters';
 import { useToast } from '@/components/ui/use-toast';
-import Pagination from '@/components/Pagination';
-import { PAGINATION } from '@/utils/constants';
-import Select from '@/components/ui/select';
-import { CurrencyInput } from '@/components/ui/CurrencyInput';
+import { createPurchaseBooksColumnDefs, defaultColDef } from '@/config/purchaseBooksGridColumns';
+import '@/styles/ag-grid-overrides.css';
+
+// Register AG Grid Community modules
+ModuleRegistry.registerModules([AllCommunityModule]);
+
+// Map AG Grid column fields to API sort fields
+const SORT_FIELD_MAP = {
+  'jenis_buku.code': 'jenis_buku_code',
+  'bidang_studi': 'bidang_studi_name',
+  'jenjang_studi.code': 'jenjang_studi_code',
+  'curriculum.name': 'curriculum_name',
+  'kelas': 'kelas',
+  'periode': 'periode',
+  'year': 'year',
+  'merk_buku': 'merk_buku_name',
+  'publisher': 'publisher_name',
+  'no_pages': 'no_pages',
+  'price': 'price',
+  'stock': 'stock',
+};
+
+// Map AG Grid column fields to API filter fields
+const FILTER_FIELD_MAP = {
+  'jenis_buku.code': 'jenis_buku_code',
+  'bidang_studi': 'bidang_studi_name',
+  'jenjang_studi.code': 'jenjang_studi_code',
+  'curriculum.name': 'curriculum_name',
+  'kelas': 'kelas',
+  'periode': 'periode',
+  'year': 'year',
+  'merk_buku': 'merk_buku_name',
+  'publisher': 'publisher_name',
+  'no_pages': 'no_pages',
+  'price': 'price',
+  'stock': 'stock',
+};
 
 const PurchaseBookSelectionDialog = ({ isOpen, onClose, currentSelectedBooks = [], onConfirm }) => {
   const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [jenisBukuFilter, setJenisBukuFilter] = useState('');
-  const [publisherFilter, setPublisherFilter] = useState('');
-  const [currentPage, setCurrentPage] = useState(PAGINATION.DEFAULT_PAGE);
+  const gridRef = useRef(null);
   const [selectedBooks, setSelectedBooks] = useState({});
-  const limit = 10;
+  const [sortModel, setSortModel] = useState({ sort_by: '', sort_order: '' });
+  const [columnFilters, setColumnFilters] = useState({});
 
   // Initialize selected books from current selection
   useEffect(() => {
@@ -43,55 +73,39 @@ const PurchaseBookSelectionDialog = ({ isOpen, onClose, currentSelectedBooks = [
   // Reset filters when dialog opens
   useEffect(() => {
     if (isOpen) {
-      setSearchTerm('');
-      setJenisBukuFilter('');
-      setPublisherFilter('');
-      setCurrentPage(PAGINATION.DEFAULT_PAGE);
+      setSortModel({ sort_by: '', sort_order: '' });
+      setColumnFilters({});
+      // Reset grid filters if grid is ready
+      if (gridRef.current?.api) {
+        gridRef.current.api.setFilterModel(null);
+      }
     }
   }, [isOpen]);
 
   // Fetch books
-  const { data: booksData = { books: [], pagination: { total: 0, page: 1, limit: 10, total_pages: 0 } }, isLoading } = useQuery({
-    queryKey: ['books', searchTerm, jenisBukuFilter, publisherFilter, currentPage, limit],
+  const { data: booksData = { books: [], pagination: { total: 0, page: 1, limit: 1000, total_pages: 0 } }, isLoading } = useQuery({
+    queryKey: ['books-purchase-selection', sortModel, columnFilters],
     queryFn: async () => {
-      const response = await api.get('/books', {
-        params: {
-          search: searchTerm,
-          jenis_buku_id: jenisBukuFilter || undefined,
-          publisher_id: publisherFilter || undefined,
-          page: currentPage,
-          limit: limit,
-        },
-      });
+      const params = {
+        page: 1,
+        limit: 1000, // Fetch all data, let AG Grid handle pagination
+        ...columnFilters,
+      };
+
+      // Add sorting params if set
+      if (sortModel.sort_by) {
+        params.sort_by = sortModel.sort_by;
+        params.sort_order = sortModel.sort_order || 'asc';
+      }
+
+      const response = await api.get('/books', { params });
       return response.data;
     },
-    enabled: isOpen && (searchTerm.length === 0 || searchTerm.length >= 3),
+    enabled: isOpen,
     placeholderData: keepPreviousData,
   });
 
-  // Fetch jenis buku for filter
-  const { data: jenisBukuData = { jenis_buku: [] } } = useQuery({
-    queryKey: ['bookTypes', 'all'],
-    queryFn: async () => {
-      const response = await api.get('/jenis-buku?all=true');
-      return response.data;
-    },
-    enabled: isOpen,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // Fetch publishers for filter
-  const { data: publishersData = { publishers: [] } } = useQuery({
-    queryKey: ['publishers', 'all'],
-    queryFn: async () => {
-      const response = await api.get('/publishers?all=true');
-      return response.data;
-    },
-    enabled: isOpen,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const handleCheckboxChange = (book) => {
+  const handleCheckboxChange = useCallback((book) => {
     setSelectedBooks(prev => {
       const newSelection = { ...prev };
       if (newSelection[book.id]) {
@@ -106,14 +120,24 @@ const PurchaseBookSelectionDialog = ({ isOpen, onClose, currentSelectedBooks = [
       }
       return newSelection;
     });
-  };
+  }, []);
 
-  const handleQuantityChange = (bookId, quantity) => {
+  const handleQuantityChange = useCallback((bookId, quantity, maxStock) => {
     const book = selectedBooks[bookId];
     if (!book) return;
 
     const numQuantity = parseInt(quantity) || 1;
     if (numQuantity < 1) return;
+
+    // Validate against stock
+    if (numQuantity > maxStock) {
+      toast({
+        title: "Peringatan",
+        description: `Jumlah tidak boleh melebihi stok yang tersedia (${maxStock})`,
+        variant: "destructive",
+      });
+      return;
+    }
 
     setSelectedBooks(prev => ({
       ...prev,
@@ -122,20 +146,29 @@ const PurchaseBookSelectionDialog = ({ isOpen, onClose, currentSelectedBooks = [
         quantity: numQuantity
       }
     }));
-  };
+  }, [selectedBooks, toast]);
 
-  const handlePriceChange = (bookId, price) => {
-    const book = selectedBooks[bookId];
-    if (!book) return;
+  const handleSelectAll = useCallback((shouldSelectAll) => {
+    if (shouldSelectAll) {
+      // Select all books with stock > 0 with default quantity of 1
+      const newSelection = {};
+      booksData.books.forEach(book => {
+        // Only select books that are in stock
+        if (book.stock > 0) {
+          newSelection[book.id] = {
+            book: book,
+            quantity: 1,
+            price: book.price || 0
+          };
+        }
+      });
+      setSelectedBooks(newSelection);
+    } else {
+      // Unselect all
+      setSelectedBooks({});
+    }
+  }, [booksData.books]);
 
-    setSelectedBooks(prev => ({
-      ...prev,
-      [bookId]: {
-        ...prev[bookId],
-        price: price
-      }
-    }));
-  };
 
   const calculateSummary = () => {
     let totalBooks = 0;
@@ -180,165 +213,103 @@ const PurchaseBookSelectionDialog = ({ isOpen, onClose, currentSelectedBooks = [
     onConfirm(selectedBooksArray);
   };
 
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(PAGINATION.DEFAULT_PAGE);
-  };
+  // Handle AG Grid sort change
+  const onSortChanged = useCallback((params) => {
+    const sortState = params.api.getColumnState().find(col => col.sort);
 
-  const handlePageChange = (newPage) => {
-    setCurrentPage(newPage);
-  };
+    if (sortState) {
+      const apiField = SORT_FIELD_MAP[sortState.colId] || sortState.colId;
+      setSortModel({
+        sort_by: apiField,
+        sort_order: sortState.sort,
+      });
+    } else {
+      setSortModel({ sort_by: '', sort_order: '' });
+    }
+  }, []);
+
+  // Handle AG Grid filter change
+  const onFilterChanged = useCallback((params) => {
+    const filterModel = params.api.getFilterModel();
+    const apiFilters = {};
+
+    Object.entries(filterModel).forEach(([field, filterData]) => {
+      const apiField = FILTER_FIELD_MAP[field] || field;
+
+      // Handle different filter types
+      if (filterData.filterType === 'text') {
+        apiFilters[apiField] = filterData.filter;
+      } else if (filterData.filterType === 'number') {
+        if (filterData.type === 'equals') {
+          apiFilters[apiField] = filterData.filter;
+        } else if (filterData.type === 'greaterThan') {
+          apiFilters[`${apiField}_min`] = filterData.filter;
+        } else if (filterData.type === 'lessThan') {
+          apiFilters[`${apiField}_max`] = filterData.filter;
+        } else if (filterData.type === 'inRange') {
+          apiFilters[`${apiField}_min`] = filterData.filter;
+          apiFilters[`${apiField}_max`] = filterData.filterTo;
+        }
+      }
+    });
+
+    setColumnFilters(apiFilters);
+  }, []);
+
+  const columnDefs = useMemo(
+    () => createPurchaseBooksColumnDefs({
+      selectedBooks,
+      onCheckboxChange: handleCheckboxChange,
+      onQuantityChange: handleQuantityChange,
+      onSelectAll: handleSelectAll,
+      allBooks: booksData?.books || [],
+    }),
+    [selectedBooks, handleCheckboxChange, handleQuantityChange, handleSelectAll, booksData?.books]
+  );
 
   const { totalBooks, totalAmount } = calculateSummary();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl h-[85vh] flex flex-col">
+      <DialogContent className="max-w-[95vw] h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Pilih Buku untuk Pembelian</DialogTitle>
         </DialogHeader>
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Search and Filters */}
-          <div className="space-y-3 mb-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-              <Input
-                placeholder="Cari buku berdasarkan nama..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-                className="pl-10"
+          {/* AG Grid */}
+          <div className="flex-1 overflow-hidden">
+            <div style={{ height: '100%', width: '100%' }}>
+              <AgGridReact
+                ref={gridRef}
+                theme={themeBalham}
+                rowData={booksData?.books || []}
+                columnDefs={columnDefs}
+                defaultColDef={defaultColDef}
+                animateRows={true}
+                suppressRowClickSelection={true}
+                pagination={true}
+                paginationPageSize={50}
+                paginationPageSizeSelector={[25, 50, 100, 200]}
+                domLayout="normal"
+                tooltipShowDelay={200}
+                tooltipHideDelay={2000}
+                overlayLoadingTemplate={'<span class="ag-overlay-loading-center">Loading...</span>'}
+                overlayNoRowsTemplate={'<span>Belum ada buku. Tambahkan buku pertama anda.</span>'}
+                loading={isLoading}
+                getRowId={(params) => params.data.id}
+                onSortChanged={onSortChanged}
+                onFilterChanged={onFilterChanged}
+                getRowStyle={(params) => {
+                  const stock = params.data.stock || 0;
+                  if (stock === 0) {
+                    return { backgroundColor: '#f1f5f9' }; // slate-100
+                  }
+                  return null;
+                }}
               />
             </div>
-            <div className="flex gap-3">
-              <div className="w-64">
-                <Select
-                  options={[
-                    { value: '', label: 'Semua Jenis Buku' },
-                    ...jenisBukuData.jenis_buku.map(jb => ({ value: jb.id, label: jb.name }))
-                  ]}
-                  value={jenisBukuFilter}
-                  onChange={(val) => {
-                    setJenisBukuFilter(val);
-                    setCurrentPage(PAGINATION.DEFAULT_PAGE);
-                  }}
-                  placeholder="Filter Jenis Buku"
-                />
-              </div>
-              <div className="w-64">
-                <Select
-                  options={[
-                    { value: '', label: 'Semua Penerbit' },
-                    ...publishersData.publishers.map(p => ({ value: p.id, label: p.name }))
-                  ]}
-                  value={publisherFilter}
-                  onChange={(val) => {
-                    setPublisherFilter(val);
-                    setCurrentPage(PAGINATION.DEFAULT_PAGE);
-                  }}
-                  placeholder="Filter Penerbit"
-                />
-              </div>
-            </div>
           </div>
-
-          {/* Books Table */}
-          <div className="flex-1 overflow-auto border rounded-lg">
-            {isLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-                  <p className="mt-4 text-slate-500">Loading...</p>
-                </div>
-              </div>
-            ) : booksData.books.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-slate-500">
-                <div className="text-center">
-                  <Package className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-                  <p className="text-lg font-medium">Tidak ada buku ditemukan</p>
-                  <p className="text-sm mt-2">Coba ubah filter atau kata kunci pencarian</p>
-                </div>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader className="sticky top-0 bg-white z-10">
-                  <TableRow>
-                    <TableHead className="w-[50px]"></TableHead>
-                    <TableHead>Nama Buku</TableHead>
-                    <TableHead>Penerbit</TableHead>
-                    <TableHead>Jenis</TableHead>
-                    <TableHead className="text-center">Stok Saat Ini</TableHead>
-                    <TableHead className="text-center w-[100px]">Qty</TableHead>
-                    <TableHead className="text-right w-[180px]">Harga Beli</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {booksData.books.map((book) => {
-                    const isSelected = !!selectedBooks[book.id];
-                    return (
-                      <TableRow key={book.id} className={isSelected ? 'bg-purple-50' : ''}>
-                        <TableCell>
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => handleCheckboxChange(book)}
-                            className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500 cursor-pointer"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-medium text-sm block">{book.name}</span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm">{book.publisher?.name || '-'}</span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm">{book.jenis_buku?.name || '-'}</span>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant="outline" className="bg-slate-50">
-                            {book.stock || 0}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {isSelected && (
-                            <Input
-                              type="number"
-                              min="1"
-                              value={selectedBooks[book.id].quantity}
-                              onChange={(e) => handleQuantityChange(book.id, e.target.value)}
-                              className="w-20 text-center mx-auto"
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {isSelected && (
-                            <CurrencyInput
-                              value={selectedBooks[book.id].price}
-                              onChange={(value) => handlePriceChange(book.id, value)}
-                              className="w-full text-right"
-                            />
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
-          </div>
-
-          {/* Pagination */}
-          {!isLoading && booksData.books.length > 0 && booksData.pagination && (
-            <div className="mt-3">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={booksData.pagination.total_pages}
-                total={booksData.pagination.total}
-                limit={booksData.pagination.limit}
-                onPageChange={handlePageChange}
-              />
-            </div>
-          )}
         </div>
 
         {/* Footer Summary */}

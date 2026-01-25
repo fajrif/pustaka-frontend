@@ -1,0 +1,411 @@
+import React from 'react';
+import BadgeCellRenderer from '@/components/ag-grid/cellRenderers/BadgeCellRenderer';
+import CurrencyCellRenderer from '@/components/ag-grid/cellRenderers/CurrencyCellRenderer';
+import DropdownFloatingFilter from '@/components/ag-grid/floatingFilters/DropdownFloatingFilter';
+import {
+    getJenisBukuColor,
+    getJenjangStudiColor,
+    getMerkBukuColor,
+} from '@/config/bookColorMappings';
+import { formatRupiah } from '@/utils/formatters';
+
+/**
+ * Create column definitions for Purchase Books Selection AG Grid
+ * @param {Object} options - Options for column actions
+ * @param {Object} options.selectedBooks - Object containing selected books with quantities and prices
+ * @param {Function} options.onCheckboxChange - Callback when checkbox is toggled
+ * @param {Function} options.onQuantityChange - Callback when quantity is changed
+ * @param {Function} options.onSelectAll - Callback when select all is toggled
+ * @param {Array} options.allBooks - All available books for select all functionality
+ * @returns {Array} Column definitions array
+ */
+export const createPurchaseBooksColumnDefs = ({ selectedBooks, onCheckboxChange, onQuantityChange, onSelectAll, allBooks }) => [
+    // Checkbox column - pinned left
+    {
+        headerName: '',
+        field: 'checkbox',
+        width: 50,
+        pinned: 'left',
+        sortable: false,
+        filter: false,
+        resizable: false,
+        checkboxSelection: false, // We'll use custom renderer
+        headerComponent: (params) => {
+            // Only count books with stock > 0 for select all
+            const inStockBooks = allBooks?.filter(book => book.stock > 0) || [];
+            const totalInStockBooks = inStockBooks.length;
+            const selectedCount = Object.keys(selectedBooks).length;
+            const allSelected = totalInStockBooks > 0 && selectedCount === totalInStockBooks;
+            const someSelected = selectedCount > 0 && selectedCount < totalInStockBooks;
+
+            return (
+                <div className="flex items-center justify-center h-full">
+                    <input
+                        type="checkbox"
+                        checked={allSelected}
+                        ref={(input) => {
+                            if (input) {
+                                input.indeterminate = someSelected;
+                            }
+                        }}
+                        onChange={() => onSelectAll(!allSelected)}
+                        className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500 cursor-pointer"
+                        title={allSelected ? "Unselect All" : "Select All (In Stock Only)"}
+                    />
+                </div>
+            );
+        },
+        cellRenderer: (params) => {
+            const isSelected = !!selectedBooks[params.data.id];
+            const stock = params.data.stock || 0;
+            const isOutOfStock = stock === 0;
+
+            return (
+                <div className="flex items-center justify-center">
+                    <input
+                        type="checkbox"
+                        checked={isSelected}
+                        disabled={isOutOfStock}
+                        onChange={() => onCheckboxChange(params.data)}
+                        className={`w-4 h-4 text-purple-600 rounded focus:ring-purple-500 ${isOutOfStock ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'
+                            }`}
+                        title={isOutOfStock ? 'Out of stock' : ''}
+                    />
+                </div>
+            );
+        },
+    },
+    // Jenis Buku
+    {
+        headerName: 'Jenis Buku',
+        field: 'jenis_buku.code',
+        width: 110,
+        sortable: true,
+        filter: 'agTextColumnFilter',
+        floatingFilter: true,
+        suppressHeaderFilterButton: true,
+        suppressHeaderMenuButton: true,
+        suppressFloatingFilterButton: true,
+        floatingFilterComponent: DropdownFloatingFilter,
+        floatingFilterComponentParams: {
+            apiEndpoint: '/jenis-buku',
+            dataKey: 'jenis_buku',
+            valueKey: 'code',
+            labelFormatter: (item) => `[${item.code}] ${item.name}`,
+            placeholder: 'Semua',
+        },
+        cellRenderer: (params) => {
+            const code = params.value;
+            const colorClasses = getJenisBukuColor(code);
+            return <BadgeCellRenderer value={code} colorClasses={colorClasses} />;
+        },
+        filterValueGetter: (params) => {
+            const data = params.data?.jenis_buku;
+            if (!data) return '';
+            return data.code;
+        },
+    },
+    // Bidang Studi
+    {
+        headerName: 'Bidang Studi',
+        field: 'bidang_studi',
+        width: 180,
+        sortable: true,
+        filter: true,
+        cellRenderer: (params) => {
+            const data = params.data?.bidang_studi;
+            if (!data) return <span className="text-slate-400">-</span>;
+            const displayText = `[${data.code}] ${data.name}`;
+            return (
+                <span className="text-black-400">
+                    {displayText}
+                </span>
+            );
+        },
+        filterValueGetter: (params) => {
+            const data = params.data?.bidang_studi;
+            if (!data) return '';
+            return `${data.code} ${data.name}`;
+        },
+        cellStyle: { fontWeight: '500' },
+    },
+    // Jenjang Studi
+    {
+        headerName: 'Jenjang',
+        field: 'jenjang_studi.code',
+        width: 100,
+        sortable: true,
+        filter: 'agTextColumnFilter',
+        floatingFilter: true,
+        suppressHeaderFilterButton: true,
+        suppressHeaderMenuButton: true,
+        suppressFloatingFilterButton: true,
+        floatingFilterComponent: DropdownFloatingFilter,
+        floatingFilterComponentParams: {
+            apiEndpoint: '/jenjang-studi',
+            dataKey: 'jenjang_studi',
+            valueKey: 'code',
+            labelFormatter: (item) => `[${item.code}] ${item.name}`,
+            placeholder: 'Semua',
+        },
+        cellRenderer: (params) => {
+            const code = params.value;
+            const colorClasses = getJenjangStudiColor(code);
+            return <BadgeCellRenderer value={code} colorClasses={colorClasses} />;
+        },
+        filterValueGetter: (params) => {
+            const data = params.data?.jenjang_studi;
+            if (!data) return '';
+            return data.code;
+        },
+    },
+    // Kurikulum
+    {
+        headerName: 'Kurikulum',
+        field: 'curriculum.name',
+        width: 120,
+        sortable: true,
+        filter: 'agTextColumnFilter',
+        floatingFilter: true,
+        suppressHeaderFilterButton: true,
+        suppressHeaderMenuButton: true,
+        suppressFloatingFilterButton: true,
+        floatingFilterComponent: DropdownFloatingFilter,
+        floatingFilterComponentParams: {
+            apiEndpoint: '/curriculums',
+            dataKey: 'curriculums',
+            valueKey: 'name',
+            labelFormatter: (item) => item.name.toUpperCase(),
+            placeholder: 'Semua',
+        },
+        valueFormatter: (params) => (params.value ? params.value.toUpperCase() : '-'),
+    },
+    // Kelas
+    {
+        headerName: 'Kelas',
+        field: 'kelas',
+        width: 80,
+        sortable: true,
+        filter: true,
+        cellStyle: { textAlign: 'center' },
+        valueGetter: (params) => {
+            const kelas = params.data?.kelas;
+            if (!kelas) return '-';
+            if (typeof kelas === 'object') {
+                return kelas.name || kelas.code || '-';
+            }
+            return kelas;
+        },
+    },
+    // Semester
+    {
+        headerName: 'Semester',
+        field: 'periode',
+        width: 140,
+        sortable: true,
+        filter: true,
+        valueFormatter: (params) => {
+            if (params.value == 1) return 'Semester Ganjil';
+            if (params.value == 2) return 'Semester Genap';
+            return '-';
+        },
+    },
+    // Tahun
+    {
+        headerName: 'Tahun',
+        field: 'year',
+        width: 80,
+        sortable: true,
+        filter: true,
+        cellStyle: { textAlign: 'center' },
+    },
+    // Merk Buku
+    {
+        headerName: 'Merk Buku',
+        field: 'merk_buku',
+        width: 110,
+        sortable: true,
+        filter: 'agTextColumnFilter',
+        floatingFilter: true,
+        suppressHeaderFilterButton: true,
+        suppressHeaderMenuButton: true,
+        suppressFloatingFilterButton: true,
+        floatingFilterComponent: DropdownFloatingFilter,
+        floatingFilterComponentParams: {
+            apiEndpoint: '/merk-buku',
+            dataKey: 'merk_buku',
+            valueKey: 'code',
+            labelFormatter: (item) => `[${item.code}] ${item.name}`,
+            placeholder: 'Semua',
+        },
+        cellRenderer: (params) => {
+            const data = params.value;
+            if (!data) return <span className="text-slate-400">-</span>;
+            const colorClasses = getMerkBukuColor(data.code);
+            return <BadgeCellRenderer value={data.code} colorClasses={colorClasses} />;
+        },
+        filterValueGetter: (params) => {
+            const data = params.data?.merk_buku;
+            if (!data) return '';
+            return data.code;
+        },
+        tooltipValueGetter: (params) => {
+            const data = params.data?.merk_buku;
+            return data?.name || '';
+        },
+    },
+    // Penerbit
+    {
+        headerName: 'Penerbit',
+        field: 'publisher',
+        width: 100,
+        sortable: true,
+        filter: true,
+        valueGetter: (params) => {
+            const data = params.data?.publisher;
+            return data?.code || '-';
+        },
+        tooltipValueGetter: (params) => {
+            const data = params.data?.publisher;
+            return data?.name || '';
+        },
+    },
+    // Halaman
+    {
+        headerName: 'Halaman',
+        field: 'no_pages',
+        width: 90,
+        sortable: true,
+        filter: 'agNumberColumnFilter',
+        cellStyle: { textAlign: 'center' },
+        valueFormatter: (params) => (params.value ? params.value : '-'),
+    },
+    // Stock - pinned right (first in pinned group)
+    {
+        headerName: 'Stock',
+        field: 'stock',
+        width: 80,
+        pinned: 'right',
+        sortable: true,
+        filter: 'agNumberColumnFilter',
+        cellStyle: (params) => {
+            const stock = params.value || 0;
+            let color = '';
+            let fontWeight = '500';
+
+            if (stock <= 5) {
+                // Alert: Red text
+                color = '#dc2626'; // red-600
+                fontWeight = '700';
+            } else if (stock <= 10) {
+                // Warning: Orange text
+                color = '#ea580c'; // orange-600
+                fontWeight = '700';
+            }
+
+            return {
+                textAlign: 'center',
+                color,
+                fontWeight,
+                display: 'flex',
+                alignItems: 'center',
+            };
+        },
+    },
+    // Harga - pinned right
+    {
+        headerName: 'Harga',
+        field: 'price',
+        width: 130,
+        pinned: 'right',
+        sortable: true,
+        filter: 'agNumberColumnFilter',
+        cellRenderer: CurrencyCellRenderer,
+        cellStyle: { fontWeight: '500' },
+    },
+    // Quantity column - pinned right (with stock validation)
+    {
+        headerName: 'Qty',
+        field: 'quantity',
+        width: 100,
+        pinned: 'right',
+        sortable: false,
+        filter: false,
+        resizable: false,
+        cellRenderer: (params) => {
+            const isSelected = !!selectedBooks[params.data.id];
+            if (!isSelected) return null;
+
+            const quantity = selectedBooks[params.data.id].quantity;
+            const maxStock = params.data.stock || 999999; // Use current stock as max
+
+            const handleInput = (e) => {
+                const value = parseInt(e.target.value);
+                // Check if user is trying to enter a value greater than max
+                if (!isNaN(value) && value > maxStock) {
+                    // Call onQuantityChange with the invalid value to trigger toast
+                    onQuantityChange(params.data.id, value.toString(), maxStock);
+                    // Prevent the invalid value from being set
+                    e.preventDefault();
+                    // Reset to max stock
+                    e.target.value = maxStock;
+                }
+            };
+
+            return (
+                <div className="flex items-center justify-center">
+                    <input
+                        type="number"
+                        min="1"
+                        max={maxStock}
+                        value={quantity}
+                        onInput={handleInput}
+                        onChange={(e) => onQuantityChange(params.data.id, e.target.value, maxStock)}
+                        className="w-20 px-2 py-1 text-center border border-slate-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        onClick={(e) => e.stopPropagation()}
+                        title={`Max: ${maxStock}`}
+                    />
+                </div>
+            );
+        },
+    },
+    // Subtotal column - pinned right
+    {
+        headerName: 'Subtotal',
+        field: 'subtotal',
+        width: 150,
+        pinned: 'right',
+        sortable: false,
+        filter: false,
+        resizable: false,
+        cellRenderer: (params) => {
+            const isSelected = !!selectedBooks[params.data.id];
+            if (!isSelected) return null;
+
+            const { quantity, price } = selectedBooks[params.data.id];
+            const subtotal = quantity * price;
+
+            return (
+                <div className="flex items-center justify-end font-semibold text-purple-600">
+                    {formatRupiah(subtotal)}
+                </div>
+            );
+        },
+    },
+];
+
+/**
+ * Default column settings for AG Grid
+ */
+export const defaultColDef = {
+    resizable: true,
+    sortable: true,
+    filter: true,
+    floatingFilter: true,
+    minWidth: 60,
+    flex: 0,
+    cellStyle: {
+        display: 'flex',
+        alignItems: 'center',
+    },
+};

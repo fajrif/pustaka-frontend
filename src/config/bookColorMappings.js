@@ -27,19 +27,34 @@ export const JENJANG_STUDI_COLORS = {
     border: 'border-blue-200'
   },
   'SMP': {
-    bg: 'bg-purple-100',
-    text: 'text-purple-800',
-    border: 'border-purple-200'
+    bg: 'bg-blue-300',
+    text: 'text-blue-800',
+    border: 'border-blue-200'
   },
   'SMA': {
-    bg: 'bg-red-100',
-    text: 'text-red-800',
-    border: 'border-red-200'
+    bg: 'bg-slate-100',
+    text: 'text-slate-800',
+    border: 'border-slate-200'
   },
   'SMK': {
     bg: 'bg-amber-100',
     text: 'text-amber-800',
     border: 'border-amber-200'
+  },
+  'MI': {
+    bg: 'bg-green-100',
+    text: 'text-green-800',
+    border: 'border-green-200'
+  },
+  'MTS': {
+    bg: 'bg-green-300',
+    text: 'text-green-800',
+    border: 'border-green-200'
+  },
+  'MA': {
+    bg: 'bg-green-400',
+    text: 'text-green-800',
+    border: 'border-green-200'
   },
   'default': {
     bg: 'bg-gray-100',

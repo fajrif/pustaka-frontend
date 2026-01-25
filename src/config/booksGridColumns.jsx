@@ -230,7 +230,29 @@ export const createBooksColumnDefs = ({ onEdit, onDelete }) => [
     width: 80,
     sortable: true,
     filter: 'agNumberColumnFilter',
-    cellStyle: { textAlign: 'center' },
+    cellStyle: (params) => {
+      const stock = params.value || 0;
+      let color = '';
+      let fontWeight = '500';
+
+      if (stock <= 5) {
+        // Alert: Red text
+        color = '#dc2626'; // red-600
+        fontWeight = '700';
+      } else if (stock <= 10) {
+        // Warning: Orange text
+        color = '#ea580c'; // orange-600
+        fontWeight = '700';
+      }
+
+      return {
+        textAlign: 'center',
+        color,
+        fontWeight,
+        display: 'flex',
+        alignItems: 'center',
+      };
+    },
   },
   {
     headerName: '',
