@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { api } from '@/api/axios';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Pencil, Search, Filter, Trash2, Users } from 'lucide-react';
+import { Plus, Pencil, Search, Trash2, Users } from 'lucide-react';
 import AddEditSalesAssociateDialog from '@/components/dialogs/operationals/AddEditSalesAssociateDialog';
 import Pagination from '@/components/Pagination';
 import { formatDate } from '@/utils/formatters';
@@ -44,8 +43,8 @@ const MasterSalesAssociate = () => {
     setShowDialog(true);
   };
 
-  const finishSubmit = (isQuery=true) => {
-    if(isQuery) {
+  const finishSubmit = (isQuery = true) => {
+    if (isQuery) {
       queryClient.invalidateQueries(['salesAssociates']);
     }
     setShowDialog(false);
@@ -147,100 +146,100 @@ const MasterSalesAssociate = () => {
                 Belum ada sales associate. Tambahkan sales associate pertama anda.
               </div>
             ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[150px]">Kode</TableHead>
-                        <TableHead>Nama</TableHead>
-                        <TableHead>Wilayah</TableHead>
-                        <TableHead>Pembayaran</TableHead>
-                        <TableHead>Diskon</TableHead>
-                        <TableHead>Dibuat</TableHead>
-                        <TableHead className="w-[150px] text-center">Action</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {salesAssociatesData.sales_associates.map((sales_associate) => (
-                        <TableRow key={sales_associate.id}>
-                          <TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[150px]">Kode</TableHead>
+                      <TableHead>Nama</TableHead>
+                      <TableHead>Wilayah</TableHead>
+                      <TableHead>Pembayaran</TableHead>
+                      <TableHead>Diskon</TableHead>
+                      <TableHead>Dibuat</TableHead>
+                      <TableHead className="w-[150px] text-center">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {salesAssociatesData.sales_associates.map((sales_associate) => (
+                      <TableRow key={sales_associate.id}>
+                        <TableCell>
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                            {sales_associate.code || 'N/A'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className="font-medium text-sm inline-block cursor-pointer hover:underline hover:text-blue-600 mb-1"
+                            onClick={() => handleEdit(sales_associate)}
+                          >
+                            {sales_associate.name}
+                          </span>
+                          <span className="text-xs block">
+                            No KTP: {sales_associate.no_ktp || '-'}
+                          </span>
+                          <span className="text-xs">
+                            Phone: {sales_associate.phone1 || sales_associate.phone2 || '-'}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium text-sm inline-block mb-1">
+                            {sales_associate.city?.name || 'N/A'}
+                          </span>
+                          <span className="text-xs block">
+                            Area: {sales_associate.area || '-'}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {sales_associate.jenis_pembayaran === 'T' ? (
                             <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                              {sales_associate.code || 'N/A'}
+                              Tunai
                             </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <span 
-                              className="font-medium text-sm inline-block cursor-pointer hover:underline hover:text-blue-600 mb-1"
+                          ) : (
+                            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                              Kredit
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {sales_associate.discount > 0 && (
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 mt-2">
+                              {sales_associate.discount}%
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-slate-500">
+                            {formatDate(sales_associate.created_at)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-center gap-1">
+                            <Button
+                              variant="outline"
+                              size="icon"
                               onClick={() => handleEdit(sales_associate)}
-                              >
-                              {sales_associate.name}
-                            </span>
-                            <span className="text-xs block">
-                              No KTP: {sales_associate.no_ktp || '-'}
-                            </span>
-                            <span className="text-xs">
-                              Phone: {sales_associate.phone1 || sales_associate.phone2 || '-'}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <span className="font-medium text-sm inline-block mb-1">
-                              {sales_associate.city?.name || 'N/A'}
-                            </span>
-                            <span className="text-xs block">
-                              Area: {sales_associate.area || '-'}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            {sales_associate.jenis_pembayaran === 'T' ? (
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                Tunai
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                                Kredit
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {sales_associate.discount > 0 && (
-                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 mt-2">
-                                {sales_associate.discount}%
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm text-slate-500">
-                              {formatDate(sales_associate.created_at)}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex justify-center gap-1">
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => handleEdit(sales_associate)}
-                              >
-                                <Pencil className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => {
-                                  if (confirm('Yakin ingin menghapus sales_associate ini?')) {
-                                    deleteMutation.mutate(sales_associate.id);
-                                  }
-                                }}
-                                className="text-red-500 hover:text-red-700"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => {
+                                if (confirm('Yakin ingin menghapus sales_associate ini?')) {
+                                  deleteMutation.mutate(sales_associate.id);
+                                }
+                              }}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
 
             {/* Pagination */}
@@ -262,7 +261,7 @@ const MasterSalesAssociate = () => {
         onClose={() => finishSubmit(false)}
         editingSalesAssociate={editingSalesAssociate}
         onFinish={finishSubmit}
-        />
+      />
     </div>
   );
 };

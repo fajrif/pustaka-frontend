@@ -7,7 +7,7 @@ import { api } from '@/api/axios';
  * DropdownFloatingFilter - A custom AG Grid floating filter that renders a dropdown
  * to select from master data options for filtering.
  * 
- * Usage in column definition:
+ * Usage with API endpoint:
  * {
  *   floatingFilterComponent: DropdownFloatingFilter,
  *   floatingFilterComponentParams: {
@@ -18,6 +18,18 @@ import { api } from '@/api/axios';
  *     placeholder: 'Semua',
  *   },
  * }
+ * 
+ * Usage with static options:
+ * {
+ *   floatingFilterComponent: DropdownFloatingFilter,
+ *   floatingFilterComponentParams: {
+ *     staticOptions: [
+ *       { value: 'T', label: 'Tunai' },
+ *       { value: 'K', label: 'Kredit' }
+ *     ],
+ *     placeholder: 'Semua',
+ *   },
+ * }
  */
 const DropdownFloatingFilter = forwardRef((props, ref) => {
     const {
@@ -25,7 +37,8 @@ const DropdownFloatingFilter = forwardRef((props, ref) => {
         dataKey,
         labelFormatter = (item) => item.name,
         valueKey = 'code',
-        placeholder = 'Semua'
+        placeholder = 'Semua',
+        staticOptions // New parameter for static options
     } = props;
     const [selectedValue, setSelectedValue] = useState('');
     const [isOpen, setIsOpen] = useState(false);
@@ -36,6 +49,14 @@ const DropdownFloatingFilter = forwardRef((props, ref) => {
     const containerRef = useRef(null);
     const buttonRef = useRef(null);
     const dropdownRef = useRef(null);
+
+    // Initialize static options if provided
+    useEffect(() => {
+        if (staticOptions && staticOptions.length > 0) {
+            setOptions(staticOptions);
+            setHasLoaded(true);
+        }
+    }, [staticOptions]);
 
     // Fetch options from API when dropdown is first opened
     const loadOptions = async () => {

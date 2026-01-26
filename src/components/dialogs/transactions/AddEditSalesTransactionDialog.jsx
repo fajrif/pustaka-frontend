@@ -463,25 +463,51 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Nama Buku</TableHead>
-                          <TableHead>Penerbit</TableHead>
-                          <TableHead>Jenis</TableHead>
-                          <TableHead className="text-right">Harga</TableHead>
-                          <TableHead className="text-center">Qty</TableHead>
-                          <TableHead className="text-right">Subtotal</TableHead>
-                          {canEditItems && <TableHead className="w-[50px]"></TableHead>}
+                          <TableHead className="p-2 h-auto text-xs font-semibold">Jenis</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold">Bidang Studi</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold">Jenjang</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold">Kelas</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold">Kurikulum</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold">Merk</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold text-right">Harga</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold text-center">Qty</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold text-right">Subtotal</TableHead>
+                          {canEditItems && <TableHead className="p-2 h-auto text-xs w-[50px]"></TableHead>}
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {selectedBooks.map((item) => (
                           <TableRow key={item.book_id}>
-                            <TableCell>
-                              <span className="font-medium text-sm">{item.book.name}</span>
+                            <TableCell className="p-2 text-xs">
+                              <div title={item.book.jenis_buku ? item.book.jenis_buku.name : ''}>
+                                {item.book.jenis_buku ? item.book.jenis_buku.code : '-'}
+                              </div>
                             </TableCell>
-                            <TableCell>{item.book.publisher?.name || '-'}</TableCell>
-                            <TableCell>{item.book.jenis_buku ? `[${item.book.jenis_buku.code}] ${item.book.jenis_buku.name}` : '-'}</TableCell>
-                            <TableCell className="text-right">{formatRupiah(item.book.price)}</TableCell>
-                            <TableCell className="text-center">
+                            <TableCell className="p-2 text-xs">
+                              <div className="font-medium truncate max-w-[150px]" title={item.book.bidang_studi ? item.book.bidang_studi.name : ''}>
+                                {item.book.bidang_studi ? item.book.bidang_studi.name : '-'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="p-2 text-xs">
+                              <div title={item.book.jenjang_studi ? item.book.jenjang_studi.name : ''}>
+                                {item.book.jenjang_studi ? item.book.jenjang_studi.code : '-'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="p-2 text-xs">
+                              {item.book.kelas}
+                            </TableCell>
+                            <TableCell className="p-2 text-xs">
+                              <div className="uppercase truncate max-w-[100px]" title={item.book.curriculum ? item.book.curriculum.name : ''}>
+                                {item.book.curriculum ? item.book.curriculum.name : '-'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="p-2 text-xs">
+                              <div title={item.book.merk_buku ? item.book.merk_buku.name : ''}>
+                                {item.book.merk_buku ? item.book.merk_buku.code : '-'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="p-2 text-xs text-right">{formatRupiah(item.book.price)}</TableCell>
+                            <TableCell className="p-2 text-xs text-center">
                               {!canEditItems ? (
                                 <span>{item.quantity}</span>
                               ) : (
@@ -491,7 +517,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
                                     size="sm"
                                     variant="outline"
                                     onClick={() => handleQuantityChange(item.book_id, item.quantity - 1)}
-                                    className="h-7 w-7 p-0"
+                                    className="h-6 w-6 p-0"
                                   >
                                     -
                                   </Button>
@@ -499,7 +525,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
                                     type="number"
                                     value={item.quantity}
                                     onChange={(e) => handleQuantityChange(item.book_id, parseInt(e.target.value) || 1)}
-                                    className="w-16 h-7 text-center p-1"
+                                    className="w-12 h-6 text-center p-1 text-xs"
                                     min="1"
                                     max={item.book.stock}
                                   />
@@ -508,26 +534,26 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
                                     size="sm"
                                     variant="outline"
                                     onClick={() => handleQuantityChange(item.book_id, item.quantity + 1)}
-                                    className="h-7 w-7 p-0"
+                                    className="h-6 w-6 p-0"
                                   >
                                     +
                                   </Button>
                                 </div>
                               )}
                             </TableCell>
-                            <TableCell className="text-right font-medium">
+                            <TableCell className="p-2 text-xs text-right font-medium">
                               {formatRupiah(item.book.price * item.quantity)}
                             </TableCell>
                             {canEditItems && (
-                              <TableCell>
+                              <TableCell className="p-2 text-xs">
                                 <Button
                                   type="button"
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => handleRemoveBook(item.book_id)}
-                                  className="text-red-500 hover:text-red-700 h-7 w-7"
+                                  className="text-red-500 hover:text-red-700 h-6 w-6"
                                 >
-                                  <Trash2 className="w-4 h-4" />
+                                  <Trash2 className="w-3 h-3" />
                                 </Button>
                               </TableCell>
                             )}

@@ -188,29 +188,58 @@ const ViewSalesTransactionDialog = ({ isOpen, onClose, transactionId, initialDat
                                             <Table>
                                                 <TableHeader>
                                                     <TableRow>
-                                                        <TableHead>Nama Buku</TableHead>
-                                                        <TableHead>Penerbit</TableHead>
-                                                        <TableHead>Jenis</TableHead>
-                                                        <TableHead className="text-right">Harga</TableHead>
-                                                        <TableHead className="text-center">Qty</TableHead>
-                                                        <TableHead className="text-right">Subtotal</TableHead>
+                                                        <TableHead className="p-2 h-auto text-xs font-semibold">Jenis</TableHead>
+                                                        <TableHead className="p-2 h-auto text-xs font-semibold">Bidang Studi</TableHead>
+                                                        <TableHead className="p-2 h-auto text-xs font-semibold">Jenjang</TableHead>
+                                                        <TableHead className="p-2 h-auto text-xs font-semibold">Kelas</TableHead>
+                                                        <TableHead className="p-2 h-auto text-xs font-semibold">Kurikulum</TableHead>
+                                                        <TableHead className="p-2 h-auto text-xs font-semibold">Merk</TableHead>
+                                                        <TableHead className="p-2 h-auto text-xs font-semibold text-right">Harga</TableHead>
+                                                        <TableHead className="p-2 h-auto text-xs font-semibold text-center">Qty</TableHead>
+                                                        <TableHead className="p-2 h-auto text-xs font-semibold text-right">Subtotal</TableHead>
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
-                                                    {displayTransaction.items.map((item) => (
-                                                        <TableRow key={item.book_id}>
-                                                            <TableCell>
-                                                                <span className="font-medium text-sm">{item.book?.name || item.book_name || '-'}</span>
-                                                            </TableCell>
-                                                            <TableCell>{item.book?.publisher?.name || '-'}</TableCell>
-                                                            <TableCell>{item.book?.jenis_buku ? `[${item.book.jenis_buku.code}] ${item.book.jenis_buku.name}` : '-'}</TableCell>
-                                                            <TableCell className="text-right">{formatRupiah(item.book?.price || 0)}</TableCell>
-                                                            <TableCell className="text-center"><span>{item.quantity}</span></TableCell>
-                                                            <TableCell className="text-right font-medium">
-                                                                {formatRupiah((item.book?.price || 0) * item.quantity)}
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    ))}
+                                                    {displayTransaction.items.map((item, index) => {
+                                                        if (index === 0) console.log(item);
+                                                        return (
+                                                            <TableRow key={item.book_id}>
+                                                                <TableCell className="p-2 text-xs">
+                                                                    <div title={item.book.jenis_buku ? item.book.jenis_buku.name : ''}>
+                                                                        {item.book.jenis_buku ? item.book.jenis_buku.code : '-'}
+                                                                    </div>
+                                                                </TableCell>
+                                                                <TableCell className="p-2 text-xs">
+                                                                    <div className="font-medium truncate max-w-[150px]" title={item.book.bidang_studi ? item.book.bidang_studi.name : ''}>
+                                                                        {item.book.bidang_studi ? item.book.bidang_studi.name : '-'}
+                                                                    </div>
+                                                                </TableCell>
+                                                                <TableCell className="p-2 text-xs">
+                                                                    <div title={item.book.jenjang_studi ? item.book.jenjang_studi.name : ''}>
+                                                                        {item.book.jenjang_studi ? item.book.jenjang_studi.code : '-'}
+                                                                    </div>
+                                                                </TableCell>
+                                                                <TableCell className="p-2 text-xs">
+                                                                    {item.book.kelas}
+                                                                </TableCell>
+                                                                <TableCell className="p-2 text-xs">
+                                                                    <div className="uppercase truncate max-w-[100px]" title={item.book.curriculum ? item.book.curriculum.name : ''}>
+                                                                        {item.book.curriculum ? item.book.curriculum.name : '-'}
+                                                                    </div>
+                                                                </TableCell>
+                                                                <TableCell className="p-2 text-xs">
+                                                                    <div title={item.book.merk_buku ? item.book.merk_buku.name : ''}>
+                                                                        {item.book.merk_buku ? item.book.merk_buku.code : '-'}
+                                                                    </div>
+                                                                </TableCell>
+                                                                <TableCell className="p-2 text-xs text-right">{formatRupiah(item.book?.price || 0)}</TableCell>
+                                                                <TableCell className="p-2 text-xs text-center"><span>{item.quantity}</span></TableCell>
+                                                                <TableCell className="p-2 text-xs text-right font-medium">
+                                                                    {formatRupiah((item.book?.price || 0) * item.quantity)}
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        );
+                                                    })}
                                                 </TableBody>
                                             </Table>
                                         </div>

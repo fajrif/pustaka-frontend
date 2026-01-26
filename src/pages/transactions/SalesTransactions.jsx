@@ -1,24 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import { AgGridReact } from 'ag-grid-react';
+import { ModuleRegistry, AllCommunityModule, themeBalham } from 'ag-grid-community';
 import { api } from '@/api/axios';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Pencil, Search, Trash2, ShoppingCart, Eye, FileText } from 'lucide-react';
+import { Plus, ShoppingCart } from 'lucide-react';
 import AddEditSalesTransactionDialog from '@/components/dialogs/transactions/AddEditSalesTransactionDialog';
 import ViewSalesTransactionDialog from '@/components/dialogs/transactions/ViewSalesTransactionDialog';
 import InvoiceDialog from '@/components/dialogs/transactions/InvoiceDialog';
-import Pagination from '@/components/Pagination';
-import { formatDate, formatRupiah } from '@/utils/formatters';
-import { PAGINATION } from '@/utils/constants';
 import { useToast } from '@/components/ui/use-toast';
-import Select from '@/components/ui/select';
+import { createSalesTransactionsColumnDefs, defaultColDef } from '@/config/salesTransactionsGridColumns';
+import '@/styles/ag-grid-overrides.css';
+
+// Register AG Grid Community modules
+ModuleRegistry.registerModules([AllCommunityModule]);
+
+// Map AG Grid column fields to API sort fields
+const SORT_FIELD_MAP = {
+  'no_invoice': 'no_invoice',
+  'sales_associate.name': 'sales_associate_name',
+  'transaction_date': 'transaction_date',
+  'payment_type': 'payment_type',
+  'total_amount': 'total_amount',
+  'status': 'status',
+};
+
+// Map AG Grid column fields to API filter fields
+const FILTER_FIELD_MAP = {
+  'no_invoice': 'no_invoice',
+  'sales_associate.name': 'sales_associate_name',
+  'transaction_date': 'transaction_date',
+  'payment_type': 'payment_type',
+  'total_amount': 'total_amount',
+  'status': 'status',
+};
+
 
 const SalesTransactions = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const gridRef = useRef(null);
   const [showDialog, setShowDialog] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
 
@@ -29,44 +51,56 @@ const SalesTransactions = () => {
   // Invoice Dialog State
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
   const [invoiceTransaction, setInvoiceTransaction] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [paymentTypeFilter, setPaymentTypeFilter] = useState('');
-  const [currentPage, setCurrentPage] = useState(PAGINATION.DEFAULT_PAGE);
-  const limit = PAGINATION.DEFAULT_LIMIT;
 
-  const { data: transactionsData = { sales_transactions: [], pagination: { total: 0, page: 1, limit: PAGINATION.DEFAULT_LIMIT, total_pages: 0 } }, isLoading } = useQuery({
-    queryKey: ['salesTransactions', searchTerm, currentPage, limit, statusFilter, paymentTypeFilter],
+  // Sorting and Filtering State
+  const [sortModel, setSortModel] = useState({ sort_by: '', sort_order: '' });
+  const [columnFilters, setColumnFilters] = useState({});
+
+
+  const { data: transactionsData = { sales_transactions: [] }, isLoading } = useQuery({
+    queryKey: ['salesTransactions', sortModel, columnFilters],
     queryFn: async () => {
-      const response = await api.get('/sales-transactions', {
-        params: {
-          search: searchTerm,
-          page: currentPage,
-          limit: limit,
-          status: statusFilter || undefined,
-          payment_type: paymentTypeFilter || undefined,
-        },
-      });
+      const params = {
+        page: 1,
+        limit: 1000, // Fetch all data, let AG Grid handle pagination
+        ...columnFilters,
+      };
+
+      // Add sorting params if set
+      if (sortModel.sort_by) {
+        params.sort_by = sortModel.sort_by;
+        params.sort_order = sortModel.sort_order || 'asc';
+      }
+
+      const response = await api.get('/sales-transactions', { params });
+
+      // Transform transaction_date to date-only format (strip time component)
+      if (response.data?.sales_transactions) {
+        response.data.sales_transactions = response.data.sales_transactions.map(tx => ({
+          ...tx,
+          transaction_date: tx.transaction_date ? tx.transaction_date.split('T')[0] : tx.transaction_date
+        }));
+      }
+
       return response.data;
     },
-    enabled: searchTerm.length === 0 || searchTerm.length >= 3,
     placeholderData: keepPreviousData,
   });
 
-  const handleView = (transaction) => {
+  const handleView = useCallback((transaction) => {
     setViewTransaction(transaction);
     setShowViewDialog(true);
-  };
+  }, []);
 
-  const handleInvoice = (transaction) => {
+  const handleInvoice = useCallback((transaction) => {
     setInvoiceTransaction(transaction);
     setShowInvoiceDialog(true);
-  };
+  }, []);
 
-  const handleEdit = (transaction) => {
+  const handleEdit = useCallback((transaction) => {
     setEditingTransaction(transaction);
     setShowDialog(true);
-  };
+  }, []);
 
   const finishSubmit = (isQuery = true) => {
     if (isQuery) {
@@ -74,16 +108,6 @@ const SalesTransactions = () => {
     }
     setShowDialog(false);
     setEditingTransaction(null);
-  };
-
-  const handlePageChange = (newPage) => {
-    setCurrentPage(newPage);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(PAGINATION.DEFAULT_PAGE);
   };
 
   const deleteMutation = useMutation({
@@ -107,30 +131,89 @@ const SalesTransactions = () => {
     }
   });
 
-  const handleDelete = (transaction) => {
+  const handleDelete = useCallback((transaction) => {
     if (confirm('Yakin ingin menghapus transaksi ini? Stok akan dikembalikan otomatis.')) {
       deleteMutation.mutate(transaction.id);
     }
-  };
+  }, [deleteMutation]);
 
-  // Status badge component
-  const StatusBadge = ({ status }) => {
-    const config = {
-      0: { label: 'Pesanan', className: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
-      1: { label: 'Lunas', className: 'bg-green-50 text-green-700 border-green-200' },
-      2: { label: 'Angsuran', className: 'bg-blue-50 text-blue-700 border-blue-200' }
-    };
-    const { label, className } = config[status] || config[0];
-    return <Badge variant="outline" className={className}>{label}</Badge>;
-  };
+  // Handle AG Grid sort change
+  const onSortChanged = useCallback((params) => {
+    const sortState = params.api.getColumnState().find(col => col.sort);
 
-  // Payment type badge component
-  const PaymentTypeBadge = ({ paymentType }) => {
-    if (paymentType === 'T') {
-      return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Tunai</Badge>;
+    if (sortState) {
+      const apiField = SORT_FIELD_MAP[sortState.colId] || sortState.colId;
+      setSortModel({
+        sort_by: apiField,
+        sort_order: sortState.sort,
+      });
+    } else {
+      setSortModel({ sort_by: '', sort_order: '' });
     }
-    return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Kredit</Badge>;
-  };
+  }, []);
+
+  // Handle AG Grid filter change
+  const onFilterChanged = useCallback((params) => {
+    const filterModel = params.api.getFilterModel();
+    const apiFilters = {};
+
+    Object.entries(filterModel).forEach(([field, filterData]) => {
+      const apiField = FILTER_FIELD_MAP[field] || field;
+
+      // Handle different filter types
+      if (filterData.filterType === 'text') {
+        apiFilters[apiField] = filterData.filter;
+      } else if (filterData.filterType === 'number') {
+        if (filterData.type === 'equals') {
+          apiFilters[apiField] = filterData.filter;
+        } else if (filterData.type === 'greaterThan') {
+          apiFilters[`${apiField}_min`] = filterData.filter;
+        } else if (filterData.type === 'lessThan') {
+          apiFilters[`${apiField}_max`] = filterData.filter;
+        } else if (filterData.type === 'inRange') {
+          apiFilters[`${apiField}_min`] = filterData.filter;
+          apiFilters[`${apiField}_max`] = filterData.filterTo;
+        }
+      } else if (filterData.filterType === 'date') {
+        // Helper function to format date as YYYY-MM-DD
+        const formatDateToString = (date) => {
+          if (!date) return null;
+          const d = new Date(date);
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+
+        // Handle date range filters
+        if (filterData.type === 'equals') {
+          const formattedDate = formatDateToString(filterData.dateFrom);
+          apiFilters[`${apiField}_from`] = formattedDate;
+          apiFilters[`${apiField}_to`] = formattedDate;
+        } else if (filterData.type === 'greaterThan') {
+          apiFilters[`${apiField}_from`] = formatDateToString(filterData.dateFrom);
+        } else if (filterData.type === 'lessThan') {
+          apiFilters[`${apiField}_to`] = formatDateToString(filterData.dateFrom);
+        } else if (filterData.type === 'inRange') {
+          apiFilters[`${apiField}_from`] = formatDateToString(filterData.dateFrom);
+          apiFilters[`${apiField}_to`] = formatDateToString(filterData.dateTo);
+        }
+      }
+    });
+
+    setColumnFilters(apiFilters);
+  }, []);
+
+
+  const columnDefs = useMemo(
+    () => createSalesTransactionsColumnDefs({
+      onView: handleView,
+      onInvoice: handleInvoice,
+      onEdit: handleEdit,
+      onDelete: handleDelete,
+    }),
+    [handleView, handleInvoice, handleEdit, handleDelete]
+  );
 
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
@@ -165,171 +248,45 @@ const SalesTransactions = () => {
 
         <Card className="border-none shadow-lg">
           <CardHeader className="border-b border-slate-100">
-            <div className="flex flex-col gap-4">
-              <div className="flex justify-between items-center">
-                <div className="w-full max-w-md">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-                    <Input
-                      placeholder="Cari no faktur atau nama sales associate..."
-                      value={searchTerm}
-                      onChange={handleSearchChange}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                <Button
-                  onClick={() => {
-                    setEditingTransaction(null);
-                    setShowDialog(true);
-                  }}
-                  className="bg-blue-900 hover:bg-blue-800"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Tambah Transaksi
-                </Button>
-              </div>
-
-              <div className="flex gap-4">
-                <div className="w-48">
-                  <Select
-                    options={[
-                      { value: '', label: 'Semua Status' },
-                      { value: '0', label: 'Pesanan' },
-                      { value: '1', label: 'Lunas' },
-                      { value: '2', label: 'Angsuran' }
-                    ]}
-                    value={statusFilter}
-                    onChange={setStatusFilter}
-                    placeholder="Filter Status"
-                  />
-                </div>
-                <div className="w-48">
-                  <Select
-                    options={[
-                      { value: '', label: 'Semua Pembayaran' },
-                      { value: 'T', label: 'Tunai' },
-                      { value: 'K', label: 'Kredit' }
-                    ]}
-                    value={paymentTypeFilter}
-                    onChange={setPaymentTypeFilter}
-                    placeholder="Filter Pembayaran"
-                  />
-                </div>
-              </div>
+            <div className="flex justify-end">
+              <Button
+                onClick={() => {
+                  setEditingTransaction(null);
+                  setShowDialog(true);
+                }}
+                className="bg-blue-900 hover:bg-blue-800"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Tambah Transaksi
+              </Button>
             </div>
           </CardHeader>
           <CardContent className="pt-6">
-            {isLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-4 text-slate-500">Loading...</p>
-              </div>
-            ) : transactionsData.sales_transactions.length === 0 ? (
-              <div className="text-center py-12 text-slate-500">
-                <ShoppingCart className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-                <p className="text-lg font-medium">Belum ada transaksi</p>
-                <p className="text-sm mt-2">Klik "Tambah Transaksi" untuk membuat transaksi pertama</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[150px]">No Faktur</TableHead>
-                      <TableHead>Sales Associate</TableHead>
-                      <TableHead>Tanggal</TableHead>
-                      <TableHead>Pembayaran</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="w-[150px] text-center">Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {transactionsData.sales_transactions.map((transaction) => (
-                      <TableRow key={transaction.id}>
-                        <TableCell>
-                          <span
-                            className="uppercase cursor-pointer hover:underline hover:text-blue-600 font-medium"
-                            onClick={() => handleView(transaction)}
-                          >
-                            {transaction.no_invoice || 'N/A'}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-medium text-sm">
-                            {transaction.sales_associate?.name || 'N/A'}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm text-slate-600">
-                            {formatDate(transaction.transaction_date)}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <PaymentTypeBadge paymentType={transaction.payment_type} />
-                        </TableCell>
-                        <TableCell className="text-right font-medium">
-                          {formatRupiah(transaction.total_amount)}
-                        </TableCell>
-                        <TableCell>
-                          <StatusBadge status={transaction.status} />
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex justify-center gap-1">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => handleView(transaction)}
-                              title="View Details"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => handleInvoice(transaction)}
-                              className="text-green-600 hover:text-green-700"
-                              title="Lihat Faktur"
-                            >
-                              <FileText className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => handleEdit(transaction)}
-                              className="text-blue-600 hover:text-blue-700"
-                              title="Edit Transaction"
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => handleDelete(transaction)}
-                              className="text-red-500 hover:text-red-700"
-                              title="Delete Transaction"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-
-            {!isLoading && transactionsData.sales_transactions.length > 0 && transactionsData.pagination && (
-              <Pagination
-                currentPage={currentPage}
-                totalPages={transactionsData.pagination.total_pages}
-                total={transactionsData.pagination.total}
-                limit={transactionsData.pagination.limit}
-                onPageChange={handlePageChange}
+            <div
+              style={{ height: 600, width: '100%' }}
+            >
+              <AgGridReact
+                ref={gridRef}
+                theme={themeBalham}
+                rowData={transactionsData?.sales_transactions || []}
+                columnDefs={columnDefs}
+                defaultColDef={defaultColDef}
+                animateRows={true}
+                suppressRowClickSelection={true}
+                pagination={true}
+                paginationPageSize={50}
+                paginationPageSizeSelector={[25, 50, 100, 200]}
+                domLayout="normal"
+                tooltipShowDelay={200}
+                tooltipHideDelay={2000}
+                overlayLoadingTemplate={'<span class="ag-overlay-loading-center">Loading...</span>'}
+                overlayNoRowsTemplate={'<span>Belum ada transaksi. Klik "Tambah Transaksi" untuk membuat transaksi pertama.</span>'}
+                loading={isLoading}
+                getRowId={(params) => params.data.id}
+                onSortChanged={onSortChanged}
+                onFilterChanged={onFilterChanged}
               />
-            )}
+            </div>
           </CardContent>
         </Card>
       </div>
