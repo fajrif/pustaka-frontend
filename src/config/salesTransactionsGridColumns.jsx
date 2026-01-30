@@ -120,8 +120,10 @@ export const createSalesTransactionsColumnDefs = ({ onView, onInvoice, onEdit, o
         width: 80,
         cellClass: 'justify-center',
         cellRenderer: (params) => {
-            const itemCount = params.data?.items?.length || 0;
-            return <span className="font-medium">{itemCount}</span>;
+            const totalQuantity = params.data?.items?.reduce((sum, item) => {
+                return sum + (item.quantity || 0);
+            }, 0) || 0;
+            return <span className="font-medium">{totalQuantity}</span>;
         },
         sortable: false,
         filter: false,
