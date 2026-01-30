@@ -36,6 +36,20 @@ const getPeriodeLabel = (periode, year) => {
     return `${year}/${nextYear}`;
 };
 
+// Helper function to get status label
+const getStatusLabel = (status) => {
+    switch (status) {
+        case 0:
+            return 'Pesanan';
+        case 1:
+            return 'Lunas';
+        case 2:
+            return 'Angsuran';
+        default:
+            return '-';
+    }
+};
+
 const InvoiceDialog = ({ isOpen, onClose, transactionId }) => {
     const invoiceRef = useRef(null);
     const [isExporting, setIsExporting] = useState(false);
@@ -68,6 +82,27 @@ const InvoiceDialog = ({ isOpen, onClose, transactionId }) => {
     };
 
     const { totalQuantity, totalAmount } = calculateSummary();
+
+    // Group items by jenis_buku
+    const groupItemsByJenisBuku = () => {
+        if (!transaction?.items) return [];
+
+        const grouped = {};
+        transaction.items.forEach(item => {
+            const jenisBukuId = item.book?.jenis_buku?.id || 'unknown';
+            if (!grouped[jenisBukuId]) {
+                grouped[jenisBukuId] = {
+                    jenisBuku: item.book?.jenis_buku,
+                    items: []
+                };
+            }
+            grouped[jenisBukuId].items.push(item);
+        });
+
+        return Object.values(grouped);
+    };
+
+    const groupedItems = groupItemsByJenisBuku();
 
     // Get first item's jenis_buku info (as per requirement, all items have same jenis_buku)
     const firstItem = transaction?.items?.[0];
@@ -114,11 +149,11 @@ const InvoiceDialog = ({ isOpen, onClose, transactionId }) => {
                 ) : (
                     <div ref={invoiceRef} className="bg-white p-6" style={{ fontFamily: 'Arial, sans-serif' }}>
                         {/* Invoice Header with Biller Logo */}
-                        <div className="border-b-2 border-slate-800 pb-4 mb-6">
-                            <div className="flex justify-between items-start">
+                        <div className="mb-6">
+                            <div className="flex justify-between items-start gap-4">
                                 <div>
                                     {/* Biller Logo and Info */}
-                                    <div className="flex items-start gap-4">
+                                    <div className="flex items-start gap-4 mb-4">
                                         {transaction.biller?.logo_url && (
                                             <img
                                                 src={getAssetUrl(transaction.biller.logo_url)}
@@ -130,29 +165,29 @@ const InvoiceDialog = ({ isOpen, onClose, transactionId }) => {
                                         <div>
                                             <h2 className="text-lg font-bold text-slate-800">{transaction.biller?.name || '-'}</h2>
                                             {transaction.biller?.address && (
-                                                <p className="text-sm text-slate-600">{transaction.biller.address}</p>
+                                                <p className="text-xs text-slate-600">{transaction.biller.address}</p>
                                             )}
                                             {transaction.biller?.phone && (
-                                                <p className="text-sm text-slate-600">Telp: {transaction.biller.phone}</p>
+                                                <p className="text-xs text-slate-600">Telp: {transaction.biller.phone}</p>
                                             )}
                                             {transaction.biller?.email && (
-                                                <p className="text-sm text-slate-600">{transaction.biller.email}</p>
+                                                <p className="text-xs text-slate-600">{transaction.biller.email}</p>
                                             )}
                                         </div>
                                     </div>
                                     {/* Sales Associate Info */}
-                                    <div className="mb-6">
-                                        <h3 className="text-sm  text-slate-500 uppercase mb-2">Kepada Yth.</h3>
-                                        <div className="bg-slate-50 p-4 rounded-lg">
-                                            <p className=" text-slate-800">{transaction.sales_associate?.name || '-'}</p>
+                                    <div className="mb-0">
+                                        <div className="bg-slate-50 p-4">
+                                            <h3 className="text-sm  text-slate-500 uppercase mb-2">Kepada Yth.</h3>
+                                            <p className="text-sm text-slate-900 font-semibold">{transaction.sales_associate?.name || '-'}</p>
                                             {transaction.sales_associate?.address && (
-                                                <p className="text-sm text-slate-600 mt-1">{transaction.sales_associate.address}</p>
+                                                <p className="text-xs text-slate-600 mt-1">{transaction.sales_associate.address}</p>
                                             )}
                                             {transaction.sales_associate?.phone && (
-                                                <p className="text-sm text-slate-600">Telp: {transaction.sales_associate.phone}</p>
+                                                <p className="text-xs text-slate-600">Telp: {transaction.sales_associate.phone}</p>
                                             )}
                                             {transaction.sales_associate?.email && (
-                                                <p className="text-sm text-slate-600">{transaction.sales_associate.email}</p>
+                                                <p className="text-xs text-slate-600">{transaction.sales_associate.email}</p>
                                             )}
                                         </div>
                                     </div>
@@ -160,25 +195,29 @@ const InvoiceDialog = ({ isOpen, onClose, transactionId }) => {
 
 
                                 {/* Invoice Info */}
-                                <div className="">
-                                    <h1 className="text-2xl font-bold text-slate-800 mb-2">FAKTUR PENJUALAN</h1>
+                                <div className="border p-4">
+                                    <h2 className="text-lg font-bold text-slate-800 uppercase mb-2">Faktur Penjualan</h2>
                                     <table className="ml-auto text-sm">
                                         <tbody>
                                             <tr>
-                                                <td className="text-slate-600 pr-2">No.Faktur:</td>
-                                                <td className=" text-left uppercase">{transaction.no_invoice}</td>
+                                                <td className="text-slate-600">No.Faktur</td>
+                                                <td className="text-slate-600 px-2">:</td>
+                                                <td className="text-left uppercase">{transaction.no_invoice}</td>
                                             </tr>
                                             <tr>
-                                                <td className="text-slate-600 pr-2">Tanggal:</td>
-                                                <td className=" text-left">{formatDate(transaction.transaction_date)}</td>
+                                                <td className="text-slate-600">Tanggal</td>
+                                                <td className="text-slate-600 px-2">:</td>
+                                                <td className="text-left">{formatDate(transaction.transaction_date)}</td>
                                             </tr>
                                             <tr>
-                                                <td className="text-slate-600 pr-2">Jenis Buku:</td>
-                                                <td className=" text-left">{jenisBuku?.name || '-'}</td>
+                                                <td className="text-slate-600">Status</td>
+                                                <td className="text-slate-600 px-2">:</td>
+                                                <td className="text-left">{getStatusLabel(transaction.status)}</td>
                                             </tr>
                                             <tr>
-                                                <td className="text-slate-600 pr-2">Periode:</td>
-                                                <td className=" text-left">{getPeriodeLabel(bookPeriode, bookYear)}</td>
+                                                <td className="text-slate-600">Periode</td>
+                                                <td className="text-slate-600 px-2">:</td>
+                                                <td className="text-left">{getPeriodeLabel(bookPeriode, bookYear)}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -186,66 +225,107 @@ const InvoiceDialog = ({ isOpen, onClose, transactionId }) => {
                             </div>
                         </div>
 
-                        {/* Items Table */}
-                        <div className="mb-6">
-                            <h3 className="text-sm  text-slate-500 uppercase mb-3">Detail Pembelian</h3>
-                            <table className="w-full border-collapse">
-                                <thead>
-                                    <tr className="bg-slate-800 text-white">
-                                        <th className="border border-slate-300 px-3 py-2 text-center text-sm w-12">No</th>
-                                        <th className="border border-slate-300 px-3 py-2 text-left text-sm">Merk Buku</th>
-                                        <th className="border border-slate-300 px-3 py-2 text-left text-sm">Nama Buku</th>
-                                        <th className="border border-slate-300 px-3 py-2 text-center text-sm w-16">Qty</th>
-                                        <th className="border border-slate-300 px-3 py-2 text-right text-sm w-28">Harga</th>
-                                        <th className="border border-slate-300 px-3 py-2 text-right text-sm w-32">Subtotal</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {transaction.items?.map((item, index) => (
-                                        <tr key={item.id || index} className="hover:bg-slate-50">
-                                            <td className="border border-slate-300 px-3 py-2 text-center text-sm">{index + 1}</td>
-                                            <td className="border border-slate-300 px-3 py-2 text-sm">
-                                                {item.book?.merk_buku ? `[${item.book.merk_buku.code}] ${item.book.merk_buku.name}` : '-'}
-                                            </td>
-                                            <td className="border border-slate-300 px-3 py-2 text-sm font-medium">{item.book?.name || '-'}</td>
-                                            <td className="border border-slate-300 px-3 py-2 text-center text-sm">{item.quantity}</td>
-                                            <td className="border border-slate-300 px-3 py-2 text-right text-sm">{formatRupiah(item.book?.price || 0)}</td>
-                                            <td className="border border-slate-300 px-3 py-2 text-right text-sm font-medium">
-                                                {formatRupiah((item.book?.price || 0) * item.quantity)}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    {(!transaction.items || transaction.items.length === 0) && (
-                                        <tr>
-                                            <td colSpan={6} className="border border-slate-300 px-3 py-4 text-center text-slate-500">
-                                                Tidak ada item
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                        {/* Items Tables - Grouped by Jenis Buku */}
+                        <div className="mb-6 space-y-6">
+                            {groupedItems.length === 0 ? (
+                                <div className="text-center py-8 border rounded bg-slate-50">
+                                    <p className="text-slate-500 text-sm">Tidak ada item</p>
+                                </div>
+                            ) : (
+                                groupedItems.map((group, groupIndex) => {
+                                    let itemCounter = 0;
+                                    // Calculate group subtotal
+                                    const groupSubtotal = group.items.reduce((sum, item) => {
+                                        return sum + ((item.book?.price || 0) * item.quantity);
+                                    }, 0);
+
+                                    return (
+                                        <div key={groupIndex}>
+                                            {/* Jenis Buku Header */}
+                                            <h4 className="text-xs font-semibold mb-2">
+                                                {group.jenisBuku ? `[${group.jenisBuku.code}] ${group.jenisBuku.name}` : 'Tidak Diketahui'}
+                                            </h4>
+
+                                            <table className="w-full border-collapse">
+                                                <thead>
+                                                    <tr className="bg-slate-50">
+                                                        <th className="border border-slate-300 px-2 py-2 text-center text-xs">No</th>
+                                                        <th className="border border-slate-300 px-2 py-2 text-left text-xs">Bidang Studi</th>
+                                                        <th className="border border-slate-300 px-2 py-2 text-left text-xs">Jenjang</th>
+                                                        <th className="border border-slate-300 px-2 py-2 text-center text-xs">Kelas</th>
+                                                        <th className="border border-slate-300 px-2 py-2 text-left text-xs">Kurikulum</th>
+                                                        <th className="border border-slate-300 px-2 py-2 text-left text-xs">Merk</th>
+                                                        <th className="border border-slate-300 px-2 py-2 text-right text-xs">Harga</th>
+                                                        <th className="border border-slate-300 px-2 py-2 text-center text-xs">Qty</th>
+                                                        <th className="border border-slate-300 px-2 py-2 text-right text-xs">Subtotal</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {group.items.map((item, index) => {
+                                                        itemCounter++;
+                                                        return (
+                                                            <tr key={item.id || index} className="hover:bg-slate-50">
+                                                                <td className="border border-slate-300 px-2 py-2 text-center text-xs">{itemCounter}</td>
+                                                                <td className="border border-slate-300 px-2 py-2 text-xs">
+                                                                    {item.book?.bidang_studi ? item.book.bidang_studi.name : '-'}
+                                                                </td>
+                                                                <td className="border border-slate-300 px-2 py-2 text-xs">
+                                                                    {item.book?.jenjang_studi ? item.book.jenjang_studi.code : '-'}
+                                                                </td>
+                                                                <td className="border border-slate-300 px-2 py-2 text-center text-xs">
+                                                                    {item.book?.kelas || '-'}
+                                                                </td>
+                                                                <td className="border border-slate-300 px-2 py-2 text-xs uppercase">
+                                                                    {item.book?.curriculum ? item.book.curriculum.name : '-'}
+                                                                </td>
+                                                                <td className="border border-slate-300 px-2 py-2 text-xs">
+                                                                    {item.book?.merk_buku ? item.book.merk_buku.code : '-'}
+                                                                </td>
+                                                                <td className="border border-slate-300 px-2 py-2 text-right text-xs">{formatRupiah(item.book?.price || 0)}</td>
+                                                                <td className="border border-slate-300 px-2 py-2 text-center text-xs">{item.quantity}</td>
+                                                                <td className="border border-slate-300 px-2 py-2 text-right text-xs font-medium">
+                                                                    {formatRupiah((item.book?.price || 0) * item.quantity)}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                    {/* Group Subtotal Row */}
+                                                    <tr className="bg-slate-50 font-semibold">
+                                                        <td colSpan={8} className="border border-slate-300 px-2 py-2 text-right text-xs">
+                                                            Subtotal
+                                                        </td>
+                                                        <td className="border border-slate-300 px-2 py-2 text-right text-xs font-bold">
+                                                            {formatRupiah(groupSubtotal)}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    );
+                                })
+                            )}
                         </div>
 
                         {/* Summary Section */}
-                        <div className="border-t-2 border-slate-800 pt-4 mb-6">
+                        <div className="pt-4 mb-6">
                             <div className="flex justify-between items-start">
                                 {/* Spelled Out Amount */}
                                 <div className="flex-1 pr-8">
                                     <p className="text-sm text-slate-600 mb-1">Terbilang:</p>
-                                    <p className=" text-slate-800 italic border border-slate-300 p-2 rounded bg-slate-50">
+                                    <p className="text-sm text-slate-800 italic p-2 bg-slate-50">
                                         # {spellOutNumber(totalAmount)} Rupiah #
                                     </p>
                                 </div>
 
                                 {/* Totals */}
-                                <div className="text-right space-y-2 min-w-[250px]">
+                                <div className="text-sm text-right space-y-2 min-w-[250px]">
                                     <div className="flex justify-between gap-4">
                                         <span className="text-slate-600">Total Quantity:</span>
                                         <span className="">{totalQuantity} item</span>
                                     </div>
                                     <div className="flex justify-between gap-4 border-t pt-2">
-                                        <span className="font-bold text-lg">Total Harga:</span>
-                                        <span className="font-bold text-lg text-blue-600">{formatRupiah(totalAmount)}</span>
+                                        <span className="font-bold">Total Harga:</span>
+                                        <span className="font-bold">{formatRupiah(totalAmount)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -254,19 +334,19 @@ const InvoiceDialog = ({ isOpen, onClose, transactionId }) => {
                         {/* Signature Placeholders */}
                         <div className="mt-8 pt-4">
                             <div className="grid grid-cols-3 gap-4 text-center">
-                                <div className="border border-slate-300 p-4 rounded">
+                                <div className="border border-slate-300 p-4">
                                     <p className="text-sm text-slate-600 mb-16">Dibuat Oleh</p>
                                     <div className="border-t border-slate-400 pt-2">
                                         <p className="text-sm text-slate-500">(............................)</p>
                                     </div>
                                 </div>
-                                <div className="border border-slate-300 p-4 rounded">
+                                <div className="border border-slate-300 p-4">
                                     <p className="text-sm text-slate-600 mb-16">Diterima Oleh</p>
                                     <div className="border-t border-slate-400 pt-2">
                                         <p className="text-sm text-slate-500">(............................)</p>
                                     </div>
                                 </div>
-                                <div className="border border-slate-300 p-4 rounded">
+                                <div className="border border-slate-300 p-4">
                                     <p className="text-sm text-slate-600 mb-16">Disetujui Oleh</p>
                                     <div className="border-t border-slate-400 pt-2">
                                         <p className="text-sm text-slate-500">(............................)</p>
