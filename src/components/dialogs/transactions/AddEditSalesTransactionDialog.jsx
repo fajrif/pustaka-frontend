@@ -242,6 +242,10 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
   };
 
   const calculateSummary = () => {
+    const totalQuantity = selectedBooks.reduce((sum, item) => {
+      return sum + (item.quantity || 0);
+    }, 0);
+
     const booksSubtotal = selectedBooks.reduce((sum, item) => {
       return sum + (item.book.price * item.quantity);
     }, 0);
@@ -251,7 +255,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
 
     const totalAmount = booksSubtotal + shippingsTotal;
 
-    return { booksSubtotal, shippingsTotal, totalAmount };
+    return { totalQuantity, booksSubtotal, shippingsTotal, totalAmount };
   };
 
   const onHandleSubmit = async (data) => {
@@ -303,7 +307,7 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
     }
   };
 
-  const { booksSubtotal, shippingsTotal, totalAmount } = calculateSummary();
+  const { totalQuantity, booksSubtotal, shippingsTotal, totalAmount } = calculateSummary();
 
   // Calculate remaining balance
   const calculateRemainingBalance = () => {
@@ -730,6 +734,10 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
               <div className="space-y-3 bg-slate-50 p-4 rounded-lg border">
                 <h3 className="font-semibold text-slate-900">{isEditing ? 'Ringkasan Transaksi' : 'Ringkasan Awal'}</h3>
                 <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Total Items:</span>
+                    <span className="font-medium">{totalQuantity} item</span>
+                  </div>
                   <div className="flex justify-between">
                     <span className="text-slate-600">Subtotal Buku:</span>
                     <span className="font-medium">{formatRupiah(booksSubtotal)}</span>

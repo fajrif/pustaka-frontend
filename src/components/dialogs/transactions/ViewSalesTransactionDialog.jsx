@@ -51,7 +51,11 @@ const ViewSalesTransactionDialog = ({ isOpen, onClose, transactionId, initialDat
     const currentPayments = paymentsData?.payments || displayTransaction?.payments || [];
 
     const calculateSummary = () => {
-        if (!displayTransaction) return { booksSubtotal: 0, shippingsTotal: 0, totalAmount: 0 };
+        if (!displayTransaction) return { totalQuantity: 0, booksSubtotal: 0, shippingsTotal: 0, totalAmount: 0 };
+
+        const totalQuantity = displayTransaction.items?.reduce((sum, item) => {
+            return sum + (item.quantity || 0);
+        }, 0) || 0;
 
         const booksSubtotal = displayTransaction.items?.reduce((sum, item) => {
             return sum + ((item.book?.price || 0) * item.quantity);
@@ -60,10 +64,10 @@ const ViewSalesTransactionDialog = ({ isOpen, onClose, transactionId, initialDat
         const shippingsTotal = currentShippings.reduce((sum, s) => sum + s.total_amount, 0);
         const totalAmount = booksSubtotal + shippingsTotal;
 
-        return { booksSubtotal, shippingsTotal, totalAmount };
+        return { totalQuantity, booksSubtotal, shippingsTotal, totalAmount };
     };
 
-    const { booksSubtotal, shippingsTotal, totalAmount } = calculateSummary();
+    const { totalQuantity, booksSubtotal, shippingsTotal, totalAmount } = calculateSummary();
 
     const calculateRemainingBalance = () => {
         if (!displayTransaction) return 0;
@@ -329,6 +333,10 @@ const ViewSalesTransactionDialog = ({ isOpen, onClose, transactionId, initialDat
                             <div className="space-y-3 bg-slate-50 p-4 rounded-lg border">
                                 <h3 className="font-semibold text-slate-900">Ringkasan Transaksi</h3>
                                 <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-600">Total Items:</span>
+                                        <span className="font-medium">{totalQuantity} item</span>
+                                    </div>
                                     <div className="flex justify-between">
                                         <span className="text-slate-600">Subtotal Buku:</span>
                                         <span className="font-medium">{formatRupiah(booksSubtotal)}</span>
