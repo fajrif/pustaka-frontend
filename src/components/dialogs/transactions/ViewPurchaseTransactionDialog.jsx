@@ -92,17 +92,21 @@ const ViewPurchaseTransactionDialog = ({ isOpen, onClose, transactionId, initial
 
   const calculateSummary = () => {
     if (!displayTransaction || !displayTransaction.items) {
-      return { totalAmount: 0, totalItems: 0 };
+      return { totalAmount: 0, totalJenis: 0, totalQuantity: 0 };
     }
 
     const totalAmount = displayTransaction.items.reduce((sum, item) => {
       return sum + (item.price * item.quantity);
     }, 0);
 
-    return { totalAmount, totalItems: displayTransaction.items.length };
+    const totalQuantity = displayTransaction.items.reduce((sum, item) => {
+      return sum + item.quantity;
+    }, 0);
+
+    return { totalAmount, totalJenis: displayTransaction.items.length, totalQuantity };
   };
 
-  const { totalAmount, totalItems } = calculateSummary();
+  const { totalAmount, totalJenis, totalQuantity } = calculateSummary();
 
   const StatusBadge = ({ status }) => {
     const config = statusConfig[status] || statusConfig[0];
@@ -225,25 +229,57 @@ const ViewPurchaseTransactionDialog = ({ isOpen, onClose, transactionId, initial
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Nama Buku</TableHead>
-                          <TableHead>Penerbit</TableHead>
-                          <TableHead>Jenis</TableHead>
-                          <TableHead className="text-center">Qty</TableHead>
-                          <TableHead className="text-right">Harga Beli</TableHead>
-                          <TableHead className="text-right">Subtotal</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold">Jenis</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold">Bidang Studi</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold">Jenjang</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold">Kelas</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold">Kurikulum</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold">Merk</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold text-right">Harga Jual</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold">Harga Beli</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold text-center">Qty</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold text-right">Subtotal</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {displayTransaction.items.map((item) => (
                           <TableRow key={item.book_id || item.id}>
-                            <TableCell>
-                              <span className="font-medium text-sm">{item.book?.name || '-'}</span>
+                            <TableCell className="p-2 text-xs">
+                              <div title={item.book?.jenis_buku ? item.book.jenis_buku.name : ''}>
+                                {item.book?.jenis_buku ? item.book.jenis_buku.code : '-'}
+                              </div>
                             </TableCell>
-                            <TableCell>{item.book?.publisher?.name || '-'}</TableCell>
-                            <TableCell>{item.book?.jenis_buku ? `[${item.book.jenis_buku.code}] ${item.book.jenis_buku.name}` : '-'}</TableCell>
-                            <TableCell className="text-center">{item.quantity}</TableCell>
-                            <TableCell className="text-right">{formatRupiah(item.price)}</TableCell>
-                            <TableCell className="text-right font-medium">
+                            <TableCell className="p-2 text-xs">
+                              <div className="font-medium truncate max-w-[150px]" title={item.book?.bidang_studi ? item.book.bidang_studi.name : ''}>
+                                {item.book?.bidang_studi ? item.book.bidang_studi.name : '-'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="p-2 text-xs">
+                              <div title={item.book?.jenjang_studi ? item.book.jenjang_studi.name : ''}>
+                                {item.book?.jenjang_studi ? item.book.jenjang_studi.code : '-'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="p-2 text-xs">
+                              {item.book?.kelas || '-'}
+                            </TableCell>
+                            <TableCell className="p-2 text-xs">
+                              <div className="uppercase truncate max-w-[100px]" title={item.book?.curriculum ? item.book.curriculum.name : ''}>
+                                {item.book?.curriculum ? item.book.curriculum.name : '-'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="p-2 text-xs">
+                              <div title={item.book?.merk_buku ? item.book.merk_buku.name : ''}>
+                                {item.book?.merk_buku ? item.book.merk_buku.code : '-'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="p-2 text-xs text-right">{formatRupiah(item.book?.price || 0)}</TableCell>
+                            <TableCell className="p-2 text-xs">
+                              <span className="text-purple-600 font-medium">{formatRupiah(item.price)}</span>
+                            </TableCell>
+                            <TableCell className="p-2 text-xs text-center">
+                              <span>{item.quantity}</span>
+                            </TableCell>
+                            <TableCell className="p-2 text-xs text-right font-medium">
                               {formatRupiah(item.price * item.quantity)}
                             </TableCell>
                           </TableRow>
@@ -260,8 +296,16 @@ const ViewPurchaseTransactionDialog = ({ isOpen, onClose, transactionId, initial
               <h3 className="font-semibold text-slate-900">Ringkasan Transaksi</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-slate-600">Jumlah Item:</span>
-                  <span className="font-medium">{totalItems} buku</span>
+                  <span className="text-slate-600">Tanggal Buat:</span>
+                  <span className="font-medium">{displayTransaction.created_at ? formatDate(displayTransaction.created_at, 'dd MMM yyyy HH:mm') : '-'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Jumlah jenis:</span>
+                  <span className="font-medium">{totalJenis} jenis</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Total Buku:</span>
+                  <span className="font-medium">{totalQuantity} buku</span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-purple-200">
                   <span className="font-bold text-slate-900">TOTAL PEMBELIAN:</span>

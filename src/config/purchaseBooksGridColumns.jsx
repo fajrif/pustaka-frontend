@@ -12,14 +12,13 @@ import { formatRupiah } from '@/utils/formatters';
 /**
  * Create column definitions for Purchase Books Selection AG Grid
  * @param {Object} options - Options for column actions
- * @param {Object} options.selectedBooks - Object containing selected books with quantities and prices
+ * @param {Object} options.selectedBooks - Object containing selected books
  * @param {Function} options.onCheckboxChange - Callback when checkbox is toggled
- * @param {Function} options.onQuantityChange - Callback when quantity is changed
  * @param {Function} options.onSelectAll - Callback when select all is toggled
  * @param {Array} options.allBooks - All available books for select all functionality
  * @returns {Array} Column definitions array
  */
-export const createPurchaseBooksColumnDefs = ({ selectedBooks, onCheckboxChange, onQuantityChange, onSelectAll, allBooks }) => [
+export const createPurchaseBooksColumnDefs = ({ selectedBooks, onCheckboxChange, onSelectAll, allBooks }) => [
     // Checkbox column - pinned left
     {
         headerName: '',
@@ -31,12 +30,10 @@ export const createPurchaseBooksColumnDefs = ({ selectedBooks, onCheckboxChange,
         resizable: false,
         checkboxSelection: false, // We'll use custom renderer
         headerComponent: (params) => {
-            // Only count books with stock > 0 for select all
-            const inStockBooks = allBooks?.filter(book => book.stock > 0) || [];
-            const totalInStockBooks = inStockBooks.length;
+            const totalBooks = allBooks?.length || 0;
             const selectedCount = Object.keys(selectedBooks).length;
-            const allSelected = totalInStockBooks > 0 && selectedCount === totalInStockBooks;
-            const someSelected = selectedCount > 0 && selectedCount < totalInStockBooks;
+            const allSelected = totalBooks > 0 && selectedCount === totalBooks;
+            const someSelected = selectedCount > 0 && selectedCount < totalBooks;
 
             return (
                 <div className="flex items-center justify-center h-full">
@@ -48,38 +45,33 @@ export const createPurchaseBooksColumnDefs = ({ selectedBooks, onCheckboxChange,
                                 input.indeterminate = someSelected;
                             }
                         }}
-                        onChange={() => onSelectAll(!allSelected)}
-                        className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500 cursor-pointer"
-                        title={allSelected ? "Unselect All" : "Select All (In Stock Only)"}
+                        onChange={(e) => onSelectAll(e.target.checked)}
+                        className="w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500"
+                        title="Pilih Semua"
                     />
                 </div>
             );
         },
         cellRenderer: (params) => {
             const isSelected = !!selectedBooks[params.data.id];
-            const stock = params.data.stock || 0;
-            const isOutOfStock = stock === 0;
 
             return (
-                <div className="flex items-center justify-center">
+                <div className="flex items-center justify-center h-full">
                     <input
                         type="checkbox"
                         checked={isSelected}
-                        disabled={isOutOfStock}
                         onChange={() => onCheckboxChange(params.data)}
-                        className={`w-4 h-4 text-purple-600 rounded focus:ring-purple-500 ${isOutOfStock ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'
-                            }`}
-                        title={isOutOfStock ? 'Out of stock' : ''}
+                        className="w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500"
                     />
                 </div>
             );
         },
     },
-    // Jenis Buku
+    // Jenis Buku column
     {
         headerName: 'Jenis Buku',
         field: 'jenis_buku.code',
-        width: 110,
+        width: 90,
         sortable: true,
         filter: 'agTextColumnFilter',
         floatingFilter: true,
@@ -105,7 +97,7 @@ export const createPurchaseBooksColumnDefs = ({ selectedBooks, onCheckboxChange,
             return data.code;
         },
     },
-    // Bidang Studi
+    // Bidang Studi column
     {
         headerName: 'Bidang Studi',
         field: 'bidang_studi',
@@ -129,7 +121,7 @@ export const createPurchaseBooksColumnDefs = ({ selectedBooks, onCheckboxChange,
         },
         cellStyle: { fontWeight: '500' },
     },
-    // Jenjang Studi
+    // Jenjang Studi column
     {
         headerName: 'Jenjang',
         field: 'jenjang_studi.code',
@@ -159,7 +151,46 @@ export const createPurchaseBooksColumnDefs = ({ selectedBooks, onCheckboxChange,
             return data.code;
         },
     },
-    // Kurikulum
+    // Kelas column
+    {
+        headerName: 'Kelas',
+        field: 'kelas',
+        width: 80,
+        sortable: true,
+        filter: 'agNumberColumnFilter',
+        cellRenderer: (params) => {
+            const kelas = params.value;
+            if (!kelas) return <span className="text-slate-400">-</span>;
+            return <span className="font-medium">{kelas}</span>;
+        },
+    },
+    // Periode/Semester column
+    {
+        headerName: 'Semester',
+        field: 'periode',
+        width: 140,
+        sortable: true,
+        filter: true,
+        valueFormatter: (params) => {
+            if (params.value == 1) return 'Semester Ganjil';
+            if (params.value == 2) return 'Semester Genap';
+            return '-';
+        },
+    },
+    // Year column
+    {
+        headerName: 'Tahun',
+        field: 'year',
+        width: 80,
+        sortable: true,
+        filter: 'agNumberColumnFilter',
+        cellRenderer: (params) => {
+            const year = params.value;
+            if (!year) return <span className="text-slate-400">-</span>;
+            return <span>{year}</span>;
+        },
+    },
+    // Curriculum column
     {
         headerName: 'Kurikulum',
         field: 'curriculum.name',
@@ -180,48 +211,9 @@ export const createPurchaseBooksColumnDefs = ({ selectedBooks, onCheckboxChange,
         },
         valueFormatter: (params) => (params.value ? params.value.toUpperCase() : '-'),
     },
-    // Kelas
+    // Merk Buku column
     {
-        headerName: 'Kelas',
-        field: 'kelas',
-        width: 80,
-        sortable: true,
-        filter: true,
-        cellStyle: { textAlign: 'center' },
-        valueGetter: (params) => {
-            const kelas = params.data?.kelas;
-            if (!kelas) return '-';
-            if (typeof kelas === 'object') {
-                return kelas.name || kelas.code || '-';
-            }
-            return kelas;
-        },
-    },
-    // Semester
-    {
-        headerName: 'Semester',
-        field: 'periode',
-        width: 140,
-        sortable: true,
-        filter: true,
-        valueFormatter: (params) => {
-            if (params.value == 1) return 'Semester Ganjil';
-            if (params.value == 2) return 'Semester Genap';
-            return '-';
-        },
-    },
-    // Tahun
-    {
-        headerName: 'Tahun',
-        field: 'year',
-        width: 80,
-        sortable: true,
-        filter: true,
-        cellStyle: { textAlign: 'center' },
-    },
-    // Merk Buku
-    {
-        headerName: 'Merk Buku',
+        headerName: 'Merk',
         field: 'merk_buku',
         width: 110,
         sortable: true,
@@ -254,7 +246,7 @@ export const createPurchaseBooksColumnDefs = ({ selectedBooks, onCheckboxChange,
             return data?.name || '';
         },
     },
-    // Penerbit
+    // Penerbit column
     {
         headerName: 'Penerbit',
         field: 'publisher',
@@ -270,51 +262,40 @@ export const createPurchaseBooksColumnDefs = ({ selectedBooks, onCheckboxChange,
             return data?.name || '';
         },
     },
-    // Halaman
+    // No Pages column
     {
         headerName: 'Halaman',
         field: 'no_pages',
         width: 90,
         sortable: true,
         filter: 'agNumberColumnFilter',
-        cellStyle: { textAlign: 'center' },
-        valueFormatter: (params) => (params.value ? params.value : '-'),
+        cellRenderer: (params) => {
+            const noPages = params.value;
+            if (!noPages) return <span className="text-slate-400">-</span>;
+            return <span>{noPages}</span>;
+        },
     },
-    // Stock - pinned right (first in pinned group)
+    // Stock column - pinned right
     {
-        headerName: 'Stock',
+        headerName: 'Stok',
         field: 'stock',
         width: 80,
         pinned: 'right',
         sortable: true,
         filter: 'agNumberColumnFilter',
-        cellStyle: (params) => {
+        cellRenderer: (params) => {
             const stock = params.value || 0;
-            let color = '';
-            let fontWeight = '500';
-
-            if (stock <= 5) {
-                // Alert: Red text
-                color = '#dc2626'; // red-600
-                fontWeight = '700';
-            } else if (stock <= 10) {
-                // Warning: Orange text
-                color = '#ea580c'; // orange-600
-                fontWeight = '700';
-            }
-
-            return {
-                textAlign: 'center',
-                color,
-                fontWeight,
-                display: 'flex',
-                alignItems: 'center',
-            };
+            const stockColor = stock <= 0 ? 'text-red-600' : stock <= 10 ? 'text-orange-600' : 'text-green-600';
+            return (
+                <div className={`flex items-center justify-center font-semibold ${stockColor}`}>
+                    {stock}
+                </div>
+            );
         },
     },
-    // Harga - pinned right
+    // Harga Jual - pinned right
     {
-        headerName: 'Harga',
+        headerName: 'Harga Jual',
         field: 'price',
         width: 130,
         pinned: 'right',
@@ -322,75 +303,6 @@ export const createPurchaseBooksColumnDefs = ({ selectedBooks, onCheckboxChange,
         filter: 'agNumberColumnFilter',
         cellRenderer: CurrencyCellRenderer,
         cellStyle: { fontWeight: '500' },
-    },
-    // Quantity column - pinned right (with stock validation)
-    {
-        headerName: 'Qty',
-        field: 'quantity',
-        width: 100,
-        pinned: 'right',
-        sortable: false,
-        filter: false,
-        resizable: false,
-        cellRenderer: (params) => {
-            const isSelected = !!selectedBooks[params.data.id];
-            if (!isSelected) return null;
-
-            const quantity = selectedBooks[params.data.id].quantity;
-            const maxStock = params.data.stock || 999999; // Use current stock as max
-
-            const handleInput = (e) => {
-                const value = parseInt(e.target.value);
-                // Check if user is trying to enter a value greater than max
-                if (!isNaN(value) && value > maxStock) {
-                    // Call onQuantityChange with the invalid value to trigger toast
-                    onQuantityChange(params.data.id, value.toString(), maxStock);
-                    // Prevent the invalid value from being set
-                    e.preventDefault();
-                    // Reset to max stock
-                    e.target.value = maxStock;
-                }
-            };
-
-            return (
-                <div className="flex items-center justify-center">
-                    <input
-                        type="number"
-                        min="1"
-                        max={maxStock}
-                        value={quantity}
-                        onInput={handleInput}
-                        onChange={(e) => onQuantityChange(params.data.id, e.target.value, maxStock)}
-                        className="w-20 px-2 py-1 text-center border border-slate-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                        onClick={(e) => e.stopPropagation()}
-                        title={`Max: ${maxStock}`}
-                    />
-                </div>
-            );
-        },
-    },
-    // Subtotal column - pinned right
-    {
-        headerName: 'Subtotal',
-        field: 'subtotal',
-        width: 150,
-        pinned: 'right',
-        sortable: false,
-        filter: false,
-        resizable: false,
-        cellRenderer: (params) => {
-            const isSelected = !!selectedBooks[params.data.id];
-            if (!isSelected) return null;
-
-            const { quantity, price } = selectedBooks[params.data.id];
-            const subtotal = quantity * price;
-
-            return (
-                <div className="flex items-center justify-end font-semibold text-purple-600">
-                    {formatRupiah(subtotal)}
-                </div>
-            );
-        },
     },
 ];
 

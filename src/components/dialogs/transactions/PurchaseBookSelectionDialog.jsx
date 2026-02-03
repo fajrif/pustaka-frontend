@@ -5,8 +5,6 @@ import { ModuleRegistry, AllCommunityModule, themeBalham } from 'ag-grid-communi
 import { api } from '@/api/axios';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Package } from 'lucide-react';
-import { formatRupiah } from '@/utils/formatters';
 import { useToast } from '@/components/ui/use-toast';
 import { createPurchaseBooksColumnDefs, defaultColDef } from '@/config/purchaseBooksGridColumns';
 import '@/styles/ag-grid-overrides.css';
@@ -59,9 +57,7 @@ const PurchaseBookSelectionDialog = ({ isOpen, onClose, currentSelectedBooks = [
       const initialSelection = {};
       currentSelectedBooks.forEach(book => {
         initialSelection[book.book_id] = {
-          book: book.book,
-          quantity: book.quantity,
-          price: book.price
+          book: book.book
         };
       });
       setSelectedBooks(initialSelection);
@@ -111,56 +107,22 @@ const PurchaseBookSelectionDialog = ({ isOpen, onClose, currentSelectedBooks = [
       if (newSelection[book.id]) {
         delete newSelection[book.id];
       } else {
-        // Use book's existing price as default purchase price
         newSelection[book.id] = {
-          book: book,
-          quantity: 1,
-          price: book.price || 0
+          book: book
         };
       }
       return newSelection;
     });
   }, []);
 
-  const handleQuantityChange = useCallback((bookId, quantity, maxStock) => {
-    const book = selectedBooks[bookId];
-    if (!book) return;
-
-    const numQuantity = parseInt(quantity) || 1;
-    if (numQuantity < 1) return;
-
-    // Validate against stock
-    if (numQuantity > maxStock) {
-      toast({
-        title: "Peringatan",
-        description: `Jumlah tidak boleh melebihi stok yang tersedia (${maxStock})`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSelectedBooks(prev => ({
-      ...prev,
-      [bookId]: {
-        ...prev[bookId],
-        quantity: numQuantity
-      }
-    }));
-  }, [selectedBooks, toast]);
-
   const handleSelectAll = useCallback((shouldSelectAll) => {
     if (shouldSelectAll) {
-      // Select all books with stock > 0 with default quantity of 1
+      // Select all books
       const newSelection = {};
       booksData.books.forEach(book => {
-        // Only select books that are in stock
-        if (book.stock > 0) {
-          newSelection[book.id] = {
-            book: book,
-            quantity: 1,
-            price: book.price || 0
-          };
-        }
+        newSelection[book.id] = {
+          book: book
+        };
       });
       setSelectedBooks(newSelection);
     } else {
@@ -169,42 +131,18 @@ const PurchaseBookSelectionDialog = ({ isOpen, onClose, currentSelectedBooks = [
     }
   }, [booksData.books]);
 
-
-  const calculateSummary = () => {
-    let totalBooks = 0;
-    let totalAmount = 0;
-
-    Object.values(selectedBooks).forEach(item => {
-      totalBooks += 1;
-      totalAmount += (item.price * item.quantity);
-    });
-
-    return { totalBooks, totalAmount };
-  };
-
   const handleConfirm = () => {
     const selectedBooksArray = Object.entries(selectedBooks).map(([bookId, item]) => ({
       book_id: bookId,
       book: item.book,
-      quantity: item.quantity,
-      price: item.price
+      quantity: 1, // Default quantity
+      price: item.book?.purchasing_price || item.book?.price || 0 // Default to book's purchasing_price, then price, then 0
     }));
 
     if (selectedBooksArray.length === 0) {
       toast({
         title: "Error",
         description: "Pilih minimal 1 buku",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate all items have price
-    const hasZeroPrice = selectedBooksArray.some(item => item.price <= 0);
-    if (hasZeroPrice) {
-      toast({
-        title: "Error",
-        description: "Semua buku harus memiliki harga beli",
         variant: "destructive",
       });
       return;
@@ -260,14 +198,13 @@ const PurchaseBookSelectionDialog = ({ isOpen, onClose, currentSelectedBooks = [
     () => createPurchaseBooksColumnDefs({
       selectedBooks,
       onCheckboxChange: handleCheckboxChange,
-      onQuantityChange: handleQuantityChange,
       onSelectAll: handleSelectAll,
       allBooks: booksData?.books || [],
     }),
-    [selectedBooks, handleCheckboxChange, handleQuantityChange, handleSelectAll, booksData?.books]
+    [selectedBooks, handleCheckboxChange, handleSelectAll, booksData?.books]
   );
 
-  const { totalBooks, totalAmount } = calculateSummary();
+  const totalBooks = Object.keys(selectedBooks).length;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -300,38 +237,30 @@ const PurchaseBookSelectionDialog = ({ isOpen, onClose, currentSelectedBooks = [
                 getRowId={(params) => params.data.id}
                 onSortChanged={onSortChanged}
                 onFilterChanged={onFilterChanged}
-                getRowStyle={(params) => {
-                  const stock = params.data.stock || 0;
-                  if (stock === 0) {
-                    return { backgroundColor: '#f1f5f9' }; // slate-100
-                  }
-                  return null;
-                }}
               />
             </div>
           </div>
         </div>
 
-        {/* Footer Summary */}
+        {/* Footer */}
         <div className="pt-4 border-t">
-          <div className="flex justify-between items-center mb-4">
+          <DialogFooter className="flex justify-between items-center">
             <div className="text-sm text-slate-600">
               <span className="font-semibold">Dipilih: {totalBooks} buku</span>
-              <span className="ml-4">Total Pembelian: <span className="font-semibold text-purple-600">{formatRupiah(totalAmount)}</span></span>
             </div>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Batal
-            </Button>
-            <Button
-              type="button"
-              onClick={handleConfirm}
-              disabled={totalBooks === 0}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              Tambah ke Transaksi ({totalBooks})
-            </Button>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Batal
+              </Button>
+              <Button
+                type="button"
+                onClick={handleConfirm}
+                disabled={totalBooks === 0}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                Tambah ke Transaksi ({totalBooks})
+              </Button>
+            </div>
           </DialogFooter>
         </div>
       </DialogContent>

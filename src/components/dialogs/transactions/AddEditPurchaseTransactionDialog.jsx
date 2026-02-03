@@ -172,6 +172,16 @@ const AddEditPurchaseTransactionDialog = ({ isOpen, onClose, transactionId, onFi
   const handlePriceChange = (bookId, newPrice) => {
     setSelectedBooks(prev => prev.map(item => {
       if (item.book_id === bookId) {
+        const maxPrice = item.book?.price || 999999999;
+        // Validate against selling price
+        if (newPrice > maxPrice) {
+          toast({
+            title: "Peringatan",
+            description: `Harga beli tidak boleh melebihi harga jual (${formatRupiah(maxPrice)})`,
+            variant: "destructive",
+          });
+          return { ...item, price: maxPrice };
+        }
         return { ...item, price: newPrice };
       }
       return item;
@@ -183,13 +193,17 @@ const AddEditPurchaseTransactionDialog = ({ isOpen, onClose, transactionId, onFi
   };
 
   const calculateSummary = () => {
+    const totalQuantity = selectedBooks.reduce((sum, item) => {
+      return sum + (item.quantity || 0);
+    }, 0);
     const totalAmount = selectedBooks.reduce((sum, item) => {
       return sum + (item.price * item.quantity);
     }, 0);
-    return { totalAmount, totalItems: selectedBooks.length };
+    return { totalAmount, totalJenis: selectedBooks.length, totalQuantity };
   };
 
   const onHandleSubmit = async (data) => {
+
     // Validate books
     if (selectedBooks.length === 0) {
       toast({
@@ -200,12 +214,14 @@ const AddEditPurchaseTransactionDialog = ({ isOpen, onClose, transactionId, onFi
       return;
     }
 
-    // Validate all items have price
-    const hasZeroPrice = selectedBooks.some(item => item.price <= 0);
-    if (hasZeroPrice) {
+    // Validate all items have price > 0
+    const booksWithoutPrice = selectedBooks.filter(item => !item.price || item.price <= 0);
+    if (booksWithoutPrice.length > 0) {
+      const bookNames = booksWithoutPrice.map(item => item.book?.name || 'Unknown').slice(0, 3).join(', ');
+      const moreCount = booksWithoutPrice.length > 3 ? ` dan ${booksWithoutPrice.length - 3} lainnya` : '';
       toast({
         title: "Error",
-        description: "Semua buku harus memiliki harga beli",
+        description: `Harga beli belum diisi untuk: ${bookNames}${moreCount}`,
         variant: "destructive",
       });
       return;
@@ -213,13 +229,16 @@ const AddEditPurchaseTransactionDialog = ({ isOpen, onClose, transactionId, onFi
 
     // Prepare payload
     const payload = {
-      ...data,
+      supplier_id: data.supplier_id,
+      purchase_date: data.purchase_date,
+      note: data.note && data.note.trim() !== '' ? data.note : undefined, // Send undefined instead of empty string
       items: selectedBooks.map(book => ({
         book_id: book.book_id,
-        quantity: book.quantity,
-        price: book.price
+        quantity: Number(book.quantity),
+        price: Number(book.price)
       }))
     };
+
 
     if (isEditing) {
       updateMutation.mutate({ id: transactionId, data: payload });
@@ -228,14 +247,14 @@ const AddEditPurchaseTransactionDialog = ({ isOpen, onClose, transactionId, onFi
     }
   };
 
-  const { totalAmount, totalItems } = calculateSummary();
+  const { totalAmount, totalJenis, totalQuantity } = calculateSummary();
 
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClosing}>
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-purple-700">
               {isEditing ? 'Edit Transaksi Pembelian' : 'Tambah Transaksi Pembelian Baru'}
             </DialogTitle>
           </DialogHeader>
@@ -337,80 +356,88 @@ const AddEditPurchaseTransactionDialog = ({ isOpen, onClose, transactionId, onFi
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Nama Buku</TableHead>
-                          <TableHead>Penerbit</TableHead>
-                          <TableHead>Jenis</TableHead>
-                          <TableHead className="text-center">Qty</TableHead>
-                          <TableHead className="text-right">Harga Beli</TableHead>
-                          <TableHead className="text-right">Subtotal</TableHead>
-                          {!isTransactionLocked && <TableHead className="w-[50px]"></TableHead>}
+                          <TableHead className="p-2 h-auto text-xs font-semibold">Jenis</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold">Bidang Studi</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold">Jenjang</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold">Kelas</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold">Kurikulum</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold">Merk</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold text-right">Harga Jual</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold">Harga Beli</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold text-center">Qty</TableHead>
+                          <TableHead className="p-2 h-auto text-xs font-semibold text-right">Subtotal</TableHead>
+                          {!isTransactionLocked && <TableHead className="p-2 h-auto text-xs w-[50px]"></TableHead>}
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {selectedBooks.map((item) => (
                           <TableRow key={item.book_id}>
-                            <TableCell>
-                              <span className="font-medium text-sm">{item.book.name}</span>
+                            <TableCell className="p-2 text-xs">
+                              <div title={item.book.jenis_buku ? item.book.jenis_buku.name : ''}>
+                                {item.book.jenis_buku ? item.book.jenis_buku.code : '-'}
+                              </div>
                             </TableCell>
-                            <TableCell>{item.book.publisher?.name || '-'}</TableCell>
-                            <TableCell>{item.book.jenis_buku ? `[${item.book.jenis_buku.code}] ${item.book.jenis_buku.name}` : '-'}</TableCell>
-                            <TableCell className="text-center">
-                              {isTransactionLocked ? (
-                                <span>{item.quantity}</span>
-                              ) : (
-                                <div className="flex items-center justify-center gap-1">
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleQuantityChange(item.book_id, item.quantity - 1)}
-                                    className="h-7 w-7 p-0"
-                                  >
-                                    -
-                                  </Button>
-                                  <Input
-                                    type="number"
-                                    value={item.quantity}
-                                    onChange={(e) => handleQuantityChange(item.book_id, parseInt(e.target.value) || 1)}
-                                    className="w-16 h-7 text-center p-1"
-                                    min="1"
-                                  />
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleQuantityChange(item.book_id, item.quantity + 1)}
-                                    className="h-7 w-7 p-0"
-                                  >
-                                    +
-                                  </Button>
-                                </div>
-                              )}
+                            <TableCell className="p-2 text-xs">
+                              <div className="font-medium truncate max-w-[150px]" title={item.book.bidang_studi ? item.book.bidang_studi.name : ''}>
+                                {item.book.bidang_studi ? item.book.bidang_studi.name : '-'}
+                              </div>
                             </TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="p-2 text-xs">
+                              <div title={item.book.jenjang_studi ? item.book.jenjang_studi.name : ''}>
+                                {item.book.jenjang_studi ? item.book.jenjang_studi.code : '-'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="p-2 text-xs">
+                              {item.book.kelas}
+                            </TableCell>
+                            <TableCell className="p-2 text-xs">
+                              <div className="uppercase truncate max-w-[100px]" title={item.book.curriculum ? item.book.curriculum.name : ''}>
+                                {item.book.curriculum ? item.book.curriculum.name : '-'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="p-2 text-xs">
+                              <div title={item.book.merk_buku ? item.book.merk_buku.name : ''}>
+                                {item.book.merk_buku ? item.book.merk_buku.code : '-'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="p-2 text-xs text-right">{formatRupiah(item.book.price)}</TableCell>
+                            <TableCell className="p-2 text-xs">
                               {isTransactionLocked ? (
-                                <span>{formatRupiah(item.price)}</span>
+                                <span className="text-purple-600 font-medium">{formatRupiah(item.price)}</span>
                               ) : (
                                 <CurrencyInput
                                   value={item.price}
                                   onChange={(value) => handlePriceChange(item.book_id, value)}
-                                  className="w-32 text-right"
+                                  className="w-28 text-xs h-6"
                                 />
                               )}
                             </TableCell>
-                            <TableCell className="text-right font-medium">
+                            <TableCell className="p-2 text-xs text-center">
+                              {isTransactionLocked ? (
+                                <span>{item.quantity}</span>
+                              ) : (
+                                <Input
+                                  type="number"
+                                  value={item.quantity}
+                                  onChange={(e) => handleQuantityChange(item.book_id, parseInt(e.target.value) || 1)}
+                                  className="w-16 h-6 text-center p-1 text-xs"
+                                  min="1"
+                                />
+                              )}
+                            </TableCell>
+                            <TableCell className="p-2 text-xs text-right font-medium">
                               {formatRupiah(item.price * item.quantity)}
                             </TableCell>
                             {!isTransactionLocked && (
-                              <TableCell>
+                              <TableCell className="p-2 text-xs">
                                 <Button
                                   type="button"
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => handleRemoveBook(item.book_id)}
-                                  className="text-red-500 hover:text-red-700 h-7 w-7"
+                                  className="text-red-500 hover:text-red-700 h-6 w-6"
                                 >
-                                  <Trash2 className="w-4 h-4" />
+                                  <Trash2 className="w-3 h-3" />
                                 </Button>
                               </TableCell>
                             )}
@@ -427,8 +454,12 @@ const AddEditPurchaseTransactionDialog = ({ isOpen, onClose, transactionId, onFi
                 <h3 className="font-semibold text-slate-900">Ringkasan Transaksi</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-slate-600">Jumlah Item:</span>
-                    <span className="font-medium">{totalItems} buku</span>
+                    <span className="text-slate-600">Jumlah jenis:</span>
+                    <span className="font-medium">{totalJenis} jenis</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Total Buku:</span>
+                    <span className="font-medium">{totalQuantity} buku</span>
                   </div>
                   <div className="flex justify-between pt-2 border-t border-purple-200">
                     <span className="font-bold text-slate-900">TOTAL PEMBELIAN:</span>

@@ -10,7 +10,7 @@ export const purchaseTransactionSchema = z.object({
   supplier_id: z.string().uuid("Invalid Penerbit ID").min(1, "Penerbit harus dipilih"),
   purchase_date: z.string().min(1, "Tanggal pembelian harus diisi"),
   note: z.string().optional(),
-  items: z.array(purchaseTransactionItemSchema).min(1, "Minimal 1 item buku"),
+  items: z.array(purchaseTransactionItemSchema).min(1, "Minimal 1 item buku").optional(),
 });
 
 export type PurchaseTransactionFormData = z.infer<typeof purchaseTransactionSchema>;

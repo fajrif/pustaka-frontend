@@ -323,8 +323,8 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
       <Dialog open={isOpen} onOpenChange={onClosing}>
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {isEditing ? 'Edit Transaksi' : 'Tambah Transaksi Baru'}
+            <DialogTitle className="text-blue-700">
+              {isEditing ? 'Edit Transaksi Penjualan' : 'Tambah Transaksi Penjualan Baru'}
             </DialogTitle>
           </DialogHeader>
 
@@ -515,34 +515,14 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
                               {!canEditItems ? (
                                 <span>{item.quantity}</span>
                               ) : (
-                                <div className="flex items-center justify-center gap-1">
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleQuantityChange(item.book_id, item.quantity - 1)}
-                                    className="h-6 w-6 p-0"
-                                  >
-                                    -
-                                  </Button>
-                                  <Input
-                                    type="number"
-                                    value={item.quantity}
-                                    onChange={(e) => handleQuantityChange(item.book_id, parseInt(e.target.value) || 1)}
-                                    className="w-12 h-6 text-center p-1 text-xs"
-                                    min="1"
-                                    max={item.book.stock}
-                                  />
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleQuantityChange(item.book_id, item.quantity + 1)}
-                                    className="h-6 w-6 p-0"
-                                  >
-                                    +
-                                  </Button>
-                                </div>
+                                <Input
+                                  type="number"
+                                  value={item.quantity}
+                                  onChange={(e) => handleQuantityChange(item.book_id, parseInt(e.target.value) || 1)}
+                                  className="w-16 h-6 text-center p-1 text-xs"
+                                  min="1"
+                                  max={item.book.stock}
+                                />
                               )}
                             </TableCell>
                             <TableCell className="p-2 text-xs text-right font-medium">
