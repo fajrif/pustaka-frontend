@@ -56,13 +56,16 @@ const SalesTransactions = () => {
   const [sortModel, setSortModel] = useState({ sort_by: '', sort_order: '' });
   const [columnFilters, setColumnFilters] = useState({});
 
+  // Pagination State
+  const [paginationModel, setPaginationModel] = useState({ page: 1, pageSize: 50 });
 
-  const { data: transactionsData = { sales_transactions: [] }, isLoading } = useQuery({
-    queryKey: ['salesTransactions', sortModel, columnFilters],
+
+  const { data: transactionsData = { sales_transactions: [], total: 0 }, isLoading } = useQuery({
+    queryKey: ['salesTransactions', paginationModel, sortModel, columnFilters],
     queryFn: async () => {
       const params = {
-        page: 1,
-        limit: 1000, // Fetch all data, let AG Grid handle pagination
+        page: paginationModel.page,
+        limit: paginationModel.pageSize,
         ...columnFilters,
       };
 
@@ -201,6 +204,8 @@ const SalesTransactions = () => {
       }
     });
 
+    // Reset to page 1 when filters change
+    setPaginationModel(prev => ({ ...prev, page: 1 }));
     setColumnFilters(apiFilters);
   }, []);
 
@@ -274,8 +279,18 @@ const SalesTransactions = () => {
                 animateRows={true}
                 suppressRowClickSelection={true}
                 pagination={true}
-                paginationPageSize={50}
+                paginationPageSize={paginationModel.pageSize}
                 paginationPageSizeSelector={[25, 50, 100, 200]}
+                suppressPaginationPanel={false}
+                rowModelType="clientSide"
+                onPaginationChanged={(params) => {
+                  const currentPage = params.api.paginationGetCurrentPage() + 1;
+                  const pageSize = params.api.paginationGetPageSize();
+                  if (currentPage !== paginationModel.page || pageSize !== paginationModel.pageSize) {
+                    setPaginationModel({ page: currentPage, pageSize });
+                  }
+                }}
+                rowCount={transactionsData?.total || 0}
                 domLayout="normal"
                 tooltipShowDelay={200}
                 tooltipHideDelay={2000}

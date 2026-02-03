@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { MoreVertical, Eye, Pencil, Trash2, CheckCircle, XCircle } from 'lucide-react';
 
-const PurchaseTransactionActionMenuCellRenderer = ({ data, onView, onEdit, onDelete, onComplete, onCancel }) => {
+const PurchaseTransactionActionMenuCellRenderer = ({ data, onView, onEdit, onDelete }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
     const buttonRef = useRef(null);
@@ -58,22 +58,6 @@ const PurchaseTransactionActionMenuCellRenderer = ({ data, onView, onEdit, onDel
         }
     };
 
-    const handleComplete = (e) => {
-        e.stopPropagation();
-        setIsOpen(false);
-        if (confirm('Tandai transaksi ini sebagai selesai? Stok buku akan ditambahkan.')) {
-            onComplete(data);
-        }
-    };
-
-    const handleCancel = (e) => {
-        e.stopPropagation();
-        setIsOpen(false);
-        if (confirm('Yakin ingin membatalkan transaksi ini?')) {
-            onCancel(data);
-        }
-    };
-
     const handleDelete = (e) => {
         e.stopPropagation();
         setIsOpen(false);
@@ -114,28 +98,12 @@ const PurchaseTransactionActionMenuCellRenderer = ({ data, onView, onEdit, onDel
                         {isPending && (
                             <>
                                 <button
-                                    onClick={handleComplete}
-                                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-600 hover:bg-green-50"
-                                    type="button"
-                                >
-                                    <CheckCircle className="w-4 h-4" />
-                                    Tandai Selesai
-                                </button>
-                                <button
                                     onClick={handleEdit}
                                     className="w-full flex items-center gap-2 px-3 py-2 text-sm text-blue-600 hover:bg-blue-50"
                                     type="button"
                                 >
                                     <Pencil className="w-4 h-4" />
                                     Edit
-                                </button>
-                                <button
-                                    onClick={handleCancel}
-                                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-orange-600 hover:bg-orange-50"
-                                    type="button"
-                                >
-                                    <XCircle className="w-4 h-4" />
-                                    Batalkan
                                 </button>
                             </>
                         )}

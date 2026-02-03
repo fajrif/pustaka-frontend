@@ -163,8 +163,6 @@ export const createPurchaseTransactionsColumnDefs = ({ onView, onEdit, onDelete,
                 onView={onView}
                 onEdit={onEdit}
                 onDelete={onDelete}
-                onComplete={onComplete}
-                onCancel={onCancel}
             />
         ),
     },

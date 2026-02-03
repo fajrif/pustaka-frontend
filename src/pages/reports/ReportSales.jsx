@@ -60,8 +60,8 @@ const ReportSales = () => {
   const preparePaymentTypeChart = () => {
     if (!reportData?.summary) return [];
     return [
-      { name: 'Tunai', value: reportData.summary.cash_total || 0 },
-      { name: 'Kredit', value: reportData.summary.credit_total || 0 },
+      { name: 'Tunai', value: reportData.summary.cash_amount || 0 },
+      { name: 'Kredit', value: reportData.summary.credit_amount || 0 },
     ].filter(item => item.value > 0);
   };
 
@@ -82,7 +82,7 @@ const ReportSales = () => {
   };
 
   const handleExportExcel = async () => {
-    if (!reportData?.transactions?.length) return;
+    if (!reportData?.data?.length) return;
     setIsExportingExcel(true);
     try {
       const columns = [
@@ -93,7 +93,7 @@ const ReportSales = () => {
         { key: 'total_amount', header: 'Total', width: 18, accessor: (item) => formatRupiah(item.total_amount) },
         { key: 'status', header: 'Status', width: 12, accessor: (item) => statusConfig[item.status]?.label || '-' },
       ];
-      await exportToExcel(reportData.transactions, columns, generateReportFilename('Penjualan', 'xlsx'), 'Penjualan');
+      await exportToExcel(reportData.data, columns, generateReportFilename('Penjualan', 'xlsx'), 'Penjualan');
       toast({ title: "Success", description: "Excel berhasil diexport", variant: "success" });
     } catch (error) {
       toast({ title: "Error", description: "Gagal export Excel", variant: "destructive" });
@@ -161,7 +161,7 @@ const ReportSales = () => {
                     onExportExcel={handleExportExcel}
                     isExportingPDF={isExportingPDF}
                     isExportingExcel={isExportingExcel}
-                    disabled={!reportData?.transactions?.length}
+                    disabled={!reportData?.data?.length}
                   />
                 </div>
               </div>
@@ -217,11 +217,11 @@ const ReportSales = () => {
                 </div>
                 <div className="bg-emerald-50 rounded-lg p-4">
                   <p className="text-sm text-emerald-600 font-medium">Tunai</p>
-                  <p className="text-2xl font-semibold text-emerald-900">{formatRupiah(reportData.summary.cash_total || 0)}</p>
+                  <p className="text-2xl font-semibold text-emerald-900">{formatRupiah(reportData.summary.cash_amount || 0)}</p>
                 </div>
                 <div className="bg-orange-50 rounded-lg p-4">
                   <p className="text-sm text-orange-600 font-medium">Kredit</p>
-                  <p className="text-2xl font-semibold text-orange-900">{formatRupiah(reportData.summary.credit_total || 0)}</p>
+                  <p className="text-2xl font-semibold text-orange-900">{formatRupiah(reportData.summary.credit_amount || 0)}</p>
                 </div>
               </div>
             </div>
@@ -259,7 +259,7 @@ const ReportSales = () => {
             <div ref={tableRef}>
               {isLoading ? (
                 <div className="text-center py-8">Loading...</div>
-              ) : !reportData?.transactions?.length ? (
+              ) : !reportData?.data?.length ? (
                 <div className="text-center py-8 text-slate-500">
                   Tidak ada data untuk ditampilkan
                 </div>
@@ -278,7 +278,7 @@ const ReportSales = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {reportData.transactions.map((trx, index) => (
+                      {reportData.data.map((trx, index) => (
                         <TableRow key={trx.id}>
                           <TableCell>{index + 1}</TableCell>
                           <TableCell className="font-medium">{trx.no_invoice}</TableCell>

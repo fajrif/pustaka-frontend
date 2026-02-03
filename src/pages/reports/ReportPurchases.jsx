@@ -49,21 +49,21 @@ const ReportPurchases = () => {
     setFilters({});
   };
 
-  // Prepare chart data - group by publisher
+  // Prepare chart data - group by supplier
   const prepareChartData = () => {
-    if (!reportData?.purchases) return [];
+    if (!reportData?.data) return [];
 
-    const groupedByPublisher = {};
-    reportData.purchases.forEach(purchase => {
-      const publisherName = purchase.publisher?.name || 'Lainnya';
-      if (!groupedByPublisher[publisherName]) {
-        groupedByPublisher[publisherName] = { name: publisherName, total: 0, count: 0 };
+    const groupedBySupplier = {};
+    reportData.data.forEach(purchase => {
+      const supplierName = purchase.supplier?.name || 'Lainnya';
+      if (!groupedBySupplier[supplierName]) {
+        groupedBySupplier[supplierName] = { name: supplierName, total: 0, count: 0 };
       }
-      groupedByPublisher[publisherName].total += purchase.total_amount || 0;
-      groupedByPublisher[publisherName].count += 1;
+      groupedBySupplier[supplierName].total += purchase.total_amount || 0;
+      groupedBySupplier[supplierName].count += 1;
     });
 
-    return Object.values(groupedByPublisher)
+    return Object.values(groupedBySupplier)
       .sort((a, b) => b.total - a.total)
       .slice(0, 10);
   };
@@ -85,18 +85,18 @@ const ReportPurchases = () => {
   };
 
   const handleExportExcel = async () => {
-    if (!reportData?.purchases?.length) return;
+    if (!reportData?.data?.length) return;
     setIsExportingExcel(true);
     try {
       const columns = [
         { key: 'no_po', header: 'No PO', width: 20 },
-        { key: 'publisher', header: 'Penerbit', width: 25, accessor: (item) => item.publisher?.name || '-' },
+        { key: 'supplier', header: 'Supplier', width: 25, accessor: (item) => item.supplier?.name || '-' },
         { key: 'purchase_date', header: 'Tanggal', width: 15, accessor: (item) => formatDate(item.purchase_date) },
         { key: 'total_items', header: 'Total Item', width: 12 },
         { key: 'total_amount', header: 'Total Nilai', width: 18, accessor: (item) => formatRupiah(item.total_amount) },
         { key: 'status', header: 'Status', width: 12, accessor: (item) => statusConfig[item.status]?.label || '-' },
       ];
-      await exportToExcel(reportData.purchases, columns, generateReportFilename('Pembelian', 'xlsx'), 'Pembelian');
+      await exportToExcel(reportData.data, columns, generateReportFilename('Pembelian', 'xlsx'), 'Pembelian');
       toast({ title: "Success", description: "Excel berhasil diexport", variant: "success" });
     } catch (error) {
       toast({ title: "Error", description: "Gagal export Excel", variant: "destructive" });
@@ -164,7 +164,7 @@ const ReportPurchases = () => {
                     onExportExcel={handleExportExcel}
                     isExportingPDF={isExportingPDF}
                     isExportingExcel={isExportingExcel}
-                    disabled={!reportData?.purchases?.length}
+                    disabled={!reportData?.data?.length}
                   />
                 </div>
               </div>
@@ -176,7 +176,7 @@ const ReportPurchases = () => {
                   <div className="flex items-center gap-2 flex-wrap">
                     {filters.supplier_id && (
                       <Badge variant="secondary" className="gap-1">
-                        Penerbit
+                        Supplier
                         <X className="w-3 h-3 cursor-pointer" onClick={() => setFilters(prev => ({ ...prev, supplier_id: '' }))} />
                       </Badge>
                     )}
@@ -206,7 +206,7 @@ const ReportPurchases = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-blue-50 rounded-lg p-4">
                   <p className="text-sm text-blue-600 font-medium">Total Transaksi</p>
-                  <p className="text-2xl font-semibold text-blue-900">{reportData.summary.total_purchases || 0}</p>
+                  <p className="text-2xl font-semibold text-blue-900">{reportData.summary.total_transactions || 0}</p>
                 </div>
                 <div className="bg-purple-50 rounded-lg p-4">
                   <p className="text-sm text-purple-600 font-medium">Total Nilai</p>
@@ -214,11 +214,19 @@ const ReportPurchases = () => {
                 </div>
                 <div className="bg-green-50 rounded-lg p-4">
                   <p className="text-sm text-green-600 font-medium">Selesai</p>
-                  <p className="text-2xl font-semibold text-green-900">{reportData.summary.completed_count || 0}</p>
+                  <p className="text-2xl font-semibold text-green-900">
+                    {reportData.summary.completed_count !== undefined
+                      ? reportData.summary.completed_count
+                      : (reportData.data || []).filter(p => p.status === 1).length}
+                  </p>
                 </div>
                 <div className="bg-yellow-50 rounded-lg p-4">
                   <p className="text-sm text-yellow-600 font-medium">Pending</p>
-                  <p className="text-2xl font-semibold text-yellow-900">{reportData.summary.pending_count || 0}</p>
+                  <p className="text-2xl font-semibold text-yellow-900">
+                    {reportData.summary.pending_count !== undefined
+                      ? reportData.summary.pending_count
+                      : (reportData.data || []).filter(p => p.status === 0).length}
+                  </p>
                 </div>
               </div>
             </div>
@@ -227,7 +235,7 @@ const ReportPurchases = () => {
           {/* Chart */}
           {chartData.length > 0 && (
             <div className="p-4 border-b border-slate-100">
-              <h4 className="text-sm font-semibold text-slate-700 mb-4">Pembelian per Penerbit</h4>
+              <h4 className="text-sm font-semibold text-slate-700 mb-4">Pembelian per Supplier</h4>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -246,7 +254,7 @@ const ReportPurchases = () => {
             <div ref={tableRef}>
               {isLoading ? (
                 <div className="text-center py-8">Loading...</div>
-              ) : !reportData?.purchases?.length ? (
+              ) : !reportData?.data?.length ? (
                 <div className="text-center py-8 text-slate-500">
                   Tidak ada data untuk ditampilkan
                 </div>
@@ -257,7 +265,7 @@ const ReportPurchases = () => {
                       <TableRow>
                         <TableHead className="w-[50px]">No</TableHead>
                         <TableHead>No PO</TableHead>
-                        <TableHead>Penerbit</TableHead>
+                        <TableHead>Supplier</TableHead>
                         <TableHead>Tanggal</TableHead>
                         <TableHead className="text-center">Total Item</TableHead>
                         <TableHead className="text-right">Total Nilai</TableHead>
@@ -265,11 +273,11 @@ const ReportPurchases = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {reportData.purchases.map((purchase, index) => (
+                      {reportData.data.map((purchase, index) => (
                         <TableRow key={purchase.id}>
                           <TableCell>{index + 1}</TableCell>
-                          <TableCell className="font-medium">{purchase.no_po}</TableCell>
-                          <TableCell>{purchase.publisher?.name || '-'}</TableCell>
+                          <TableCell className="font-medium">{purchase.no_invoice}</TableCell>
+                          <TableCell>{purchase.supplier?.name || '-'}</TableCell>
                           <TableCell>{formatDate(purchase.purchase_date)}</TableCell>
                           <TableCell className="text-center">{purchase.total_items || 0}</TableCell>
                           <TableCell className="text-right font-semibold">{formatRupiah(purchase.total_amount)}</TableCell>

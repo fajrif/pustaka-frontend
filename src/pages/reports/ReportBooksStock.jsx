@@ -44,10 +44,10 @@ const ReportBooksStock = () => {
 
   // Prepare chart data
   const prepareChartData = () => {
-    if (!reportData?.books) return [];
+    if (!reportData?.data) return [];
 
     const groupedByType = {};
-    reportData.books.forEach(book => {
+    reportData.data.forEach(book => {
       const typeName = book.jenis_buku?.name || 'Lainnya';
       if (!groupedByType[typeName]) {
         groupedByType[typeName] = { name: typeName, stock: 0, lowStock: 0 };
@@ -78,19 +78,21 @@ const ReportBooksStock = () => {
   };
 
   const handleExportExcel = async () => {
-    if (!reportData?.books?.length) return;
+    if (!reportData?.data?.length) return;
     setIsExportingExcel(true);
     try {
       const columns = [
-        { key: 'code', header: 'Kode', width: 15 },
-        { key: 'name', header: 'Nama Buku', width: 30 },
-        { key: 'jenis_buku', header: 'Jenis', width: 15, accessor: (item) => item.jenis_buku?.name || '-' },
-        { key: 'jenjang_studi', header: 'Jenjang', width: 15, accessor: (item) => item.jenjang_studi?.name || '-' },
+        { key: 'jenis_buku', header: 'Jenis', width: 20, accessor: (item) => item.jenis_buku?.code || '-' },
+        { key: 'bidang_studi', header: 'Bidang Studi', width: 25, accessor: (item) => item.bidang_studi?.name || '-' },
+        { key: 'jenjang_studi', header: 'Jenjang', width: 10, accessor: (item) => item.jenjang_studi?.code || '-' },
+        { key: 'publish_year', header: 'Tahun', width: 10 },
         { key: 'curriculum', header: 'Kurikulum', width: 15, accessor: (item) => item.curriculum?.name || '-' },
+        { key: 'merk_buku', header: 'Merk', width: 15, accessor: (item) => item.merk_buku?.code || '-' },
+        { key: 'publisher', header: 'Penerbit', width: 15, accessor: (item) => item.publisher?.code || '-' },
         { key: 'stock', header: 'Stok', width: 10 },
         { key: 'price', header: 'Harga', width: 15, accessor: (item) => formatRupiah(item.price) },
       ];
-      await exportToExcel(reportData.books, columns, generateReportFilename('StokBuku', 'xlsx'), 'Stok Buku');
+      await exportToExcel(reportData.data, columns, generateReportFilename('StokBuku', 'xlsx'), 'Stok Buku');
       toast({ title: "Success", description: "Excel berhasil diexport", variant: "success" });
     } catch (error) {
       toast({ title: "Error", description: "Gagal export Excel", variant: "destructive" });
@@ -155,7 +157,7 @@ const ReportBooksStock = () => {
                   onExportExcel={handleExportExcel}
                   isExportingPDF={isExportingPDF}
                   isExportingExcel={isExportingExcel}
-                  disabled={!reportData?.books?.length}
+                  disabled={!reportData?.data?.length}
                 />
               </div>
 
@@ -226,7 +228,9 @@ const ReportBooksStock = () => {
                 </div>
                 <div className="bg-purple-50 rounded-lg p-4">
                   <p className="text-sm text-purple-600 font-medium">Total Nilai</p>
-                  <p className="text-2xl font-semibold text-purple-900">{formatRupiah(reportData.summary.total_value || 0)}</p>
+                  <p className="text-2xl font-semibold text-purple-900">
+                    {formatRupiah(reportData.summary.total_value || (reportData.data || []).reduce((acc, book) => acc + ((book.price || 0) * (book.stock || 0)), 0))}
+                  </p>
                 </div>
               </div>
             </div>
@@ -254,49 +258,49 @@ const ReportBooksStock = () => {
             <div ref={tableRef}>
               {isLoading ? (
                 <div className="text-center py-8">Loading...</div>
-              ) : !reportData?.books?.length ? (
+              ) : !reportData?.data?.length ? (
                 <div className="text-center py-8 text-slate-500">
                   Tidak ada data untuk ditampilkan
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <Table>
+                  <Table className="text-sm">
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[50px]">No</TableHead>
-                        <TableHead className="w-[100px]">Kode</TableHead>
-                        <TableHead>Nama Buku</TableHead>
-                        <TableHead>Jenis</TableHead>
-                        <TableHead>Jenjang</TableHead>
-                        <TableHead>Kurikulum</TableHead>
-                        <TableHead className="text-center">Stok</TableHead>
-                        <TableHead className="text-right">Harga</TableHead>
-                        <TableHead className="text-center">Status</TableHead>
+                        <TableHead className="w-[40px] h-8 px-2">No</TableHead>
+                        <TableHead className="h-8 px-2">Jenis</TableHead>
+                        <TableHead className="h-8 px-2">Bidang Studi</TableHead>
+                        <TableHead className="h-8 px-2">Jenjang</TableHead>
+                        <TableHead className="h-8 px-2">Tahun</TableHead>
+                        <TableHead className="h-8 px-2">Kurikulum</TableHead>
+                        <TableHead className="h-8 px-2">Merk</TableHead>
+                        <TableHead className="h-8 px-2">Penerbit</TableHead>
+                        <TableHead className="text-center h-8 px-2">Stok</TableHead>
+                        <TableHead className="text-right h-8 px-2">Harga</TableHead>
+                        <TableHead className="text-center h-8 px-2">Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {reportData.books.map((book, index) => (
+                      {reportData.data.map((book, index) => (
                         <TableRow key={book.id}>
-                          <TableCell>{index + 1}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                              {book.jenis_buku?.code || '-'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="font-medium">{book.name}</TableCell>
-                          <TableCell>{book.jenis_buku?.name || '-'}</TableCell>
-                          <TableCell>{book.jenjang_studi?.name || '-'}</TableCell>
-                          <TableCell>{book.curriculum?.name || '-'}</TableCell>
-                          <TableCell className="text-center font-semibold">{book.stock || 0}</TableCell>
-                          <TableCell className="text-right">{formatRupiah(book.price)}</TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="py-1 px-2">{index + 1}</TableCell>
+                          <TableCell className="py-1 px-2">{book.jenis_buku?.code || '-'}</TableCell>
+                          <TableCell className="py-1 px-2 font-medium">{book.bidang_studi?.name || '-'}</TableCell>
+                          <TableCell className="py-1 px-2">{book.jenjang_studi?.code || '-'}</TableCell>
+                          <TableCell className="py-1 px-2">{book.publish_year || '-'}</TableCell>
+                          <TableCell className="py-1 px-2">{book.curriculum?.name || '-'}</TableCell>
+                          <TableCell className="py-1 px-2">{book.merk_buku?.code || '-'}</TableCell>
+                          <TableCell className="py-1 px-2">{book.publisher?.code || '-'}</TableCell>
+                          <TableCell className="text-center py-1 px-2 font-semibold text-slate-700">{book.stock || 0}</TableCell>
+                          <TableCell className="text-right py-1 px-2">{formatRupiah(book.price)}</TableCell>
+                          <TableCell className="text-center py-1 px-2">
                             {(book.stock || 0) < threshold ? (
-                              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 gap-1">
+                              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 gap-1 h-5 px-1.5 text-[10px]">
                                 <AlertTriangle className="w-3 h-3" />
                                 Rendah
                               </Badge>
                             ) : (
-                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 gap-1">
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 gap-1 h-5 px-1.5 text-[10px]">
                                 <CheckCircle className="w-3 h-3" />
                                 Aman
                               </Badge>
