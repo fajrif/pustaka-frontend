@@ -15,6 +15,8 @@ export const salesTransactionItemSchema = z.object({
   transaction_id: z.string().uuid("Invalid Transaction ID format").min(1, "Transaction ID harus diisi"),
   book_id: z.string().uuid("Invalid Book ID format").min(1, "Book ID harus diisi"),
   quantity: z.number().min(1, "Quantity harus diisi"),
+  promotion: z.number().min(0, "Promotion tidak boleh negatif").optional(),
+  discount: z.number().min(0, "Discount tidak boleh negatif").max(100, "Discount maksimal 100%").optional(),
 })
 
 export const paymentSchema = z.object({

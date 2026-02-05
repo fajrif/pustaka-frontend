@@ -11,6 +11,24 @@ import { formatRupiah, formatDate } from '@/utils/formatters';
 import { Package, Truck, CreditCard, FileText } from 'lucide-react';
 import InvoiceDialog from './InvoiceDialog';
 
+/**
+ * Calculate effective price after promotion and discount
+ */
+const calculateEffectivePrice = (price, promotion = 0, discount = 0) => {
+  let effectivePrice = price - (promotion || 0);
+  effectivePrice = effectivePrice - (effectivePrice * (discount || 0) / 100);
+  return Math.max(0, effectivePrice);
+};
+
+const calculateItemSubtotal = (item) => {
+  const effectivePrice = calculateEffectivePrice(
+    item.book?.price || 0,
+    item.promotion || 0,
+    item.discount || 0
+  );
+  return effectivePrice * item.quantity;
+};
+
 const ViewSalesTransactionDialog = ({ isOpen, onClose, transactionId, initialData }) => {
     const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
 
@@ -58,7 +76,7 @@ const ViewSalesTransactionDialog = ({ isOpen, onClose, transactionId, initialDat
         }, 0) || 0;
 
         const booksSubtotal = displayTransaction.items?.reduce((sum, item) => {
-            return sum + ((item.book?.price || 0) * item.quantity);
+            return sum + calculateItemSubtotal(item);
         }, 0) || 0;
 
         const shippingsTotal = currentShippings.reduce((sum, s) => sum + s.total_amount, 0);
@@ -199,13 +217,21 @@ const ViewSalesTransactionDialog = ({ isOpen, onClose, transactionId, initialDat
                                                         <TableHead className="p-2 h-auto text-xs font-semibold">Kurikulum</TableHead>
                                                         <TableHead className="p-2 h-auto text-xs font-semibold">Merk</TableHead>
                                                         <TableHead className="p-2 h-auto text-xs font-semibold text-right">Harga</TableHead>
+                                                        {displayTransaction.payment_type === 'T' && displayTransaction.items?.some(item => item.book.jenis_buku?.code === 'LKS') && (
+                                                            <>
+                                                                <TableHead className="p-2 h-auto text-xs font-semibold text-right">Promosi</TableHead>
+                                                                <TableHead className="p-2 h-auto text-xs font-semibold text-right">Diskon</TableHead>
+                                                            </>
+                                                        )}
                                                         <TableHead className="p-2 h-auto text-xs font-semibold text-center">Qty</TableHead>
                                                         <TableHead className="p-2 h-auto text-xs font-semibold text-right">Subtotal</TableHead>
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
-                                                    {displayTransaction.items.map((item, index) => {
-                                                        if (index === 0) console.log(item);
+                                                    {displayTransaction.items.map((item) => {
+                                                        const isLKS = item.book.jenis_buku?.code === 'LKS';
+                                                        const showDiscountFields = displayTransaction.payment_type === 'T' && displayTransaction.items?.some(i => i.book.jenis_buku?.code === 'LKS');
+
                                                         return (
                                                             <TableRow key={item.book_id}>
                                                                 <TableCell className="p-2 text-xs">
@@ -237,9 +263,22 @@ const ViewSalesTransactionDialog = ({ isOpen, onClose, transactionId, initialDat
                                                                     </div>
                                                                 </TableCell>
                                                                 <TableCell className="p-2 text-xs text-right">{formatRupiah(item.book?.price || 0)}</TableCell>
+
+                                                                {/* Add promotion and discount columns */}
+                                                                {showDiscountFields && (
+                                                                    <>
+                                                                        <TableCell className="p-2 text-xs text-right">
+                                                                            {isLKS ? formatRupiah(item.promotion || 0) : '-'}
+                                                                        </TableCell>
+                                                                        <TableCell className="p-2 text-xs text-right">
+                                                                            {isLKS ? `${item.discount || 0}%` : '-'}
+                                                                        </TableCell>
+                                                                    </>
+                                                                )}
+
                                                                 <TableCell className="p-2 text-xs text-center"><span>{item.quantity}</span></TableCell>
                                                                 <TableCell className="p-2 text-xs text-right font-medium">
-                                                                    {formatRupiah((item.book?.price || 0) * item.quantity)}
+                                                                    {formatRupiah(calculateItemSubtotal(item))}
                                                                 </TableCell>
                                                             </TableRow>
                                                         );

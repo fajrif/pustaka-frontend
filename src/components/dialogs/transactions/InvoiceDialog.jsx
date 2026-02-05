@@ -7,6 +7,24 @@ import { formatRupiah, formatDate } from '@/utils/formatters';
 import { getAssetUrl } from '@/helpers/AssetHelper';
 import { Download, Loader2 } from 'lucide-react';
 
+/**
+ * Calculate effective price after promotion and discount
+ */
+const calculateEffectivePrice = (price, promotion = 0, discount = 0) => {
+  let effectivePrice = price - (promotion || 0);
+  effectivePrice = effectivePrice - (effectivePrice * (discount || 0) / 100);
+  return Math.max(0, effectivePrice);
+};
+
+const calculateItemSubtotal = (item) => {
+  const effectivePrice = calculateEffectivePrice(
+    item.book?.price || 0,
+    item.promotion || 0,
+    item.discount || 0
+  );
+  return effectivePrice * item.quantity;
+};
+
 // Helper function to spell out numbers in Indonesian
 const spellOutNumber = (num) => {
     const ones = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
@@ -75,7 +93,7 @@ const InvoiceDialog = ({ isOpen, onClose, transactionId }) => {
         }, 0) || 0;
 
         const totalAmount = transaction.items?.reduce((sum, item) => {
-            return sum + ((item.book?.price || 0) * item.quantity);
+            return sum + calculateItemSubtotal(item);
         }, 0) || 0;
 
         return { totalQuantity, totalAmount };
@@ -236,7 +254,7 @@ const InvoiceDialog = ({ isOpen, onClose, transactionId }) => {
                                     let itemCounter = 0;
                                     // Calculate group subtotal
                                     const groupSubtotal = group.items.reduce((sum, item) => {
-                                        return sum + ((item.book?.price || 0) * item.quantity);
+                                        return sum + calculateItemSubtotal(item);
                                     }, 0);
 
                                     return (
@@ -256,6 +274,12 @@ const InvoiceDialog = ({ isOpen, onClose, transactionId }) => {
                                                         <th className="border border-slate-300 px-2 py-2 text-left text-xs">Kurikulum</th>
                                                         <th className="border border-slate-300 px-2 py-2 text-left text-xs">Merk</th>
                                                         <th className="border border-slate-300 px-2 py-2 text-right text-xs">Harga</th>
+                                                        {transaction.payment_type === 'T' && group.jenisBuku?.code === 'LKS' && (
+                                                            <>
+                                                                <th className="border border-slate-300 px-2 py-2 text-right text-xs">Promosi</th>
+                                                                <th className="border border-slate-300 px-2 py-2 text-right text-xs">Diskon</th>
+                                                            </>
+                                                        )}
                                                         <th className="border border-slate-300 px-2 py-2 text-center text-xs">Qty</th>
                                                         <th className="border border-slate-300 px-2 py-2 text-right text-xs">Subtotal</th>
                                                     </tr>
@@ -263,6 +287,8 @@ const InvoiceDialog = ({ isOpen, onClose, transactionId }) => {
                                                 <tbody>
                                                     {group.items.map((item, index) => {
                                                         itemCounter++;
+                                                        const showDiscountFields = transaction.payment_type === 'T' && group.jenisBuku?.code === 'LKS';
+
                                                         return (
                                                             <tr key={item.id || index} className="hover:bg-slate-50">
                                                                 <td className="border border-slate-300 px-2 py-2 text-center text-xs">{itemCounter}</td>
@@ -282,16 +308,32 @@ const InvoiceDialog = ({ isOpen, onClose, transactionId }) => {
                                                                     {item.book?.merk_buku ? item.book.merk_buku.code : '-'}
                                                                 </td>
                                                                 <td className="border border-slate-300 px-2 py-2 text-right text-xs">{formatRupiah(item.book?.price || 0)}</td>
+
+                                                                {/* Add promotion and discount columns */}
+                                                                {showDiscountFields && (
+                                                                    <>
+                                                                        <td className="border border-slate-300 px-2 py-2 text-right text-xs">
+                                                                            {formatRupiah(item.promotion || 0)}
+                                                                        </td>
+                                                                        <td className="border border-slate-300 px-2 py-2 text-right text-xs">
+                                                                            {(item.discount || 0)}%
+                                                                        </td>
+                                                                    </>
+                                                                )}
+
                                                                 <td className="border border-slate-300 px-2 py-2 text-center text-xs">{item.quantity}</td>
                                                                 <td className="border border-slate-300 px-2 py-2 text-right text-xs font-medium">
-                                                                    {formatRupiah((item.book?.price || 0) * item.quantity)}
+                                                                    {formatRupiah(calculateItemSubtotal(item))}
                                                                 </td>
                                                             </tr>
                                                         );
                                                     })}
                                                     {/* Group Subtotal Row */}
                                                     <tr className="bg-slate-50 font-semibold">
-                                                        <td colSpan={8} className="border border-slate-300 px-2 py-2 text-right text-xs">
+                                                        <td
+                                                            colSpan={transaction.payment_type === 'T' && group.jenisBuku?.code === 'LKS' ? 10 : 8}
+                                                            className="border border-slate-300 px-2 py-2 text-right text-xs"
+                                                        >
                                                             Subtotal
                                                         </td>
                                                         <td className="border border-slate-300 px-2 py-2 text-right text-xs font-bold">

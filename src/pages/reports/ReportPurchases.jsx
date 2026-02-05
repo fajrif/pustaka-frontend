@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { api } from '@/api/axios';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,9 +10,11 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import PurchasesFilterDialog from '@/components/dialogs/reports/PurchasesFilterDialog';
 import DateRangePicker from '@/components/reports/DateRangePicker';
 import ExportButtons from '@/components/reports/ExportButtons';
+import Pagination from '@/components/Pagination';
 import { formatRupiah, formatDate } from '@/utils/formatters';
 import { exportToPDF, exportToExcel, generateReportFilename } from '@/utils/exportUtils';
 import { useToast } from '@/components/ui/use-toast';
+import { PAGINATION } from '@/utils/constants';
 
 const statusConfig = {
   0: { label: 'Pending', className: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
@@ -27,26 +29,42 @@ const ReportPurchases = () => {
   const [filters, setFilters] = useState({});
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [isExportingExcel, setIsExportingExcel] = useState(false);
+  const [currentPage, setCurrentPage] = useState(PAGINATION.DEFAULT_PAGE);
+  const limit = 100;
 
   const getActiveFilterCount = () => {
     return Object.values(filters).filter(v => v !== '' && v !== null && v !== undefined).length;
   };
 
   const { data: reportData, isLoading } = useQuery({
-    queryKey: ['reportPurchases', filters],
+    queryKey: ['reportPurchases', filters, currentPage, limit],
     queryFn: async () => {
-      const response = await api.get('/reports/purchases', { params: filters });
+      const response = await api.get('/reports/purchases', {
+        params: {
+          ...filters,
+          page: currentPage,
+          limit: limit
+        }
+      });
       return response.data;
     },
+    placeholderData: keepPreviousData,
   });
 
   const handleApplyFilters = (newFilters) => {
     setFilters(newFilters);
+    setCurrentPage(PAGINATION.DEFAULT_PAGE);
     setShowFilterDialog(false);
   };
 
   const handleClearFilters = () => {
     setFilters({});
+    setCurrentPage(PAGINATION.DEFAULT_PAGE);
+  };
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Prepare chart data - group by supplier
@@ -88,6 +106,16 @@ const ReportPurchases = () => {
     if (!reportData?.data?.length) return;
     setIsExportingExcel(true);
     try {
+      // Fetch ALL data using all=true parameter
+      const response = await api.get('/reports/purchases', {
+        params: {
+          ...filters,
+          all: true
+        }
+      });
+
+      const allData = response.data.data;
+
       const columns = [
         { key: 'no_po', header: 'No PO', width: 20 },
         { key: 'supplier', header: 'Supplier', width: 25, accessor: (item) => item.supplier?.name || '-' },
@@ -96,7 +124,7 @@ const ReportPurchases = () => {
         { key: 'total_amount', header: 'Total Nilai', width: 18, accessor: (item) => formatRupiah(item.total_amount) },
         { key: 'status', header: 'Status', width: 12, accessor: (item) => statusConfig[item.status]?.label || '-' },
       ];
-      await exportToExcel(reportData.data, columns, generateReportFilename('Pembelian', 'xlsx'), 'Pembelian');
+      await exportToExcel(allData, columns, generateReportFilename('Pembelian', 'xlsx'), 'Pembelian');
       toast({ title: "Success", description: "Excel berhasil diexport", variant: "success" });
     } catch (error) {
       toast({ title: "Error", description: "Gagal export Excel", variant: "destructive" });
@@ -142,8 +170,14 @@ const ReportPurchases = () => {
                 <DateRangePicker
                   startDate={filters.start_date || ''}
                   endDate={filters.end_date || ''}
-                  onStartDateChange={(date) => setFilters(prev => ({ ...prev, start_date: date }))}
-                  onEndDateChange={(date) => setFilters(prev => ({ ...prev, end_date: date }))}
+                  onStartDateChange={(date) => {
+                    setFilters(prev => ({ ...prev, start_date: date }));
+                    setCurrentPage(PAGINATION.DEFAULT_PAGE);
+                  }}
+                  onEndDateChange={(date) => {
+                    setFilters(prev => ({ ...prev, end_date: date }));
+                    setCurrentPage(PAGINATION.DEFAULT_PAGE);
+                  }}
                 />
                 <div className="flex items-center gap-2">
                   <Button
@@ -275,7 +309,7 @@ const ReportPurchases = () => {
                     <TableBody>
                       {reportData.data.map((purchase, index) => (
                         <TableRow key={purchase.id}>
-                          <TableCell>{index + 1}</TableCell>
+                          <TableCell>{((currentPage - 1) * limit) + index + 1}</TableCell>
                           <TableCell className="font-medium">{purchase.no_invoice}</TableCell>
                           <TableCell>{purchase.supplier?.name || '-'}</TableCell>
                           <TableCell>{formatDate(purchase.purchase_date)}</TableCell>
@@ -293,6 +327,17 @@ const ReportPurchases = () => {
                 </div>
               )}
             </div>
+
+            {/* Pagination Component */}
+            {!isLoading && reportData?.data?.length > 0 && reportData?.pagination && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={reportData.pagination.total_pages}
+                total={reportData.pagination.total}
+                limit={reportData.pagination.limit}
+                onPageChange={handlePageChange}
+              />
+            )}
           </CardContent>
         </Card>
       </div>

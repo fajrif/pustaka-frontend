@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { api } from '@/api/axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,9 +9,11 @@ import { Package, Filter, X, AlertTriangle, CheckCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import BooksStockFilterDialog from '@/components/dialogs/reports/BooksStockFilterDialog';
 import ExportButtons from '@/components/reports/ExportButtons';
+import Pagination from '@/components/Pagination';
 import { formatRupiah } from '@/utils/formatters';
 import { exportToPDF, exportToExcel, generateReportFilename } from '@/utils/exportUtils';
 import { useToast } from '@/components/ui/use-toast';
+import { PAGINATION } from '@/utils/constants';
 
 const ReportBooksStock = () => {
   const { toast } = useToast();
@@ -20,26 +22,42 @@ const ReportBooksStock = () => {
   const [filters, setFilters] = useState({});
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [isExportingExcel, setIsExportingExcel] = useState(false);
+  const [currentPage, setCurrentPage] = useState(PAGINATION.DEFAULT_PAGE);
+  const limit = 100;
 
   const getActiveFilterCount = () => {
     return Object.values(filters).filter(v => v !== '' && v !== null && v !== undefined).length;
   };
 
   const { data: reportData, isLoading } = useQuery({
-    queryKey: ['reportBooksStock', filters],
+    queryKey: ['reportBooksStock', filters, currentPage, limit],
     queryFn: async () => {
-      const response = await api.get('/reports/books-stock', { params: filters });
+      const response = await api.get('/reports/books-stock', {
+        params: {
+          ...filters,
+          page: currentPage,
+          limit: limit
+        }
+      });
       return response.data;
     },
+    placeholderData: keepPreviousData,
   });
 
   const handleApplyFilters = (newFilters) => {
     setFilters(newFilters);
+    setCurrentPage(PAGINATION.DEFAULT_PAGE);
     setShowFilterDialog(false);
   };
 
   const handleClearFilters = () => {
     setFilters({});
+    setCurrentPage(PAGINATION.DEFAULT_PAGE);
+  };
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Prepare chart data
@@ -81,6 +99,16 @@ const ReportBooksStock = () => {
     if (!reportData?.data?.length) return;
     setIsExportingExcel(true);
     try {
+      // Fetch ALL data using all=true parameter
+      const response = await api.get('/reports/books-stock', {
+        params: {
+          ...filters,
+          all: true
+        }
+      });
+
+      const allData = response.data.data;
+
       const columns = [
         { key: 'jenis_buku', header: 'Jenis', width: 20, accessor: (item) => item.jenis_buku?.code || '-' },
         { key: 'bidang_studi', header: 'Bidang Studi', width: 25, accessor: (item) => item.bidang_studi?.name || '-' },
@@ -92,7 +120,7 @@ const ReportBooksStock = () => {
         { key: 'stock', header: 'Stok', width: 10 },
         { key: 'price', header: 'Harga', width: 15, accessor: (item) => formatRupiah(item.price) },
       ];
-      await exportToExcel(reportData.data, columns, generateReportFilename('StokBuku', 'xlsx'), 'Stok Buku');
+      await exportToExcel(allData, columns, generateReportFilename('StokBuku', 'xlsx'), 'Stok Buku');
       toast({ title: "Success", description: "Excel berhasil diexport", variant: "success" });
     } catch (error) {
       toast({ title: "Error", description: "Gagal export Excel", variant: "destructive" });
@@ -283,7 +311,7 @@ const ReportBooksStock = () => {
                     <TableBody>
                       {reportData.data.map((book, index) => (
                         <TableRow key={book.id}>
-                          <TableCell className="py-1 px-2">{index + 1}</TableCell>
+                          <TableCell className="py-1 px-2">{((currentPage - 1) * limit) + index + 1}</TableCell>
                           <TableCell className="py-1 px-2">{book.jenis_buku?.code || '-'}</TableCell>
                           <TableCell className="py-1 px-2 font-medium">{book.bidang_studi?.name || '-'}</TableCell>
                           <TableCell className="py-1 px-2">{book.jenjang_studi?.code || '-'}</TableCell>
@@ -313,6 +341,17 @@ const ReportBooksStock = () => {
                 </div>
               )}
             </div>
+
+            {/* Pagination Component */}
+            {!isLoading && reportData?.data?.length > 0 && reportData?.pagination && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={reportData.pagination.total_pages}
+                total={reportData.pagination.total}
+                limit={reportData.pagination.limit}
+                onPageChange={handlePageChange}
+              />
+            )}
           </CardContent>
         </Card>
       </div>

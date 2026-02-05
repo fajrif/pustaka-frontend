@@ -17,6 +17,8 @@ import Select from '@/components/ui/select';
 import BookSelectionDialog from './BookSelectionDialog';
 import AddPaymentDialog from './AddPaymentDialog';
 import AddEditShippingDialog from './AddEditShippingDialog';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
+import { PercentageInput } from '@/components/ui/PercentageInput';
 
 const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinish }) => {
   const queryClient = useQueryClient();
@@ -28,6 +30,8 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [showShippingDialog, setShowShippingDialog] = useState(false);
   const [editingShipping, setEditingShipping] = useState(null);
+  const [generalPromotion, setGeneralPromotion] = useState(0);
+  const [generalDiscount, setGeneralDiscount] = useState(0);
 
   const initialData = {
     sales_associate_id: '',
@@ -112,7 +116,9 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
         const books = transactionDetail.items.map(item => ({
           book_id: item.book_id,
           book: item.book,
-          quantity: item.quantity
+          quantity: item.quantity,
+          promotion: item.promotion || 0,
+          discount: item.discount || 0
         }));
         setSelectedBooks(books);
       }
@@ -223,8 +229,25 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
   };
 
   const handleBookConfirm = (books) => {
-    setSelectedBooks(books);
+    // Get default discount from selected sales associate
+    const salesAssociateId = watch('sales_associate_id');
+    const selectedSA = salesAssociatesData.sales_associates?.find(sa => sa.id === salesAssociateId);
+    const defaultDiscount = selectedSA?.discount || 0;
+
+    // Initialize books with default values
+    const booksWithDefaults = books.map(book => ({
+      ...book,
+      promotion: book.promotion || 0,
+      discount: book.book.jenis_buku?.code === 'LKS' ? defaultDiscount : 0
+    }));
+
+    setSelectedBooks(booksWithDefaults);
     setShowBookDialog(false);
+
+    // Update general discount display
+    if (defaultDiscount > 0) {
+      setGeneralDiscount(defaultDiscount);
+    }
   };
 
   const handleQuantityChange = (bookId, newQuantity) => {
@@ -241,13 +264,87 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
     setSelectedBooks(prev => prev.filter(item => item.book_id !== bookId));
   };
 
+  /**
+   * Calculate effective price after promotion and discount
+   * Formula: _price = price - promotion; _price = _price - (_price * discount / 100)
+   */
+  const calculateEffectivePrice = (price, promotion = 0, discount = 0) => {
+    // Step 1: Deduct flat promotion amount
+    let effectivePrice = price - (promotion || 0);
+
+    // Step 2: Apply percentage discount
+    effectivePrice = effectivePrice - (effectivePrice * (discount || 0) / 100);
+
+    // Ensure non-negative
+    return Math.max(0, effectivePrice);
+  };
+
+  /**
+   * Calculate subtotal for an item
+   */
+  const calculateItemSubtotal = (item) => {
+    const effectivePrice = calculateEffectivePrice(
+      item.book.price,
+      item.promotion || 0,
+      item.discount || 0
+    );
+    return effectivePrice * item.quantity;
+  };
+
+  const handleGeneralPromotionChange = (value) => {
+    setGeneralPromotion(value);
+
+    // Apply to all LKS items
+    setSelectedBooks(prev => prev.map(item => {
+      if (item.book.jenis_buku?.code === 'LKS') {
+        return {
+          ...item,
+          promotion: Math.min(value, item.book.price) // Cap at book price
+        };
+      }
+      return item;
+    }));
+  };
+
+  const handleGeneralDiscountChange = (value) => {
+    setGeneralDiscount(value);
+
+    // Apply to all LKS items
+    setSelectedBooks(prev => prev.map(item => {
+      if (item.book.jenis_buku?.code === 'LKS') {
+        return { ...item, discount: value };
+      }
+      return item;
+    }));
+  };
+
+  const handlePromotionChange = (bookId, newPromotion) => {
+    setSelectedBooks(prev => prev.map(item => {
+      if (item.book_id === bookId) {
+        // Cap promotion at book price
+        const cappedPromotion = Math.min(newPromotion, item.book.price);
+        return { ...item, promotion: cappedPromotion };
+      }
+      return item;
+    }));
+  };
+
+  const handleDiscountChange = (bookId, newDiscount) => {
+    setSelectedBooks(prev => prev.map(item => {
+      if (item.book_id === bookId) {
+        return { ...item, discount: newDiscount };
+      }
+      return item;
+    }));
+  };
+
   const calculateSummary = () => {
     const totalQuantity = selectedBooks.reduce((sum, item) => {
       return sum + (item.quantity || 0);
     }, 0);
 
     const booksSubtotal = selectedBooks.reduce((sum, item) => {
-      return sum + (item.book.price * item.quantity);
+      return sum + calculateItemSubtotal(item);
     }, 0);
 
     // Sum up shippings
@@ -296,7 +393,9 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
       due_date: data.payment_type === 'K' ? data.due_date : null,
       items: selectedBooks.map(book => ({
         book_id: book.book_id,
-        quantity: book.quantity
+        quantity: book.quantity,
+        promotion: book.promotion || 0,
+        discount: book.discount || 0
       }))
     };
 
@@ -454,6 +553,41 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
                   )}
                 </div>
 
+                {/* General Discount/Promotion Section - Only for Cash & LKS items */}
+                {paymentType === 'T' && selectedBooks.some(item => item.book.jenis_buku?.code === 'LKS') && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <h4 className="text-sm font-semibold text-blue-900 mb-3">
+                      Terapkan Diskon/Promosi untuk Semua LKS
+                    </h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-700">Promosi Umum (Rp)</Label>
+                        <CurrencyInput
+                          value={generalPromotion}
+                          onChange={(val) => handleGeneralPromotionChange(val)}
+                          placeholder="Rp 0"
+                          className="h-8 text-xs"
+                        />
+                        <p className="text-xs text-slate-500">Potongan harga langsung</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-700">Diskon Umum (%)</Label>
+                        <PercentageInput
+                          value={generalDiscount}
+                          onChange={(val) => handleGeneralDiscountChange(val)}
+                          placeholder="0%"
+                          className="h-8 text-xs"
+                        />
+                        <p className="text-xs text-slate-500">Persentase diskon setelah promosi</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-blue-600 mt-3 flex items-start gap-2">
+                      <span className="mt-0.5">💡</span>
+                      <span>Nilai ini akan diterapkan ke semua item LKS. Anda masih bisa mengubah nilai per item di tabel.</span>
+                    </p>
+                  </div>
+                )}
+
                 {selectedBooks.length === 0 ? (
                   <div className="text-center py-8 border rounded bg-slate-50">
                     <Package className="w-12 h-12 mx-auto mb-3 text-slate-300" />
@@ -474,75 +608,121 @@ const AddEditSalesTransactionDialog = ({ isOpen, onClose, transactionId, onFinis
                           <TableHead className="p-2 h-auto text-xs font-semibold">Kurikulum</TableHead>
                           <TableHead className="p-2 h-auto text-xs font-semibold">Merk</TableHead>
                           <TableHead className="p-2 h-auto text-xs font-semibold text-right">Harga</TableHead>
+                          {paymentType === 'T' && selectedBooks.some(item => item.book.jenis_buku?.code === 'LKS') && (
+                            <>
+                              <TableHead className="p-2 h-auto text-xs font-semibold text-right">Promosi</TableHead>
+                              <TableHead className="p-2 h-auto text-xs font-semibold text-right">Diskon</TableHead>
+                            </>
+                          )}
                           <TableHead className="p-2 h-auto text-xs font-semibold text-center">Qty</TableHead>
                           <TableHead className="p-2 h-auto text-xs font-semibold text-right">Subtotal</TableHead>
                           {canEditItems && <TableHead className="p-2 h-auto text-xs w-[50px]"></TableHead>}
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {selectedBooks.map((item) => (
-                          <TableRow key={item.book_id}>
-                            <TableCell className="p-2 text-xs">
-                              <div title={item.book.jenis_buku ? item.book.jenis_buku.name : ''}>
-                                {item.book.jenis_buku ? item.book.jenis_buku.code : '-'}
-                              </div>
-                            </TableCell>
-                            <TableCell className="p-2 text-xs">
-                              <div className="font-medium truncate max-w-[150px]" title={item.book.bidang_studi ? item.book.bidang_studi.name : ''}>
-                                {item.book.bidang_studi ? item.book.bidang_studi.name : '-'}
-                              </div>
-                            </TableCell>
-                            <TableCell className="p-2 text-xs">
-                              <div title={item.book.jenjang_studi ? item.book.jenjang_studi.name : ''}>
-                                {item.book.jenjang_studi ? item.book.jenjang_studi.code : '-'}
-                              </div>
-                            </TableCell>
-                            <TableCell className="p-2 text-xs">
-                              {item.book.kelas}
-                            </TableCell>
-                            <TableCell className="p-2 text-xs">
-                              <div className="uppercase truncate max-w-[100px]" title={item.book.curriculum ? item.book.curriculum.name : ''}>
-                                {item.book.curriculum ? item.book.curriculum.name : '-'}
-                              </div>
-                            </TableCell>
-                            <TableCell className="p-2 text-xs">
-                              <div title={item.book.merk_buku ? item.book.merk_buku.name : ''}>
-                                {item.book.merk_buku ? item.book.merk_buku.code : '-'}
-                              </div>
-                            </TableCell>
-                            <TableCell className="p-2 text-xs text-right">{formatRupiah(item.book.price)}</TableCell>
-                            <TableCell className="p-2 text-xs text-center">
-                              {!canEditItems ? (
-                                <span>{item.quantity}</span>
-                              ) : (
-                                <Input
-                                  type="number"
-                                  value={item.quantity}
-                                  onChange={(e) => handleQuantityChange(item.book_id, parseInt(e.target.value) || 1)}
-                                  className="w-16 h-6 text-center p-1 text-xs"
-                                  min="1"
-                                  max={item.book.stock}
-                                />
-                              )}
-                            </TableCell>
-                            <TableCell className="p-2 text-xs text-right font-medium">
-                              {formatRupiah(item.book.price * item.quantity)}
-                            </TableCell>
-                            {canEditItems && (
+                        {selectedBooks.map((item) => {
+                          const isLKS = item.book.jenis_buku?.code === 'LKS';
+                          const showDiscountFields = paymentType === 'T' && selectedBooks.some(b => b.book.jenis_buku?.code === 'LKS');
+
+                          return (
+                            <TableRow key={item.book_id}>
                               <TableCell className="p-2 text-xs">
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleRemoveBook(item.book_id)}
-                                  className="text-red-500 hover:text-red-700 h-6 w-6"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </Button>
+                                <div title={item.book.jenis_buku ? item.book.jenis_buku.name : ''}>
+                                  {item.book.jenis_buku ? item.book.jenis_buku.code : '-'}
+                                </div>
                               </TableCell>
-                            )}
-                          </TableRow>
-                        ))}
+                              <TableCell className="p-2 text-xs">
+                                <div className="font-medium truncate max-w-[150px]" title={item.book.bidang_studi ? item.book.bidang_studi.name : ''}>
+                                  {item.book.bidang_studi ? item.book.bidang_studi.name : '-'}
+                                </div>
+                              </TableCell>
+                              <TableCell className="p-2 text-xs">
+                                <div title={item.book.jenjang_studi ? item.book.jenjang_studi.name : ''}>
+                                  {item.book.jenjang_studi ? item.book.jenjang_studi.code : '-'}
+                                </div>
+                              </TableCell>
+                              <TableCell className="p-2 text-xs">
+                                {item.book.kelas}
+                              </TableCell>
+                              <TableCell className="p-2 text-xs">
+                                <div className="uppercase truncate max-w-[100px]" title={item.book.curriculum ? item.book.curriculum.name : ''}>
+                                  {item.book.curriculum ? item.book.curriculum.name : '-'}
+                                </div>
+                              </TableCell>
+                              <TableCell className="p-2 text-xs">
+                                <div title={item.book.merk_buku ? item.book.merk_buku.name : ''}>
+                                  {item.book.merk_buku ? item.book.merk_buku.code : '-'}
+                                </div>
+                              </TableCell>
+                              <TableCell className="p-2 text-xs text-right">{formatRupiah(item.book.price)}</TableCell>
+
+                              {/* Promotion and Discount columns - conditional */}
+                              {showDiscountFields && (
+                                <>
+                                  <TableCell className="p-2 text-xs text-right">
+                                    {isLKS && canEditItems ? (
+                                      <CurrencyInput
+                                        value={item.promotion || 0}
+                                        onChange={(val) => handlePromotionChange(item.book_id, val)}
+                                        className="w-24 h-6 text-xs text-right"
+                                        placeholder="Rp 0"
+                                      />
+                                    ) : isLKS ? (
+                                      <span>{formatRupiah(item.promotion || 0)}</span>
+                                    ) : (
+                                      <span className="text-slate-400">-</span>
+                                    )}
+                                  </TableCell>
+                                  <TableCell className="p-2 text-xs text-right">
+                                    {isLKS && canEditItems ? (
+                                      <PercentageInput
+                                        value={item.discount || 0}
+                                        onChange={(val) => handleDiscountChange(item.book_id, val)}
+                                        className="w-16 h-6 text-xs text-right"
+                                        placeholder="0%"
+                                      />
+                                    ) : isLKS ? (
+                                      <span>{item.discount || 0}%</span>
+                                    ) : (
+                                      <span className="text-slate-400">-</span>
+                                    )}
+                                  </TableCell>
+                                </>
+                              )}
+
+                              <TableCell className="p-2 text-xs text-center">
+                                {!canEditItems ? (
+                                  <span>{item.quantity}</span>
+                                ) : (
+                                  <Input
+                                    type="number"
+                                    value={item.quantity}
+                                    onChange={(e) => handleQuantityChange(item.book_id, parseInt(e.target.value) || 1)}
+                                    className="w-16 h-6 text-center p-1 text-xs"
+                                    min="1"
+                                    max={item.book.stock}
+                                  />
+                                )}
+                              </TableCell>
+                              <TableCell className="p-2 text-xs text-right font-medium">
+                                {formatRupiah(calculateItemSubtotal(item))}
+                              </TableCell>
+                              {canEditItems && (
+                                <TableCell className="p-2 text-xs">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleRemoveBook(item.book_id)}
+                                    className="text-red-500 hover:text-red-700 h-6 w-6"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
