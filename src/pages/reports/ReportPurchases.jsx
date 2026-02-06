@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ShoppingBag, Filter, X } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import PurchasesFilterDialog from '@/components/dialogs/reports/PurchasesFilterDialog';
 import DateRangePicker from '@/components/reports/DateRangePicker';
 import ExportButtons from '@/components/reports/ExportButtons';
@@ -21,6 +21,8 @@ const statusConfig = {
   1: { label: 'Selesai', className: 'bg-green-50 text-green-700 border-green-200' },
   2: { label: 'Dibatalkan', className: 'bg-red-50 text-red-700 border-red-200' },
 };
+
+const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1', '#14b8a6', '#f97316', '#84cc16'];
 
 const ReportPurchases = () => {
   const { toast } = useToast();
@@ -270,15 +272,25 @@ const ReportPurchases = () => {
           {chartData.length > 0 && (
             <div className="p-4 border-b border-slate-100">
               <h4 className="text-sm font-semibold text-slate-700 mb-4">Pembelian per Supplier</h4>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 11 }} />
-                  <YAxis tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={(value) => formatRupiah(value)} />
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    dataKey="total"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    fill="#8b5cf6"
+                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`}
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
                   <Tooltip formatter={(value) => formatRupiah(value)} />
                   <Legend />
-                  <Bar dataKey="total" name="Total Pembelian" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-                </BarChart>
+                </PieChart>
               </ResponsiveContainer>
             </div>
           )}
